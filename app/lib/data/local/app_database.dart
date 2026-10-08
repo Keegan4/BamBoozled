@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'tables.dart';
 
@@ -7,7 +8,14 @@ part 'app_database.g.dart';
 
 @DriftDatabase(tables: [Categories, Tasks, Settings])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'bamboozled'));
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openDefault());
+
+  /// Stored in the app's private support folder, not Documents (which may be
+  /// missing, or synced by OneDrive/iCloud while the database is open).
+  static QueryExecutor _openDefault() => driftDatabase(
+    name: 'bamboozled',
+    native: const DriftNativeOptions(databaseDirectory: getApplicationSupportDirectory),
+  );
 
   @override
   int get schemaVersion => 1;
