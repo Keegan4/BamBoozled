@@ -32,7 +32,7 @@ Ties are broken by the earlier due date, then by the shorter estimated time.
 | Reply to parents | today (in 4h) | Low | 0.92 | 0.25 | **0.62** | 3 |
 | Plan CCA trip | in 7 days | Urgent | 0.22 | 1.00 | **0.57** | 4 |
 
-An urgent task that is a week away still ranks below a low-priority task due today, because a deadline only hours away outweighs priority. Once the CCA trip is 2 days away, it will rank first.
+An urgent task that is a week away still ranks below a low-priority task due today, because a deadline only hours away outweighs priority. Once the CCA trip is 2 days away (score 0.73), it moves up to second place.
 
 ## Explaining the ranking
 Each card in "Do next" shows a short reason built from its two inputs, e.g. *"Due tomorrow · High priority"* or *"Overdue by 2 days"*. This lets users see why a task is ranked where it is.
