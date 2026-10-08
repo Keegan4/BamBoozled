@@ -51,8 +51,22 @@ class SyncService {
   Timer? _periodic;
   Future<void>? _running;
   bool _again = false;
+  bool _stopped = false;
+
+  /// Starts syncing for [userId]. When the account differs from the last one
+  /// synced on this device, everything local is uploaded and pulled afresh.
+  Future<void> startFor(String userId) async {
+    const userKey = 'sync_user_id';
+    if (await db.getSetting(userKey) != userId) {
+      await resetCursors();
+      await repo.markAllDirty();
+      await db.setSetting(userKey, userId);
+    }
+    start();
+  }
 
   void start() {
+    if (_stopped) return;
     _subs
       ..add(repo.localChanges.listen((_) => _schedule()))
       ..add(remote.changes().listen((_) => _schedule()));
@@ -124,6 +138,7 @@ class SyncService {
   }
 
   Future<void> stop() async {
+    _stopped = true;
     _debounceTimer?.cancel();
     _periodic?.cancel();
     for (final s in _subs) {

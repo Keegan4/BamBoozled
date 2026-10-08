@@ -11,8 +11,12 @@ abstract final class PandaText {
   static const body = TextStyle(fontFamily: _family, fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w400);
   static const bodyStrong = TextStyle(fontFamily: _family, fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w600);
   static const caption = TextStyle(fontFamily: _family, fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w400);
-  static const captionStrong =
-      TextStyle(fontFamily: _family, fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w600);
+  static const captionStrong = TextStyle(
+    fontFamily: _family,
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w600,
+  );
 }
 
 /// Spacing and radii used across the app.

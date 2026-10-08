@@ -48,8 +48,8 @@ const defaultCategoryId = 'general';
 /// to and from Supabase in the background.
 class TaskRepository {
   TaskRepository(this.db, {DateTime Function()? clock, String Function()? newId})
-      : _clock = clock ?? DateTime.now,
-        _newId = newId ?? const Uuid().v4;
+    : _clock = clock ?? DateTime.now,
+      _newId = newId ?? const Uuid().v4;
 
   final AppDatabase db;
   final DateTime Function() _clock;
@@ -63,17 +63,19 @@ class TaskRepository {
 
   // ---- Reads ----
 
-  Stream<List<Task>> watchTasks() => (db.select(db.tasks)
-        ..where((t) => t.deletedAt.isNull())
-        ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
-      .watch()
-      .map((rows) => rows.map(_taskFromRow).toList());
+  Stream<List<Task>> watchTasks() =>
+      (db.select(db.tasks)
+            ..where((t) => t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.dueAt)]))
+          .watch()
+          .map((rows) => rows.map(_taskFromRow).toList());
 
-  Stream<List<Category>> watchCategories() => (db.select(db.categories)
-        ..where((c) => c.deletedAt.isNull())
-        ..orderBy([(c) => OrderingTerm.asc(c.sortOrder), (c) => OrderingTerm.asc(c.name)]))
-      .watch()
-      .map((rows) => rows.map(_categoryFromRow).toList());
+  Stream<List<Category>> watchCategories() =>
+      (db.select(db.categories)
+            ..where((c) => c.deletedAt.isNull())
+            ..orderBy([(c) => OrderingTerm.asc(c.sortOrder), (c) => OrderingTerm.asc(c.name)]))
+          .watch()
+          .map((rows) => rows.map(_categoryFromRow).toList());
 
   Future<Task?> getTask(String id) async {
     final row = await (db.select(db.tasks)..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -106,13 +108,7 @@ class TaskRepository {
 
   Future<Category> addCategory(String name, Color color) async {
     final count = await db.categories.count().getSingle();
-    final category = Category(
-      id: _newId(),
-      name: name.trim(),
-      color: color,
-      sortOrder: count,
-      updatedAt: _clock(),
-    );
+    final category = Category(id: _newId(), name: name.trim(), color: color, sortOrder: count, updatedAt: _clock());
     await db.into(db.categories).insert(_categoryToCompanion(category, dirty: true));
     _changed();
     return category;
@@ -138,11 +134,7 @@ class TaskRepository {
   }
 
   Future<void> updateTask(Task task) async {
-    final updated = task.copyWith(
-      title: task.title.trim(),
-      notes: () => _blankToNull(task.notes),
-      updatedAt: _clock(),
-    );
+    final updated = task.copyWith(title: task.title.trim(), notes: () => _blankToNull(task.notes), updatedAt: _clock());
     await db.into(db.tasks).insertOnConflictUpdate(_taskToCompanion(updated, dirty: true));
     _changed();
   }
@@ -153,29 +145,36 @@ class TaskRepository {
     if (task == null || task.isDone == done) return;
     final now = _clock();
     await db.transaction(() async {
-      await db.into(db.tasks).insertOnConflictUpdate(_taskToCompanion(
-          task.copyWith(completedAt: () => done ? now : null, updatedAt: now),
-          dirty: true));
+      await db
+          .into(db.tasks)
+          .insertOnConflictUpdate(
+            _taskToCompanion(task.copyWith(completedAt: () => done ? now : null, updatedAt: now), dirty: true),
+          );
       if (done && task.repeat != Repeat.none) {
         final nextDue = task.repeat.next(task.dueAt);
-        final exists = await (db.select(db.tasks)
-              ..where((t) => t.title.equals(task.title) & t.dueAt.equals(nextDue) & t.deletedAt.isNull()))
-            .getSingleOrNull();
+        final exists = await (db.select(
+          db.tasks,
+        )..where((t) => t.title.equals(task.title) & t.dueAt.equals(nextDue) & t.deletedAt.isNull())).getSingleOrNull();
         if (exists == null) {
-          await db.into(db.tasks).insert(_taskToCompanion(
-              Task(
-                id: _newId(),
-                title: task.title,
-                dueAt: nextDue,
-                priority: task.priority,
-                categoryId: task.categoryId,
-                estimateMinutes: task.estimateMinutes,
-                notes: task.notes,
-                repeat: task.repeat,
-                createdAt: now,
-                updatedAt: now,
-              ),
-              dirty: true));
+          await db
+              .into(db.tasks)
+              .insert(
+                _taskToCompanion(
+                  Task(
+                    id: _newId(),
+                    title: task.title,
+                    dueAt: nextDue,
+                    priority: task.priority,
+                    categoryId: task.categoryId,
+                    estimateMinutes: task.estimateMinutes,
+                    notes: task.notes,
+                    repeat: task.repeat,
+                    createdAt: now,
+                    updatedAt: now,
+                  ),
+                  dirty: true,
+                ),
+              );
         }
       }
     });
@@ -200,18 +199,24 @@ class TaskRepository {
 
   /// Clears the dirty flag on rows that haven't changed again since they were pushed.
   Future<void> markTasksClean(List<Task> pushed) => db.batch((b) {
-        for (final t in pushed) {
-          b.update(db.tasks, const TasksCompanion(dirty: Value(false)),
-              where: (row) => row.id.equals(t.id) & row.updatedAt.equals(t.updatedAt));
-        }
-      });
+    for (final t in pushed) {
+      b.update(
+        db.tasks,
+        const TasksCompanion(dirty: Value(false)),
+        where: (row) => row.id.equals(t.id) & row.updatedAt.equals(t.updatedAt),
+      );
+    }
+  });
 
   Future<void> markCategoriesClean(List<Category> pushed) => db.batch((b) {
-        for (final c in pushed) {
-          b.update(db.categories, const CategoriesCompanion(dirty: Value(false)),
-              where: (row) => row.id.equals(c.id) & row.updatedAt.equals(c.updatedAt));
-        }
-      });
+    for (final c in pushed) {
+      b.update(
+        db.categories,
+        const CategoriesCompanion(dirty: Value(false)),
+        where: (row) => row.id.equals(c.id) & row.updatedAt.equals(c.updatedAt),
+      );
+    }
+  });
 
   /// Applies rows pulled from the server. The newest `updatedAt` wins; a local
   /// row that is newer (and not yet pushed) is kept. Returns rows applied.
@@ -257,53 +262,52 @@ class TaskRepository {
   static String? _blankToNull(String? s) => (s == null || s.trim().isEmpty) ? null : s.trim();
 
   static Task _taskFromRow(TaskRow r) => Task(
-        id: r.id,
-        title: r.title,
-        dueAt: r.dueAt,
-        priority: Priority.fromWeight(r.priority),
-        categoryId: r.categoryId,
-        estimateMinutes: r.estimateMinutes,
-        notes: r.notes,
-        repeat: Repeat.values[r.repeat.clamp(0, Repeat.values.length - 1)],
-        completedAt: r.completedAt,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
-        deletedAt: r.deletedAt,
-      );
+    id: r.id,
+    title: r.title,
+    dueAt: r.dueAt,
+    priority: Priority.fromWeight(r.priority),
+    categoryId: r.categoryId,
+    estimateMinutes: r.estimateMinutes,
+    notes: r.notes,
+    repeat: Repeat.values[r.repeat.clamp(0, Repeat.values.length - 1)],
+    completedAt: r.completedAt,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    deletedAt: r.deletedAt,
+  );
 
   static TasksCompanion _taskToCompanion(Task t, {required bool dirty}) => TasksCompanion.insert(
-        id: t.id,
-        title: t.title,
-        dueAt: t.dueAt,
-        priority: t.priority.weight,
-        categoryId: t.categoryId,
-        estimateMinutes: Value(t.estimateMinutes),
-        notes: Value(t.notes),
-        repeat: Value(t.repeat.index),
-        completedAt: Value(t.completedAt),
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-        deletedAt: Value(t.deletedAt),
-        dirty: Value(dirty),
-      );
+    id: t.id,
+    title: t.title,
+    dueAt: t.dueAt,
+    priority: t.priority.weight,
+    categoryId: t.categoryId,
+    estimateMinutes: Value(t.estimateMinutes),
+    notes: Value(t.notes),
+    repeat: Value(t.repeat.index),
+    completedAt: Value(t.completedAt),
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    deletedAt: Value(t.deletedAt),
+    dirty: Value(dirty),
+  );
 
   static Category _categoryFromRow(CategoryRow r) => Category(
-        id: r.id,
-        name: r.name,
-        color: Color(r.colorValue),
-        sortOrder: r.sortOrder,
-        updatedAt: r.updatedAt,
-        deletedAt: r.deletedAt,
-      );
+    id: r.id,
+    name: r.name,
+    color: Color(r.colorValue),
+    sortOrder: r.sortOrder,
+    updatedAt: r.updatedAt,
+    deletedAt: r.deletedAt,
+  );
 
-  static CategoriesCompanion _categoryToCompanion(Category c, {required bool dirty}) =>
-      CategoriesCompanion.insert(
-        id: c.id,
-        name: c.name,
-        colorValue: c.color.toARGB32(),
-        sortOrder: Value(c.sortOrder),
-        updatedAt: c.updatedAt,
-        deletedAt: Value(c.deletedAt),
-        dirty: Value(dirty),
-      );
+  static CategoriesCompanion _categoryToCompanion(Category c, {required bool dirty}) => CategoriesCompanion.insert(
+    id: c.id,
+    name: c.name,
+    colorValue: c.color.toARGB32(),
+    sortOrder: Value(c.sortOrder),
+    updatedAt: c.updatedAt,
+    deletedAt: Value(c.deletedAt),
+    dirty: Value(dirty),
+  );
 }

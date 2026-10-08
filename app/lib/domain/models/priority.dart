@@ -26,11 +26,11 @@ enum Repeat {
 
   /// The next due date after [from] for a repeating task.
   DateTime next(DateTime from) => switch (this) {
-        Repeat.none => from,
-        Repeat.daily => from.add(const Duration(days: 1)),
-        Repeat.weekly => from.add(const Duration(days: 7)),
-        Repeat.monthly => _addMonth(from),
-      };
+    Repeat.none => from,
+    Repeat.daily => from.add(const Duration(days: 1)),
+    Repeat.weekly => from.add(const Duration(days: 7)),
+    Repeat.monthly => _addMonth(from),
+  };
 
   static DateTime _addMonth(DateTime d) {
     final year = d.month == 12 ? d.year + 1 : d.year;

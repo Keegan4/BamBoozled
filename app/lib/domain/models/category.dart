@@ -20,15 +20,14 @@ class Category {
 
   bool get isDeleted => deletedAt != null;
 
-  Category copyWith({String? name, Color? color, int? sortOrder, DateTime? updatedAt, DateTime? deletedAt}) =>
-      Category(
-        id: id,
-        name: name ?? this.name,
-        color: color ?? this.color,
-        sortOrder: sortOrder ?? this.sortOrder,
-        updatedAt: updatedAt ?? this.updatedAt,
-        deletedAt: deletedAt ?? this.deletedAt,
-      );
+  Category copyWith({String? name, Color? color, int? sortOrder, DateTime? updatedAt, DateTime? deletedAt}) => Category(
+    id: id,
+    name: name ?? this.name,
+    color: color ?? this.color,
+    sortOrder: sortOrder ?? this.sortOrder,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt ?? this.deletedAt,
+  );
 
   @override
   bool operator ==(Object other) =>

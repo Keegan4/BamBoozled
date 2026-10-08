@@ -7,17 +7,17 @@ import 'package:flutter_test/flutter_test.dart';
 final now = DateTime(2026, 10, 8, 14);
 
 Task task(String title, DateTime due, Priority priority, {int? estimate, DateTime? done, DateTime? deleted}) => Task(
-      id: title,
-      title: title,
-      dueAt: due,
-      priority: priority,
-      categoryId: 'general',
-      estimateMinutes: estimate,
-      completedAt: done,
-      deletedAt: deleted,
-      createdAt: now,
-      updatedAt: now,
-    );
+  id: title,
+  title: title,
+  dueAt: due,
+  priority: priority,
+  categoryId: 'general',
+  estimateMinutes: estimate,
+  completedAt: done,
+  deletedAt: deleted,
+  createdAt: now,
+  updatedAt: now,
+);
 
 void main() {
   const scorer = PriorityScorer();
@@ -72,7 +72,9 @@ void main() {
 
   test('explains the ranking', () {
     expect(scorer.reason(task('a', DateTime(2026, 10, 9, 17), Priority.high), now), 'Due tomorrow · High priority');
-    expect(scorer.reason(task('a', DateTime(2026, 10, 7, 23, 59), Priority.medium), now),
-        'Overdue by 1 day · Medium priority');
+    expect(
+      scorer.reason(task('a', DateTime(2026, 10, 7, 23, 59), Priority.medium), now),
+      'Overdue by 1 day · Medium priority',
+    );
   });
 }

@@ -193,7 +193,11 @@ void main() {
 
   test('local edits trigger a sync after the debounce', () async {
     final fast = SyncService(
-        repo: phone.repo, remote: server, db: phone.db, debounce: const Duration(milliseconds: 10));
+      repo: phone.repo,
+      remote: server,
+      db: phone.db,
+      debounce: const Duration(milliseconds: 10),
+    );
     fast.start();
     await fast.syncNow();
     await phone.repo.addTask(draft('Auto-synced'));

@@ -15,13 +15,52 @@ The welcome page has:
 - **Do next 🎋:** a recommended order to do tasks in, scored from each task's deadline and its priority. See [docs/priority-algorithm.md](docs/priority-algorithm.md).
 - **Filter, search and colour coding:** each category has its own colour, and priority is shown with leaf badges.
 
-The UI mockup is described in [design/README.md](design/README.md).
+The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
+
+## Running the app
+
+You need the [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.47 or newer, which includes Dart 3.13).
+
+```bash
+cd app
+flutter pub get
+flutter run -d windows      # or macos, linux, or an Android phone/emulator
+```
+
+Without any extra settings, the app keeps tasks on the device it runs on. To sync between phone and computer, set up Supabase (below) and pass its details when you run or build:
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://YOUR-PROJECT.supabase.co \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+flutter build apk --release --dart-define=...   # Android
+flutter build windows --release --dart-define=... # Windows
+```
+
+### Setting up sync (one time)
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In the project's **SQL Editor**, paste and run [supabase/migrations/0001_tasks.sql](supabase/migrations/0001_tasks.sql). Or, with the Supabase CLI: `supabase link` then `supabase db push`.
+3. In the Supabase dashboard (menu names may differ slightly), under **Authentication → Sign In / Providers**, make sure **Email** is on. Under **Authentication → Emails**, edit the *Magic Link* template so it includes `{{ .Token }}`. That puts the 6-digit sign-in code in the email.
+4. Copy the **Project URL** and **publishable key** from **Project Settings → API Keys**, and use them in the `--dart-define` flags above.
+
+In the app, people go to **Settings → Sign in to sync**, type their email, then type the code they receive. Tasks they added before signing in are uploaded automatically.
+
+### Developing
+
+```bash
+cd app
+flutter analyze
+flutter test                                        # unit, sync and widget tests
+dart run build_runner build                         # after changing the database tables
+SCREENSHOTS=1 flutter test --update-goldens test/screenshots   # refresh design/app-screenshots
+```
+
 
 ## Recommended framework
 
 | Layer | Choice | Why |
 |---|---|---|
-| UI / app | **Flutter 3 (Dart)** | One codebase builds for Android, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
+| UI / app | **Flutter (Dart)** | One codebase builds for Android, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
 | State | **Riverpod** | Simple and testable. Works well with streams from the local database. |
 | Local storage | **Drift (SQLite)** | Offline-first: the app always reads and writes locally, so it works without internet. |
 | Sync / auth | **Supabase** (Postgres + Auth + Realtime) | Sign-in by email magic link or Google. Row-level security keeps each user's data private. |
@@ -33,6 +72,7 @@ The UI mockup is described in [design/README.md](design/README.md).
 2. `SyncService` pushes rows that changed locally to Supabase. It compares `updated_at` timestamps, and the most recent change wins.
 3. `SyncService` pulls remote changes through Supabase Realtime, plus a full catch-up when the app starts.
 4. Deleted tasks are not removed straight away. They are marked with `deleted_at` (a soft delete), so the deletion syncs to the other device.
+5. The server ignores a write that is older than the copy it already has, and stamps every row with its own `server_updated_at`, so devices with wrong clocks still pull every change.
 
 ## Project structure
 

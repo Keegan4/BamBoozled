@@ -14,12 +14,12 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await m.createIndex(Index('tasks_due_at', 'CREATE INDEX tasks_due_at ON tasks (due_at)'));
-          await m.createIndex(Index('tasks_dirty', 'CREATE INDEX tasks_dirty ON tasks (dirty)'));
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await m.createIndex(Index('tasks_due_at', 'CREATE INDEX tasks_due_at ON tasks (due_at)'));
+      await m.createIndex(Index('tasks_dirty', 'CREATE INDEX tasks_dirty ON tasks (dirty)'));
+    },
+  );
 
   Future<String?> getSetting(String key) async =>
       (await (select(settings)..where((s) => s.key.equals(key))).getSingleOrNull())?.value;

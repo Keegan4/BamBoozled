@@ -47,21 +47,20 @@ class Task {
     DateTime? Function()? completedAt,
     DateTime? updatedAt,
     DateTime? Function()? deletedAt,
-  }) =>
-      Task(
-        id: id,
-        title: title ?? this.title,
-        dueAt: dueAt ?? this.dueAt,
-        priority: priority ?? this.priority,
-        categoryId: categoryId ?? this.categoryId,
-        estimateMinutes: estimateMinutes != null ? estimateMinutes() : this.estimateMinutes,
-        notes: notes != null ? notes() : this.notes,
-        repeat: repeat ?? this.repeat,
-        completedAt: completedAt != null ? completedAt() : this.completedAt,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        deletedAt: deletedAt != null ? deletedAt() : this.deletedAt,
-      );
+  }) => Task(
+    id: id,
+    title: title ?? this.title,
+    dueAt: dueAt ?? this.dueAt,
+    priority: priority ?? this.priority,
+    categoryId: categoryId ?? this.categoryId,
+    estimateMinutes: estimateMinutes != null ? estimateMinutes() : this.estimateMinutes,
+    notes: notes != null ? notes() : this.notes,
+    repeat: repeat ?? this.repeat,
+    completedAt: completedAt != null ? completedAt() : this.completedAt,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt != null ? deletedAt() : this.deletedAt,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -80,8 +79,20 @@ class Task {
       other.deletedAt == deletedAt;
 
   @override
-  int get hashCode => Object.hash(id, title, dueAt, priority, categoryId, estimateMinutes, notes, repeat,
-      completedAt, createdAt, updatedAt, deletedAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    dueAt,
+    priority,
+    categoryId,
+    estimateMinutes,
+    notes,
+    repeat,
+    completedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
 
   @override
   String toString() => 'Task($title, due $dueAt, ${priority.label})';

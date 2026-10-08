@@ -1,7 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/theme/panda_theme.dart';
+import 'app.dart';
+import 'core/config.dart';
+import 'data/local/app_database.dart';
+import 'data/providers.dart';
+import 'data/repositories/task_repository.dart';
 
-void main() {
-  runApp(MaterialApp(title: 'BamBoozled', theme: buildPandaTheme(), home: const SizedBox()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SupabaseClient? client;
+  if (AppConfig.syncConfigured) {
+    await Supabase.initialize(url: AppConfig.supabaseUrl, publishableKey: AppConfig.supabaseKey);
+    client = Supabase.instance.client;
+  }
+
+  final db = AppDatabase();
+  final repo = TaskRepository(db);
+  await repo.ensureDefaultCategories();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        taskRepositoryProvider.overrideWithValue(repo),
+        supabaseClientProvider.overrideWithValue(client),
+      ],
+      child: const BamBoozledApp(),
+    ),
+  );
 }

@@ -25,12 +25,12 @@ void main() {
   });
 
   TaskDraft draft(String title, {Repeat repeat = Repeat.none, DateTime? due}) => TaskDraft(
-        title: title,
-        dueAt: due ?? DateTime(2026, 10, 9, 17),
-        priority: Priority.high,
-        categoryId: 'teaching',
-        repeat: repeat,
-      );
+    title: title,
+    dueAt: due ?? DateTime(2026, 10, 9, 17),
+    priority: Priority.high,
+    categoryId: 'teaching',
+    repeat: repeat,
+  );
 
   test('seeds default categories once', () async {
     await repo.ensureDefaultCategories();
@@ -41,8 +41,9 @@ void main() {
   });
 
   test('adds, edits and lists tasks; trims title and blank notes', () async {
-    final t = await repo.addTask(TaskDraft(
-        title: '  Mark 3A essays ', dueAt: DateTime(2026, 10, 9), categoryId: 'teaching', notes: '   '));
+    final t = await repo.addTask(
+      TaskDraft(title: '  Mark 3A essays ', dueAt: DateTime(2026, 10, 9), categoryId: 'teaching', notes: '   '),
+    );
     expect(t.title, 'Mark 3A essays');
     expect(t.notes, isNull);
     now = now.add(const Duration(minutes: 5));
@@ -88,12 +89,13 @@ void main() {
     final older = local.copyWith(title: 'Older remote', updatedAt: now.subtract(const Duration(minutes: 1)));
     final newer = local.copyWith(title: 'Newer remote', updatedAt: now.add(const Duration(minutes: 1)));
     final brandNew = Task(
-        id: 'remote-1',
-        title: 'From phone',
-        dueAt: DateTime(2026, 10, 10),
-        categoryId: 'admin',
-        createdAt: now,
-        updatedAt: now);
+      id: 'remote-1',
+      title: 'From phone',
+      dueAt: DateTime(2026, 10, 10),
+      categoryId: 'admin',
+      createdAt: now,
+      updatedAt: now,
+    );
 
     expect(await repo.applyRemoteTasks([older, brandNew]), 1);
     expect((await repo.getTask(local.id))!.title, 'Local title');
