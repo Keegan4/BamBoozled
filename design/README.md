@@ -1,6 +1,21 @@
 # Welcome page — UI mockup spec
 
-**Figma file:** _not created yet. It waits on the Figma connector being connected to the Claude session._
+**Figma file:** [BamBoozled — Welcome](https://www.figma.com/design/Qp2xFexfzXZvT2mR8htC4s)
+
+| Page | Contents |
+|---|---|
+| Styles & Components | Colour variables (`Panda` collection), Nunito text styles, icons, `PandaMascot`, `PriorityBadge`, `CategoryChip`, `Button`, `SearchField`, `TaskCard`, `DayCell`, `WeekDay` |
+| Welcome — Screens | Desktop welcome (1440), Android welcome (412×915), Android empty state, Desktop add-task dialog, Android add-task bottom sheet |
+
+The screens are built from component instances. If you change a component, every screen that uses it updates.
+
+## Exports
+| Desktop | Android |
+|---|---|
+| ![Desktop welcome](exports/desktop-welcome.png) | ![Android welcome](exports/android-welcome.png) |
+| ![Add task dialog](exports/desktop-add-task-dialog.png) | ![Empty state](exports/android-empty-state.png) |
+
+## Original wireframe spec
 
 ## Frames
 
