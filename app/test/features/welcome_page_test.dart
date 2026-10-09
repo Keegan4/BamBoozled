@@ -1,14 +1,8 @@
-import 'package:bamboozled/features/tasks/widgets/task_card.dart';
 import 'package:bamboozled/features/welcome/widgets/filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers.dart';
-
-List<String> doNextTitles(WidgetTester tester) => tester
-    .widgetList<TaskCard>(find.descendant(of: find.byKey(const ValueKey('do-next')), matching: find.byType(TaskCard)))
-    .map((c) => c.task.title)
-    .toList();
 
 void main() {
   fractionalWidthTests();

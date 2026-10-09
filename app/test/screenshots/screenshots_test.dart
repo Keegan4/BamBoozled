@@ -11,24 +11,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers.dart';
 
-Future<void> _loadFonts() async {
-  Future<ByteData> file(String path) async => ByteData.sublistView(await File(path).readAsBytes());
-  final nunito = FontLoader('Nunito');
-  for (final w in ['Regular', 'SemiBold', 'Bold', 'ExtraBold']) {
-    nunito.addFont(file('assets/fonts/Nunito-$w.ttf'));
-  }
-  await nunito.load();
+/// Nunito is loaded for every test by flutter_test_config.dart; screenshots also need the icon font.
+Future<void> _loadIconFont() async {
   final flutterRoot = Platform.environment['FLUTTER_ROOT'] ?? '';
-  final icons = FontLoader('MaterialIcons')
-    ..addFont(file('$flutterRoot/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf'));
-  await icons.load();
+  final bytes = await File('$flutterRoot/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytes();
+  await (FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(bytes)))).load();
 }
 
 void main() {
   final enabled = Platform.environment['SCREENSHOTS'] == '1';
 
   setUpAll(() async {
-    if (enabled) await _loadFonts();
+    if (enabled) await _loadIconFont();
   });
   // Draw real shadows (tests replace them with black outlines by default).
   void shot(String name, Future<void> Function(WidgetTester) body) => testWidgets(name, skip: !enabled, (tester) async {

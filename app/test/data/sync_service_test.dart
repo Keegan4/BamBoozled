@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bamboozled/data/local/app_database.dart';
 import 'package:bamboozled/data/remote/remote_store.dart';
 import 'package:bamboozled/data/remote/supabase_remote_store.dart';
@@ -13,64 +11,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// In-memory stand-in for Supabase that behaves like the SQL migration:
-/// stale writes are ignored and every accepted write gets a new server stamp.
-class FakeServer implements RemoteStore {
-  final _tasks = <String, (Task, int)>{};
-  final _categories = <String, (Category, int)>{};
-  final _changes = StreamController<void>.broadcast();
-  var _stamp = 0;
-  bool offline = false;
-
-  String _cursor(int stamp) => stamp.toString().padLeft(10, '0');
-
-  void _check() {
-    if (offline) throw Exception('offline');
-  }
-
-  @override
-  Future<void> upsertTasks(List<Task> tasks) async {
-    _check();
-    for (final t in tasks) {
-      final existing = _tasks[t.id];
-      if (existing != null && t.updatedAt.isBefore(existing.$1.updatedAt)) continue;
-      _tasks[t.id] = (t, ++_stamp);
-    }
-    if (tasks.isNotEmpty) _changes.add(null);
-  }
-
-  @override
-  Future<void> upsertCategories(List<Category> categories) async {
-    _check();
-    for (final c in categories) {
-      final existing = _categories[c.id];
-      if (existing != null && c.updatedAt.isBefore(existing.$1.updatedAt)) continue;
-      _categories[c.id] = (c, ++_stamp);
-    }
-  }
-
-  RemotePage<T> _page<T>(Map<String, (T, int)> table, String? cursor) {
-    final after = cursor == null ? 0 : int.parse(cursor);
-    final rows = table.values.where((r) => r.$2 > after).toList()..sort((a, b) => a.$2.compareTo(b.$2));
-    final page = rows.take(RemoteStore.pageSize).toList();
-    return RemotePage([for (final r in page) r.$1], page.isEmpty ? cursor : _cursor(page.last.$2));
-  }
-
-  @override
-  Future<RemotePage<Task>> fetchTasksSince(String? cursor) async {
-    _check();
-    return _page(_tasks, cursor);
-  }
-
-  @override
-  Future<RemotePage<Category>> fetchCategoriesSince(String? cursor) async {
-    _check();
-    return _page(_categories, cursor);
-  }
-
-  @override
-  Stream<void> changes() => _changes.stream;
-}
+import '../fakes.dart';
 
 class Device {
   Device(this.server, DateTime Function() clock, String name) {
@@ -207,6 +148,78 @@ void main() {
     expect(await phone.repo.dirtyTasks(), isEmpty);
     await laptop.sync.syncNow();
     expect((await laptop.tasks()).single.title, 'Auto-synced');
+  });
+
+  group('startFor (signing in)', () {
+    Future<void> settleSync() => Future<void>.delayed(const Duration(milliseconds: 100));
+
+    test('uploads everything already on this device the first time an account signs in', () async {
+      await phone.repo.addTask(draft('Written before signing in'));
+      await phone.repo.markTasksClean(await phone.repo.dirtyTasks()); // pretend it was never uploaded but is "clean"
+      expect(await phone.repo.dirtyTasks(), isEmpty);
+
+      await phone.sync.startFor('user-1');
+      await settleSync();
+      await phone.sync.stop();
+
+      expect(server.tasks.map((t) => t.title), ['Written before signing in']);
+      expect(await phone.db.getSetting('sync_user_id'), 'user-1');
+    });
+
+    test('the same account signing in again does not re-upload anything', () async {
+      await phone.repo.addTask(draft('One'));
+      await phone.sync.startFor('user-1');
+      await settleSync();
+      await phone.sync.stop();
+      final uploads = server.taskUpserts;
+
+      final again = SyncService(repo: phone.repo, remote: server, db: phone.db, clock: () => now);
+      await again.startFor('user-1');
+      await settleSync();
+      await again.stop();
+      expect(server.taskUpserts, uploads, reason: 'nothing changed, so nothing is pushed');
+    });
+
+    test('a different account gets this device\'s tasks and starts pulling from scratch', () async {
+      await phone.repo.addTask(draft('Mine'));
+      await phone.sync.startFor('user-1');
+      await settleSync();
+      await phone.sync.stop();
+      expect(await phone.db.getSetting('sync_cursor_tasks'), isNotNull);
+      final uploads = server.taskUpserts;
+
+      final other = SyncService(repo: phone.repo, remote: server, db: phone.db, clock: () => now);
+      await other.startFor('user-2');
+      await settleSync();
+      await other.stop();
+      expect(server.taskUpserts, greaterThan(uploads), reason: 'everything is queued for the new account');
+      expect(await phone.db.getSetting('sync_user_id'), 'user-2');
+    });
+
+    test('a stopped service does not start again', () async {
+      await phone.sync.stop();
+      phone.sync.start();
+      await settleSync();
+      expect(phone.sync.status.value.lastSyncedAt, isNull);
+    });
+
+    test('resetCursors makes the next pull start from the beginning', () async {
+      await phone.repo.addTask(draft('x'));
+      await phone.sync.syncNow();
+      expect(await phone.db.getSetting('sync_cursor_tasks'), isNotNull);
+      await phone.sync.resetCursors();
+      expect(await phone.db.getSetting('sync_cursor_tasks'), isNull);
+      expect(await phone.db.getSetting('sync_cursor_categories'), isNull);
+    });
+
+    test('syncNow while a sync is running queues exactly one follow-up', () async {
+      await phone.repo.addTask(draft('x'));
+      final first = phone.sync.syncNow();
+      final second = phone.sync.syncNow();
+      final third = phone.sync.syncNow();
+      await Future.wait([first, second, third]);
+      expect(phone.sync.status.value.phase, SyncPhase.idle);
+    });
   });
 
   test('Supabase JSON mapping round-trips', () {
