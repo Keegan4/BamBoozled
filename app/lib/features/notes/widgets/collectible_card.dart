@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/cards.dart';
-import '../../../domain/services/seeded_random.dart';
+import '../../../domain/services/stable_random.dart';
 
 /// A collectible card: arched photo, name banner, rarity gem and text box, drawn in a [finish].
 /// The card is always 5:7. With [interactive], a mouse or finger over it tilts the card and moves
@@ -617,7 +617,7 @@ class _StarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = SeededRandom(seed);
+    final r = StableRandom(seed);
     final white = Paint()..color = Colors.white.withValues(alpha: 0.9);
     final warm = Paint()..color = const Color(0xFFFFF0B4).withValues(alpha: 0.9);
     for (var i = 0; i < count; i++) {

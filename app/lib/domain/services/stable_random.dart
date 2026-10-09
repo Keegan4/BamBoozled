@@ -1,22 +1,13 @@
-/// A small random-number generator that gives the same numbers for the same seed on phones,
-/// desktops and in the browser (unlike `dart:math`'s Random, whose sequence isn't guaranteed).
-/// Used so the same person gets the same daily pack on every device.
-class SeededRandom {
-  SeededRandom(String seed) : _state = fnv1a(seed);
+/// A tiny seeded random-number generator that gives the same numbers on phones, desktops and in the
+/// browser (`dart:math`'s Random doesn't promise that), for anything that must match on every device
+/// without syncing, such as the daily card pack and the daily trivia questions.
+class StableRandom {
+  /// Seeded from a string, e.g. `'trivia#easy#3'`.
+  StableRandom(String seed) : _state = fnv1a(seed);
 
   int _state;
 
-  /// 32-bit FNV-1a hash of the UTF-16 code units: stable everywhere, unlike String.hashCode.
-  static int fnv1a(String s) {
-    var h = 0x811c9dc5;
-    for (final unit in s.codeUnits) {
-      h ^= unit;
-      h = _imul(h, 0x01000193);
-    }
-    return h;
-  }
-
-  /// mulberry32: tiny, fast and good enough for games.
+  /// mulberry32: small, fast and good enough for shuffling.
   int _next() {
     _state = (_state + 0x6d2b79f5) & 0xffffffff;
     var t = _state;
@@ -41,6 +32,28 @@ class SeededRandom {
       if (r < 0) return e.key;
     }
     return entries.last.key;
+  }
+
+  /// A shuffled copy of [items] (Fisher–Yates).
+  List<T> shuffled<T>(Iterable<T> items) {
+    final list = List.of(items);
+    for (var i = list.length - 1; i > 0; i--) {
+      final j = nextInt(i + 1);
+      final t = list[i];
+      list[i] = list[j];
+      list[j] = t;
+    }
+    return list;
+  }
+
+  /// 32-bit FNV-1a hash of the UTF-16 code units: stable everywhere, unlike String.hashCode.
+  static int fnv1a(String s) {
+    var h = 0x811c9dc5;
+    for (final unit in s.codeUnits) {
+      h ^= unit;
+      h = _imul(h, 0x01000193);
+    }
+    return h;
   }
 }
 

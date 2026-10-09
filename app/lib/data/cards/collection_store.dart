@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../domain/models/cards.dart';
 import '../../domain/services/pack_roller.dart';
-import '../../domain/services/seeded_random.dart';
+import '../../domain/services/stable_random.dart';
 import '../local/app_database.dart';
 import 'card_library.dart';
 
@@ -128,7 +128,7 @@ class CollectionStore {
     final state = await read();
     if (library.cards.isEmpty || !state.dailyAvailable(today)) return const [];
     const type = PackType.bamboo;
-    final random = SeededRandom('$seed#daily#${dateKey(today)}');
+    final random = StableRandom('$seed#daily#${dateKey(today)}');
     final rolled = PackRoller.roll(
       library.cards,
       type,

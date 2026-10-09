@@ -1,5 +1,5 @@
 import '../models/cards.dart';
-import 'seeded_random.dart';
+import 'stable_random.dart';
 
 /// The kinds of pack. The daily pack is free; the others are bought at the Panda Exchange with
 /// spare cards, and the better the pack, the rarer its cards and the more finishes it has.
@@ -66,7 +66,7 @@ abstract final class PackRoller {
 
   /// Rolls one pack. Uses only [random], so the same seed always gives the same pack.
   /// [pityDue] forces a Legendary into the last slot. Returns cards in the order they're revealed.
-  static List<(CardDef, Finish)> roll(List<CardDef> cards, PackType type, SeededRandom random, {bool pityDue = false}) {
+  static List<(CardDef, Finish)> roll(List<CardDef> cards, PackType type, StableRandom random, {bool pityDue = false}) {
     if (cards.isEmpty) return const [];
     final byRarity = {for (final r in Rarity.values) r: cards.where((c) => c.rarity == r).toList()};
     final out = <(CardDef, Finish)>[];
@@ -99,7 +99,7 @@ abstract final class PackRoller {
     return byRarity.values.firstWhere((l) => l.isNotEmpty);
   }
 
-  static Finish rollFinish(CardDef card, SeededRandom random, {double boost = 1, bool shinyOnly = false}) {
+  static Finish rollFinish(CardDef card, StableRandom random, {double boost = 1, bool shinyOnly = false}) {
     final weights = {
       for (final f in Finish.values)
         if (!card.excluded.contains(f) && (!shinyOnly || f.kind == FinishKind.shiny))

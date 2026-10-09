@@ -1,6 +1,6 @@
 import 'package:bamboozled/domain/models/cards.dart';
 import 'package:bamboozled/domain/services/pack_roller.dart';
-import 'package:bamboozled/domain/services/seeded_random.dart';
+import 'package:bamboozled/domain/services/stable_random.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 CardDef card(String id, Rarity r, {Set<Finish> excluded = const {}}) =>
@@ -16,18 +16,18 @@ final set = [
 ];
 
 void main() {
-  group('SeededRandom', () {
+  group('StableRandom', () {
     test('the same seed gives the same numbers', () {
-      final a = SeededRandom('panda'), b = SeededRandom('panda');
+      final a = StableRandom('panda'), b = StableRandom('panda');
       expect([for (var i = 0; i < 20; i++) a.nextDouble()], [for (var i = 0; i < 20; i++) b.nextDouble()]);
     });
 
     test('different seeds give different numbers', () {
-      expect(SeededRandom('a').nextDouble(), isNot(SeededRandom('b').nextDouble()));
+      expect(StableRandom('a').nextDouble(), isNot(StableRandom('b').nextDouble()));
     });
 
     test('numbers stay in range', () {
-      final r = SeededRandom('range');
+      final r = StableRandom('range');
       for (var i = 0; i < 1000; i++) {
         final d = r.nextDouble();
         expect(d, inInclusiveRange(0, 1));
@@ -37,12 +37,12 @@ void main() {
     });
 
     test('FNV-1a matches the published value', () {
-      expect(SeededRandom.fnv1a(''), 0x811c9dc5);
-      expect(SeededRandom.fnv1a('a'), 0xe40c292c);
+      expect(StableRandom.fnv1a(''), 0x811c9dc5);
+      expect(StableRandom.fnv1a('a'), 0xe40c292c);
     });
 
     test('pick follows the weights', () {
-      final r = SeededRandom('weights');
+      final r = StableRandom('weights');
       var a = 0;
       for (var i = 0; i < 10000; i++) {
         if (r.pick({'a': 3.0, 'b': 1.0}) == 'a') a++;
@@ -53,21 +53,21 @@ void main() {
 
   group('PackRoller', () {
     test('a pack has 7 cards and is the same for the same seed', () {
-      final a = PackRoller.roll(set, PackType.bamboo, SeededRandom('x'));
-      final b = PackRoller.roll(set, PackType.bamboo, SeededRandom('x'));
+      final a = PackRoller.roll(set, PackType.bamboo, StableRandom('x'));
+      final b = PackRoller.roll(set, PackType.bamboo, StableRandom('x'));
       expect(a, hasLength(PackRoller.cardsPerPack));
       expect(a.map((p) => '${p.$1.id}${p.$2}'), b.map((p) => '${p.$1.id}${p.$2}'));
     });
 
     test('no cards, no pack', () {
-      expect(PackRoller.roll(const [], PackType.bamboo, SeededRandom('x')), isEmpty);
+      expect(PackRoller.roll(const [], PackType.bamboo, StableRandom('x')), isEmpty);
     });
 
     test('rarities follow the odds: mostly commons first, never commons last', () {
       final counts = <Rarity, int>{};
       final lateCounts = <Rarity, int>{};
       for (var i = 0; i < 2000; i++) {
-        final pack = PackRoller.roll(set, PackType.bamboo, SeededRandom('odds$i'));
+        final pack = PackRoller.roll(set, PackType.bamboo, StableRandom('odds$i'));
         for (final (j, (c, _)) in pack.indexed) {
           final m = j < 5 ? counts : lateCounts;
           m[c.rarity] = (m[c.rarity] ?? 0) + 1;
@@ -82,14 +82,14 @@ void main() {
 
     test('when pity is due the last card is Legendary', () {
       for (var i = 0; i < 50; i++) {
-        final pack = PackRoller.roll(set, PackType.bamboo, SeededRandom('pity$i'), pityDue: true);
+        final pack = PackRoller.roll(set, PackType.bamboo, StableRandom('pity$i'), pityDue: true);
         expect(pack.any((p) => p.$1.rarity == Rarity.legendary), isTrue);
       }
     });
 
     test('a Golden Booster always has a Legendary and a shiny card', () {
       for (var i = 0; i < 50; i++) {
-        final pack = PackRoller.roll(set, PackType.golden, SeededRandom('gold$i'));
+        final pack = PackRoller.roll(set, PackType.golden, StableRandom('gold$i'));
         expect(pack.any((p) => p.$1.rarity == Rarity.legendary), isTrue);
         expect(pack[5].$2.kind, FinishKind.shiny);
       }
@@ -97,11 +97,11 @@ void main() {
 
     test('a missing rarity falls back to the nearest one, rarer first', () {
       final commonsOnly = [card('a', Rarity.common), card('b', Rarity.common)];
-      final pack = PackRoller.roll(commonsOnly, PackType.golden, SeededRandom('few'));
+      final pack = PackRoller.roll(commonsOnly, PackType.golden, StableRandom('few'));
       expect(pack, hasLength(7));
       final noRares = [card('a', Rarity.common), card('e', Rarity.epic)];
       for (var i = 0; i < 30; i++) {
-        final late = PackRoller.roll(noRares, PackType.bamboo, SeededRandom('fb$i')).last;
+        final late = PackRoller.roll(noRares, PackType.bamboo, StableRandom('fb$i')).last;
         expect(late.$1.id, 'e');
       }
     });
@@ -109,7 +109,7 @@ void main() {
     test('excluded finishes are never rolled', () {
       final plain = card('p', Rarity.common, excluded: {...Finish.values}..remove(Finish.none));
       for (var i = 0; i < 200; i++) {
-        expect(PackRoller.rollFinish(plain, SeededRandom('ex$i'), boost: 4), Finish.none);
+        expect(PackRoller.rollFinish(plain, StableRandom('ex$i'), boost: 4), Finish.none);
       }
       final noShiny = card(
         'n',
@@ -119,13 +119,13 @@ void main() {
             if (f.kind == FinishKind.shiny) f,
         },
       );
-      expect(PackRoller.rollFinish(noShiny, SeededRandom('s'), shinyOnly: true), Finish.none);
+      expect(PackRoller.rollFinish(noShiny, StableRandom('s'), shinyOnly: true), Finish.none);
     });
 
     test('about 30% of cards get a finish, more with a boost', () {
       expect(PackRoller.finishChance(1), closeTo(30, 0.5));
       expect(PackRoller.finishChance(2), greaterThan(PackRoller.finishChance(1)));
-      final r = SeededRandom('finishes');
+      final r = StableRandom('finishes');
       final c = card('c', Rarity.common);
       var any = 0;
       for (var i = 0; i < 10000; i++) {

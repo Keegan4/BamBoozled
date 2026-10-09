@@ -15,10 +15,10 @@ Finder rail(String label) => find.descendant(of: find.byType(AdaptiveScaffold), 
 
 void main() {
   group('navigation (desktop and tablet)', () {
-    testWidgets('a side rail lists Home, Calendar, Notes and Settings, with no bottom bar', (tester) async {
+    testWidgets('a side rail lists Home, Calendar, Notes, Play and Settings, with no bottom bar', (tester) async {
       final app = await TestApp.create();
       await app.pump(tester);
-      for (final label in ['Home', 'Calendar', 'Notes', 'Settings']) {
+      for (final label in ['Home', 'Calendar', 'Notes', 'Play', 'Settings']) {
         expect(rail(label), findsOneWidget, reason: label);
       }
       expect(find.byType(NavigationBar), findsNothing);
@@ -98,7 +98,7 @@ void main() {
       final app = await TestApp.create();
       await app.pump(tester, size: phone);
       expect(find.byType(NavigationBar), findsOneWidget);
-      expect(find.byType(NavigationDestination), findsNWidgets(4));
+      expect(find.byType(NavigationDestination), findsNWidgets(5));
       await app.dispose(tester);
     });
 
@@ -112,6 +112,9 @@ void main() {
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Notes')));
       await TestApp.settle(tester);
       expect(find.text('Daily pack'), findsOneWidget);
+      await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Play')));
+      await TestApp.settle(tester);
+      expect(find.text('Bamboo Trivia'), findsOneWidget);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Settings')));
       await TestApp.settle(tester);
       expect(find.text('Your name'), findsOneWidget);

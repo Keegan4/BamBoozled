@@ -60,6 +60,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/cards/
+    - assets/trivia/
   fonts:
     - family: Nunito
       fonts:
