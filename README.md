@@ -28,6 +28,17 @@ The welcome page has:
 
 The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
 
+## Milestone 3 — Play: Bamboo Trivia
+
+A short daily trivia run in the **Play** tab, the same questions for everyone each day, one run a day:
+- You have **2 lives**. A wrong answer, or running out of time, costs one; the run ends when both are gone.
+- Each question first shows on its own for a moment, then the four answers appear and the timer starts.
+- Questions get **harder** (easy → medium → hard) and the timer **shorter** (15 s, down to 5 s) as you go.
+- Answer correctly **within 1 second** of the answers appearing to win back a life (up to 2).
+- Your **score** is how many you answer correctly. The tab shows your streak and best score, and **Copy result** gives a line to paste into a chat.
+
+Questions come from [Open Trivia DB](https://opentdb.com) (CC BY-SA 4.0) and are built into the app, so it works offline. Details and how to refresh the questions: [docs/trivia.md](docs/trivia.md).
+
 ## Running the app
 
 You need the [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.47 or newer, which includes Dart 3.13).
@@ -185,6 +196,7 @@ BamBoozled/
 │   ├── task-format.md              # recommended task format
 │   ├── daily-notes.md              # adding cards to the Notes tab
 │   ├── ideas/daily-packs.md        # saved idea: daily packs, binder, finishes, exchange
+│   ├── trivia.md                   # the Play tab's trivia rules and question bank
 │   └── priority-algorithm.md       # "Do next" scoring
 ├── design/                         # Figma link, exported frames, app screenshots
 ├── supabase/
@@ -197,6 +209,7 @@ BamBoozled/
     ├── pubspec.yaml
     ├── android/ ios/ windows/ macos/ linux/ web/
     ├── assets/daily_notes/         # the Notes tab's cards: notes.yaml + photos
+    ├── assets/trivia/              # the Play tab's question bank (made by tool/fetch_trivia.dart)
     ├── tool/check_coverage.dart    # the coverage gate used by CI
     ├── tool/build_web.sh           # builds the web app (with its browser database files)
     ├── lib/
@@ -213,7 +226,7 @@ BamBoozled/
     │   ├── domain/                 # Task, Category, Priority, Repeat, PriorityScorer (pure Dart)
     │   └── features/
     │       ├── welcome/            # Welcome page, filters, calendar panel, Do next, This week
-    │       ├── calendar/  tasks/  settings/  auth/  notes/
+    │       ├── calendar/  tasks/  settings/  auth/  notes/  play/
     └── test/                       # unit, sync, widget and screenshot tests
 ```
 

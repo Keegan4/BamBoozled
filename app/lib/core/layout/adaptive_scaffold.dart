@@ -19,6 +19,7 @@ const destinations = [
   NavDestination('/', 'Home', Icons.home_outlined, Icons.home_rounded),
   NavDestination('/calendar', 'Calendar', Icons.calendar_month_outlined, Icons.calendar_month_rounded),
   NavDestination('/notes', 'Notes', Icons.sticky_note_2_outlined, Icons.sticky_note_2_rounded),
+  NavDestination('/play', 'Play', Icons.extension_outlined, Icons.extension_rounded),
   NavDestination('/settings', 'Settings', Icons.tune_rounded, Icons.tune_rounded),
 ];
 

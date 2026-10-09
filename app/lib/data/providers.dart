@@ -12,9 +12,13 @@ import '../domain/models/category.dart';
 import '../domain/models/daily_note.dart';
 import '../domain/services/daily_note_picker.dart';
 import '../domain/models/task.dart';
+import '../domain/trivia/daily_trivia.dart';
+import '../domain/trivia/trivia_question.dart';
+import '../domain/trivia/trivia_run.dart';
 import 'canvas/canvas_service.dart';
 import 'daily_notes/daily_note_library.dart';
 import 'daily_notes/daily_note_store.dart';
+import 'trivia/trivia_store.dart';
 import 'local/app_database.dart';
 import 'remote/auth_service.dart';
 import 'remote/supabase_remote_store.dart';
@@ -188,4 +192,24 @@ final todaysNoteProvider = Provider<AsyncValue<DailyNote?>>((ref) {
   if (pinned != null) return AsyncValue.data(pinned);
   final id = DailyNotePicker.pick(notes.keys, seed.value!, today);
   return AsyncValue.data(id == null ? null : notes[id]);
+});
+
+// ---- Daily trivia (Play tab) ----
+
+final triviaBankProvider = FutureProvider<List<TriviaQuestion>>(
+  (ref) => loadTriviaBank(ref.watch(assetBundleProvider)),
+);
+
+final triviaStoreProvider = Provider<TriviaStore>((ref) => TriviaStore(ref.watch(databaseProvider)));
+
+/// Every run kept on this device, by day.
+final triviaRunsProvider = StreamProvider<Map<int, TriviaRun>>((ref) => ref.watch(triviaStoreProvider).watch());
+
+/// Today's day number (see [DailyTrivia.dayFor]).
+final triviaDayProvider = Provider<int>((ref) => ref.watch(clockProvider.select(DailyTrivia.dayFor)));
+
+/// Today's questions.
+final todayTriviaProvider = Provider<AsyncValue<DailyTrivia>>((ref) {
+  final day = ref.watch(triviaDayProvider);
+  return ref.watch(triviaBankProvider).whenData((bank) => DailyTrivia(day, bank));
 });
