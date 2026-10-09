@@ -1,0 +1,149 @@
+name: Release
+
+# Publishes installable apps to a GitHub Release.
+#
+#   git tag v1.0.0 && git push origin v1.0.0
+#
+# Re-runs every check first, then builds Windows, macOS, Linux and Android apps and attaches them
+# to the release. To make the apps sync between devices, add two repository secrets
+# (Settings > Secrets and variables > Actions): SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.
+# Without them the apps still work, but keep tasks on one device.
+#
+# Note: the Android app is signed with Flutter's debug key. It installs fine by tapping the file
+# on a phone, but it can't be uploaded to the Play Store until a release keystore is set up.
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build, e.g. 1.0.0 (builds only; nothing is published)
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.6
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+    with:
+      build: 'no'
+
+  version:
+    name: Work out the version
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.v.outputs.name }}
+    steps:
+      - id: v
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-${REF_NAME#v}}"
+          echo "name=$version" >> "$GITHUB_OUTPUT"
+          echo "Building version $version"
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: [checks, version]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: Android
+            os: ubuntu-latest
+            build: flutter build apk --release
+          - name: Linux
+            os: ubuntu-latest
+            build: flutter build linux --release
+          - name: Windows
+            os: windows-latest
+            build: flutter build windows --release
+          - name: macOS
+            os: macos-latest
+            build: flutter build macos --release
+    defaults:
+      run:
+        working-directory: app
+        shell: bash
+    env:
+      VERSION: ${{ needs.version.outputs.name }}
+      DEFINES: >-
+        --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+        --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build tools
+        if: matrix.name == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - uses: actions/setup-java@v4
+        if: matrix.name == 'Android'
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build
+        env:
+          BUILD_COMMAND: ${{ matrix.build }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: $BUILD_COMMAND --build-name="$VERSION" --build-number="$BUILD_NUMBER" $DEFINES
+
+      - name: Package
+        env:
+          PLATFORM: ${{ matrix.name }}
+        run: |
+          mkdir -p ../dist
+          case "$PLATFORM" in
+            Android) cp build/app/outputs/flutter-apk/app-release.apk "../dist/BamBoozled-$VERSION-android.apk" ;;
+            Linux)   tar -C build/linux/x64/release/bundle -czf "../dist/BamBoozled-$VERSION-linux-x64.tar.gz" . ;;
+            Windows) (cd build/windows/x64/runner/Release && 7z a -tzip "$GITHUB_WORKSPACE/dist/BamBoozled-$VERSION-windows-x64.zip" .) ;;
+            macOS)   ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/BamBoozled.app "../dist/BamBoozled-$VERSION-macos.zip" ;;
+          esac
+          ls -la ../dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: [build, version]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          name: BamBoozled ${{ needs.version.outputs.name }}
+          generate_release_notes: true
+          files: dist/*
