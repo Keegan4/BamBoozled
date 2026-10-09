@@ -1,6 +1,7 @@
 import 'package:bamboozled/core/theme/colors.dart';
 import 'package:bamboozled/data/providers.dart';
 import 'package:bamboozled/data/sync/sync_service.dart';
+import 'package:bamboozled/core/widgets/panda_mascot.dart';
 import 'package:bamboozled/features/auth/sign_in_dialog.dart';
 import 'package:bamboozled/features/settings/sync_indicator.dart';
 import 'package:flutter/material.dart';
@@ -171,6 +172,17 @@ void main() {
       expect(dialogFields, findsNWidgets(2));
       expect(find.textContaining('code'), findsNothing);
       expect(find.text('Cancel'), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('the panda stays small and does not sit behind the words', (tester) async {
+      final (app, _) = await openDialog(tester);
+      final panda = tester.getRect(find.descendant(of: find.byType(SignInDialog), matching: find.byType(PandaMascot)));
+      expect(panda.size, const Size(72, 72));
+      final intro = tester.getRect(find.text('Use the email and password you were given.'));
+      final title = tester.getRect(find.text('Sign in to sync').last);
+      expect(panda.bottom, lessThanOrEqualTo(title.top), reason: 'the panda is above the title');
+      expect(panda.bottom, lessThanOrEqualTo(intro.top));
       await app.dispose(tester);
     });
 

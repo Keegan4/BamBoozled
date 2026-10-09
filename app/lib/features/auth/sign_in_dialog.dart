@@ -65,7 +65,8 @@ class _SignInDialogState extends ConsumerState<SignInDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    icon: const PandaMascot(size: 72),
+    // Centered so the dialog's tight width doesn't stretch the panda over the text below it.
+    icon: const Center(child: PandaMascot(size: 72)),
     title: const Text('Sign in to sync', style: PandaText.title),
     content: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 400),
