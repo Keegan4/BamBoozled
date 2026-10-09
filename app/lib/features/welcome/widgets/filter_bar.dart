@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -68,7 +69,8 @@ class _TaskSearchFieldState extends ConsumerState<TaskSearchField> {
   }
 }
 
-/// "All" plus one colour-coded chip per category.
+/// "All" plus one colour-coded chip per category. If there are more than fit, the row scrolls: it
+/// has a visible scrollbar, can be dragged with a finger or the mouse, and the mouse wheel moves it.
 class CategoryChips extends ConsumerWidget {
   const CategoryChips({super.key, this.wrap = false});
 
@@ -97,10 +99,103 @@ class CategoryChips extends ConsumerWidget {
         ),
     ];
     if (wrap) return Wrap(spacing: 8, runSpacing: 8, children: chips);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return _HorizontalScroller(
       child: Row(
         children: [for (final c in chips) Padding(padding: const EdgeInsets.only(right: 8), child: c)],
+      ),
+    );
+  }
+}
+
+/// A sideways-scrolling row with an always-visible scrollbar underneath.
+class _HorizontalScroller extends StatefulWidget {
+  const _HorizontalScroller({required this.child});
+  final Widget child;
+
+  @override
+  State<_HorizontalScroller> createState() => _HorizontalScrollerState();
+}
+
+class _HorizontalScrollerState extends State<_HorizontalScroller> {
+  final _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// A mouse wheel only scrolls up and down, so turn it into sideways movement for this row.
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent || !_controller.hasClients) return;
+    final delta = event.scrollDelta.dx != 0 ? event.scrollDelta.dx : event.scrollDelta.dy;
+    final position = _controller.position;
+    final target = (_controller.offset + delta).clamp(0.0, position.maxScrollExtent);
+    if (target == _controller.offset) return; // at the end: let the page scroll instead
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) => _controller.jumpTo(target));
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerSignal: _onPointerSignal,
+    child: ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad},
+        scrollbars: false,
+      ),
+      child: Scrollbar(
+        controller: _controller,
+        thumbVisibility: true,
+        trackVisibility: true,
+        interactive: true,
+        thickness: 6,
+        radius: const Radius.circular(3),
+        child: SingleChildScrollView(
+          controller: _controller,
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(bottom: 14),
+          child: widget.child,
+        ),
+      ),
+    ),
+  );
+}
+
+/// "Showing only: General · Done" with a button to clear it. Without this, hidden tasks look like
+/// missing tasks.
+class ActiveFilterBanner extends ConsumerWidget {
+  const ActiveFilterBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(taskFilterProvider);
+    if (!filter.hasAnyFilter) return const SizedBox.shrink();
+    final parts = filter.describe(ref.watch(categoryMapProvider));
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Container(
+        key: const ValueKey('active-filters'),
+        padding: const EdgeInsets.only(left: 16, right: 4),
+        decoration: BoxDecoration(
+          color: PandaColors.bambooTint,
+          borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.filter_alt_rounded, size: 18, color: PandaColors.bambooDark),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Showing only: ${parts.join(' · ')}',
+                  style: PandaText.captionStrong.copyWith(color: PandaColors.bambooDark),
+                ),
+              ),
+            ),
+            TextButton(onPressed: ref.read(taskFilterProvider.notifier).reset, child: const Text('Clear filters')),
+          ],
+        ),
       ),
     );
   }

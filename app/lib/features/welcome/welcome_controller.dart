@@ -35,6 +35,15 @@ class TaskFilter {
 
   bool get hasAnyFilter => activeCount > 0 || query.trim().isNotEmpty;
 
+  /// Plain-English summary of what is being filtered, e.g. ["General", "High priority", "Done"].
+  /// The default Status (To do) is not mentioned.
+  List<String> describe(Map<String, Category> categories) => [
+    if (categoryIds.isNotEmpty) categoryIds.map((id) => categories[id]?.name ?? 'Unknown category').join(' or '),
+    if (priority != null) '${priority!.label} priority',
+    if (status != StatusFilter.todo) status.label,
+    if (query.trim().isNotEmpty) '“${query.trim()}”',
+  ];
+
   TaskFilter copyWith({
     Set<String>? categoryIds,
     Priority? Function()? priority,
@@ -113,6 +122,41 @@ final tasksByDayProvider = Provider<Map<DateTime, List<Task>>>((ref) {
   return byDay;
 });
 
+/// The tasks behind each box in "This week". Ignores the filters, so the lists always add up to
+/// the numbers shown.
+class WeekTasks {
+  const WeekTasks({required this.due, required this.done, required this.overdue});
+
+  /// Everything due Monday–Sunday this week, finished or not, earliest first.
+  final List<Task> due;
+
+  /// The finished ones among [due], most recently finished first.
+  final List<Task> done;
+
+  /// Every unfinished task that is past its deadline (any week), oldest first.
+  final List<Task> overdue;
+}
+
+final weekTasksProvider = Provider<WeekTasks>((ref) {
+  final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
+  final now = ref.watch(clockProvider);
+  final start = startOfWeek(now);
+  final end = start.add(const Duration(days: 7));
+  final due = [
+    for (final t in tasks)
+      if (!t.dueAt.isBefore(start) && t.dueAt.isBefore(end)) t,
+  ]..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+  final done = [
+    for (final t in due)
+      if (t.isDone) t,
+  ]..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+  final overdue = [
+    for (final t in tasks)
+      if (t.isOverdue(now)) t,
+  ]..sort((a, b) => a.dueAt.compareTo(b.dueAt));
+  return WeekTasks(due: due, done: done, overdue: overdue);
+});
+
 class WeekSummary {
   const WeekSummary({required this.dueThisWeek, required this.doneThisWeek, required this.overdue});
   final int dueThisWeek;
@@ -122,16 +166,39 @@ class WeekSummary {
 
 /// Counts across all tasks (ignoring filters) for Monday–Sunday of this week.
 final weekSummaryProvider = Provider<WeekSummary>((ref) {
+  final week = ref.watch(weekTasksProvider);
+  return WeekSummary(dueThisWeek: week.due.length, doneThisWeek: week.done.length, overdue: week.overdue.length);
+});
+
+/// Finished tasks that pass the category, priority and search filters, most recently finished
+/// first. (The Status filter is ignored here: it decides *whether* these are shown.)
+final filteredDoneProvider = Provider<List<Task>>((ref) {
   final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
+  final filter = ref.watch(taskFilterProvider).copyWith(status: StatusFilter.all);
   final now = ref.watch(clockProvider);
-  final start = startOfWeek(now);
-  final end = start.add(const Duration(days: 7));
-  final thisWeek = tasks.where((t) => !t.dueAt.isBefore(start) && t.dueAt.isBefore(end));
-  return WeekSummary(
-    dueThisWeek: thisWeek.length,
-    doneThisWeek: thisWeek.where((t) => t.isDone).length,
-    overdue: tasks.where((t) => t.isOverdue(now)).length,
-  );
+  final categories = ref.watch(categoryMapProvider);
+  return [
+    for (final t in tasks)
+      if (t.isDone && filter.matches(t, now, categories)) t,
+  ]..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+});
+
+/// Tasks finished within the last week: shown under "Do next" so a task you tick off moves
+/// somewhere visible instead of just disappearing.
+final recentlyDoneProvider = Provider<List<Task>>((ref) {
+  final cutoff = ref.watch(clockProvider).subtract(const Duration(days: 7));
+  return [
+    for (final t in ref.watch(filteredDoneProvider))
+      if (t.completedAt!.isAfter(cutoff)) t,
+  ];
+});
+
+/// How many tasks on [day] the current filters are hiding (ignores deleted tasks).
+final hiddenOnDayProvider = Provider.family<int, DateTime>((ref, day) {
+  final all = ref.watch(tasksProvider).value ?? const <Task>[];
+  final shown = ref.watch(tasksByDayProvider)[day]?.length ?? 0;
+  final total = all.where((t) => dateOnly(t.dueAt) == day).length;
+  return total - shown;
 });
 
 class CalendarState {

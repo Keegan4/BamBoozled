@@ -8,11 +8,15 @@ import '../../../core/widgets/leaf_icon.dart';
 import '../../../core/widgets/panda_mascot.dart';
 import '../../../core/widgets/pills.dart';
 import '../../../data/providers.dart';
+import '../../../domain/models/task.dart';
 import '../../tasks/task_actions.dart';
 import '../../tasks/task_editor.dart';
 import '../welcome_controller.dart';
+import 'week_tasks_sheet.dart';
 
-/// "Do next": the top tasks in recommended order, each with its rank.
+/// "Do next": the top tasks in recommended order, each with its rank. When the Status filter asks for
+/// finished tasks it lists those too, and finished tasks from the last week always stay visible in a
+/// "Recently done" section below, so ticking a task off never makes it just vanish.
 class DoNextList extends ConsumerWidget {
   const DoNextList({super.key, this.limit = 5, this.showSubtitle = true});
 
@@ -22,21 +26,33 @@ class DoNextList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ranked = ref.watch(rankedTasksProvider);
+    final done = ref.watch(filteredDoneProvider);
+    final recent = ref.watch(recentlyDoneProvider);
     final scorer = ref.watch(priorityScorerProvider);
     final now = ref.watch(clockProvider);
     final filter = ref.watch(taskFilterProvider);
     final hasAnyTasks = (ref.watch(tasksProvider).value ?? const []).isNotEmpty;
 
+    final status = filter.status;
+    final showsFinished = status == StatusFilter.done || status == StatusFilter.all;
+    final onlyFinished = status == StatusFilter.done;
+    // Finished tasks are listed in the main list for Done/All, and in "Recently done" otherwise.
+    final finishedInList = showsFinished ? done : const <Task>[];
+    final recentSection = showsFinished || status == StatusFilter.overdue ? const <Task>[] : recent;
+    final nothingToShow = ranked.isEmpty && finishedInList.isEmpty;
+
     final header = Row(
       children: [
-        const LeafIcon(size: 22),
+        onlyFinished
+            ? const Icon(Icons.check_circle_rounded, size: 22, color: PandaColors.bamboo)
+            : const LeafIcon(size: 22),
         const SizedBox(width: 8),
-        const Text('Do next', style: PandaText.title),
+        Text(onlyFinished ? 'Done' : 'Do next', style: PandaText.title),
         const Spacer(),
         if (showSubtitle)
           Flexible(
             child: Text(
-              'By deadline + priority',
+              onlyFinished ? 'Most recent first' : 'By deadline + priority',
               overflow: TextOverflow.ellipsis,
               style: PandaText.caption.copyWith(color: PandaColors.muted),
             ),
@@ -51,7 +67,7 @@ class DoNextList extends ConsumerWidget {
         title: 'No tasks yet',
         text: 'Add your first task and the panda will suggest what to do next.',
       );
-    } else if (ranked.isEmpty && filter.hasAnyFilter) {
+    } else if (nothingToShow && filter.hasAnyFilter) {
       body = _Message(
         title: 'No tasks match',
         text: 'Try a different search or clear your filters.',
@@ -60,46 +76,152 @@ class DoNextList extends ConsumerWidget {
           child: const Text('Clear filters'),
         ),
       );
-    } else if (ranked.isEmpty) {
+    } else if (nothingToShow) {
       body = const _Message(title: 'All done!', text: 'Everything is ticked off. Time for some bamboo.');
     } else {
       body = Column(
-        key: const ValueKey('do-next'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final (i, r) in ranked.take(limit).indexed)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  _RankBubble(rank: i + 1),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ConnectedTaskCard(task: r.task, tooltip: scorer.reason(r.task, now)),
+          if (ranked.isNotEmpty)
+            Column(
+              key: const ValueKey('do-next'),
+              children: [
+                for (final (i, r) in ranked.take(limit).indexed)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        _RankBubble(rank: i + 1),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ConnectedTaskCard(task: r.task, tooltip: scorer.reason(r.task, now)),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+              ],
+            ),
+          if (finishedInList.isNotEmpty)
+            _DoneColumn(
+              key: const ValueKey('done-list'),
+              title: ranked.isEmpty ? null : 'Done',
+              tasks: finishedInList.take(limit).toList(),
+              indent: ranked.isNotEmpty,
             ),
         ],
       );
     }
 
+    final total = ranked.length + finishedInList.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         header,
         const SizedBox(height: 12),
         body,
-        if (ranked.isNotEmpty)
+        if (!nothingToShow)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: () => context.go('/tasks'),
               iconAlignment: IconAlignment.end,
               icon: const Icon(Icons.chevron_right_rounded),
-              label: Text(ranked.length > limit ? 'See all ${ranked.length} tasks' : 'See all tasks'),
+              label: Text(total > limit ? 'See all $total tasks' : 'See all tasks'),
             ),
           ),
+        if (recentSection.isNotEmpty) _RecentlyDone(tasks: recentSection),
       ],
+    );
+  }
+}
+
+/// A short list of finished tasks (struck through, with a tick) that can be un-ticked.
+class _DoneColumn extends StatelessWidget {
+  const _DoneColumn({super.key, required this.tasks, this.title, this.indent = false});
+
+  final String? title;
+  final List<Task> tasks;
+
+  /// Line the cards up with the numbered ones above them.
+  final bool indent;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (title != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 10),
+          child: Text(title!, style: PandaText.heading),
+        ),
+      for (final t in tasks)
+        Padding(
+          padding: EdgeInsets.only(bottom: 10, left: indent ? 44 : 0),
+          child: ConnectedTaskCard(task: t),
+        ),
+    ],
+  );
+}
+
+/// "Recently done": the last few things you finished, collapsible.
+class _RecentlyDone extends ConsumerStatefulWidget {
+  const _RecentlyDone({required this.tasks});
+  final List<Task> tasks;
+
+  @override
+  ConsumerState<_RecentlyDone> createState() => _RecentlyDoneState();
+}
+
+class _RecentlyDoneState extends ConsumerState<_RecentlyDone> {
+  bool _open = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = widget.tasks.take(3).toList();
+    final more = widget.tasks.length - shown.length;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            expanded: _open,
+            label: 'Recently done, ${widget.tasks.length}',
+            excludeSemantics: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => setState(() => _open = !_open),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline_rounded, size: 20, color: PandaColors.bambooDark),
+                    const SizedBox(width: 8),
+                    Text('Recently done', style: PandaText.heading),
+                    const SizedBox(width: 8),
+                    Text('${widget.tasks.length}', style: PandaText.captionStrong.copyWith(color: PandaColors.muted)),
+                    const Spacer(),
+                    Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: PandaColors.muted),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (_open) ...[
+            const SizedBox(height: 4),
+            _DoneColumn(key: const ValueKey('recently-done'), tasks: shown),
+            if (more > 0)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => ref.read(taskFilterProvider.notifier).setStatus(StatusFilter.done),
+                  child: Text('Show all ${widget.tasks.length} finished'),
+                ),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -158,7 +280,7 @@ class _Message extends StatelessWidget {
   );
 }
 
-/// "This week": due / done / overdue counts and a progress bar.
+/// "This week": due / done / overdue counts and a progress bar. Each box opens the matching tasks.
 class WeekSummaryCard extends ConsumerWidget {
   const WeekSummaryCard({super.key});
 
@@ -166,16 +288,31 @@ class WeekSummaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(weekSummaryProvider);
     final progress = s.dueThisWeek == 0 ? 0.0 : s.doneThisWeek / s.dueThisWeek;
-    Widget stat(int n, String label, Color bg, Color fg) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(PandaSizes.tileRadius)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$n', style: PandaText.display.copyWith(color: fg)),
-            Text(label, style: PandaText.captionStrong.copyWith(color: fg)),
-          ],
+    Widget stat(WeekView view, int n, String label, Color bg, Color fg) => Expanded(
+      child: Semantics(
+        button: true,
+        label: '$n $label. Show these tasks.',
+        excludeSemantics: true,
+        child: Tooltip(
+          message: 'See the tasks: ${view.title.toLowerCase()}',
+          child: Material(
+            color: bg,
+            borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => showWeekTasks(context, view),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$n', style: PandaText.display.copyWith(color: fg)),
+                    Text(label, style: PandaText.captionStrong.copyWith(color: fg)),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -186,19 +323,23 @@ class WeekSummaryCard extends ConsumerWidget {
         children: [
           const Text('This week', style: PandaText.title),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              stat(s.dueThisWeek, 'due this week', PandaColors.bambooTint, PandaColors.bambooDark),
-              const SizedBox(width: 12),
-              stat(s.doneThisWeek, 'done', PandaColors.rice, PandaColors.ink),
-              const SizedBox(width: 12),
-              stat(
-                s.overdue,
-                'overdue',
-                s.overdue > 0 ? PandaColors.overdueTint : PandaColors.rice,
-                s.overdue > 0 ? PandaColors.overdue : PandaColors.ink,
-              ),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                stat(WeekView.due, s.dueThisWeek, 'due this week', PandaColors.bambooTint, PandaColors.bambooDark),
+                const SizedBox(width: 12),
+                stat(WeekView.done, s.doneThisWeek, 'done', PandaColors.rice, PandaColors.ink),
+                const SizedBox(width: 12),
+                stat(
+                  WeekView.overdue,
+                  s.overdue,
+                  'overdue',
+                  s.overdue > 0 ? PandaColors.overdueTint : PandaColors.rice,
+                  s.overdue > 0 ? PandaColors.overdue : PandaColors.ink,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           ClipRRect(

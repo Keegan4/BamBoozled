@@ -122,6 +122,8 @@ class DropdownPill<T> extends StatelessWidget {
     // make a "null = Any" choice silently do nothing.
     onSelected: (choice) => onSelected(choice.value),
     position: PopupMenuPosition.under,
+    // Shapes the hover and press highlight to the pill instead of a box around it.
+    borderRadius: BorderRadius.circular(PandaSizes.pill),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     itemBuilder: (_) => [
       for (final e in items.entries)

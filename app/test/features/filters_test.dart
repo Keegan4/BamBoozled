@@ -1,4 +1,5 @@
 import 'package:bamboozled/core/theme/colors.dart';
+import 'package:bamboozled/features/tasks/widgets/task_card.dart';
 import 'package:bamboozled/features/welcome/widgets/filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,12 @@ Color stripeOf(WidgetTester tester, String title) {
       .firstWhere((c) => c.color != null && c.constraints?.maxWidth == 8);
   return stripe.color!;
 }
+
+/// Titles in the finished-tasks list of the Do next card.
+List<String> finishedTitles(WidgetTester tester) => tester
+    .widgetList<TaskCard>(find.descendant(of: find.byKey(const ValueKey('done-list')), matching: find.byType(TaskCard)))
+    .map((c) => c.task.title)
+    .toList();
 
 Finder chip(String label) =>
     find.descendant(of: find.byType(CategoryChips), matching: find.widgetWithText(InkWell, label));
@@ -101,8 +108,9 @@ void main() {
       expect(doNextTitles(tester), ['Submit term report']);
 
       await choose(tester, 'Status', 'Done');
-      expect(doNextTitles(tester), isEmpty, reason: 'finished tasks are not in the Do next ranking');
-      expect(find.text('No tasks match'), findsOneWidget);
+      expect(doNextTitles(tester), isEmpty, reason: 'finished tasks are not ranked');
+      expect(finishedTitles(tester), ['Print worksheets'], reason: 'but the Done view lists them');
+      expect(find.text('No tasks match'), findsNothing);
 
       await choose(tester, 'Status', 'All');
       expect(find.text('Status: All'), findsOneWidget);
@@ -158,7 +166,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'zzzz');
       await TestApp.settle(tester);
       expect(find.text('No tasks match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.text('Clear filters').last);
       await TestApp.settle(tester);
       expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, isEmpty);
       expect(doNextTitles(tester), hasLength(5));
@@ -257,7 +265,7 @@ void main() {
       );
       await TestApp.settle(tester);
       expect(doNextTitles(tester), ['Plan CCA trip']);
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.descendant(of: find.byType(FilterSheet), matching: find.text('Clear filters')));
       await TestApp.settle(tester);
       await tester.tap(find.text('Show tasks'));
       await TestApp.settle(tester);

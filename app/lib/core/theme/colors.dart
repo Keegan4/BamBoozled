@@ -21,6 +21,14 @@ abstract final class PandaColors {
   static const mint = Color(0xFF9ED9C3);
   static const stone = Color(0xFFCFC8B8);
 
+  // Extra colours, so a user's own categories don't all have to share a colour with the built-in ones.
+  static const peach = Color(0xFFF6BF9A);
+  static const lime = Color(0xFFCBE08E);
+  static const rose = Color(0xFFEDB2D6);
+  static const slate = Color(0xFFAFC0D4);
+  static const aqua = Color(0xFF8ED8E4);
+  static const sand = Color(0xFFE6D9A8);
+
   /// Colours offered when a user creates a category, with friendly names.
   static const categoryChoices = <String, Color>{
     'Sky': sky,
@@ -29,5 +37,11 @@ abstract final class PandaColors {
     'Lavender': lavender,
     'Mint': mint,
     'Stone': stone,
+    'Peach': peach,
+    'Lime': lime,
+    'Rose': rose,
+    'Slate': slate,
+    'Aqua': aqua,
+    'Sand': sand,
   };
 }

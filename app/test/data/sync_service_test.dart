@@ -1,4 +1,3 @@
-import 'package:bamboozled/data/local/app_database.dart';
 import 'package:bamboozled/data/remote/remote_store.dart';
 import 'package:bamboozled/data/remote/supabase_remote_store.dart';
 import 'package:bamboozled/data/repositories/task_repository.dart';
@@ -6,33 +5,11 @@ import 'package:bamboozled/data/sync/sync_service.dart';
 import 'package:bamboozled/domain/models/category.dart';
 import 'package:bamboozled/domain/models/priority.dart';
 import 'package:bamboozled/domain/models/task.dart';
-import 'package:drift/drift.dart' show DatabaseConnection, driftRuntimeOptions;
-import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fakes.dart';
-
-class Device {
-  Device(this.server, DateTime Function() clock, String name) {
-    var n = 0;
-    db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
-    repo = TaskRepository(db, clock: clock, newId: () => '$name-${n++}');
-    sync = SyncService(repo: repo, remote: server, db: db, clock: clock);
-  }
-  final FakeServer server;
-  late final AppDatabase db;
-  late final TaskRepository repo;
-  late final SyncService sync;
-
-  Future<List<Task>> tasks() => repo.watchTasks().first;
-
-  Future<void> close() async {
-    await sync.stop();
-    await repo.dispose();
-    await db.close();
-  }
-}
 
 void main() {
   // Each simulated device has its own in-memory database on purpose.

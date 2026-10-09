@@ -47,7 +47,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'zzz');
       await TestApp.settle(tester);
       expect(find.text('No tasks match'), findsOneWidget);
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.text('Clear filters').last);
       await TestApp.settle(tester);
       expect(doNextTitles(tester), hasLength(5));
       await app.dispose(tester);

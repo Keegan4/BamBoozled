@@ -18,6 +18,7 @@ class CalendarPage extends StatelessWidget {
         Text('Calendar', style: phone ? PandaText.title : PandaText.display),
         const SizedBox(height: 16),
         if (phone) const CompactFilterBar() else const FilterBar(),
+        const ActiveFilterBanner(),
         const SizedBox(height: 16),
         const CalendarPanel(),
       ],

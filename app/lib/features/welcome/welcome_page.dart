@@ -47,6 +47,7 @@ class WelcomePage extends ConsumerWidget {
           if (!desktop) ...[const SizedBox(height: 16), const TaskSearchField()],
           const SizedBox(height: 24),
           const FilterBar(),
+          const ActiveFilterBanner(),
           const SizedBox(height: 24),
           if (desktop)
             const Row(
@@ -170,6 +171,7 @@ class _PhoneWelcomeState extends ConsumerState<_PhoneWelcome> {
         ],
         const SizedBox(height: 16),
         const CompactFilterBar(),
+        const ActiveFilterBanner(),
         const SizedBox(height: 16),
         const DoNextList(showSubtitle: false),
         const SizedBox(height: 8),

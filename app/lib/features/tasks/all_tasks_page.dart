@@ -37,6 +37,7 @@ class AllTasksPage extends ConsumerWidget {
         const TaskSearchField(),
         const SizedBox(height: 12),
         if (phone) const CompactFilterBar() else const FilterBar(),
+        const ActiveFilterBanner(),
         const SizedBox(height: 16),
         if (ranked.isEmpty && done.isEmpty)
           Padding(

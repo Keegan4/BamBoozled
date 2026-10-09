@@ -287,10 +287,7 @@ class SelectedDayTasks extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (tasks.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('Nothing due — enjoy the bamboo.', style: PandaText.body.copyWith(color: PandaColors.muted)),
-          )
+          _EmptyDay(hidden: ref.watch(hiddenOnDayProvider(selected)))
         else
           for (final t in tasks)
             Padding(
@@ -298,6 +295,38 @@ class SelectedDayTasks extends ConsumerWidget {
               child: ConnectedTaskCard(task: t),
             ),
       ],
+    );
+  }
+}
+
+/// Shown when no task is listed for the selected day. If tasks exist but are hidden, say why, so
+/// they don't look like they've gone missing.
+class _EmptyDay extends ConsumerWidget {
+  const _EmptyDay({required this.hidden});
+  final int hidden;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(taskFilterProvider);
+    final style = PandaText.body.copyWith(color: PandaColors.muted);
+    if (hidden == 0) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text('Nothing due — enjoy the bamboo.', style: style),
+      );
+    }
+    final noun = hidden == 1 ? '1 task is' : '$hidden tasks are';
+    // Only the default "To do" view is on: what's hidden is finished work.
+    if (!filter.hasAnyFilter) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(hidden == 1 ? 'The task due is done.' : 'Everything due is done.', style: style),
+      );
+    }
+    // The banner at the top of the page has the "Clear filters" button.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text('$noun hidden by your filters.', style: style),
     );
   }
 }

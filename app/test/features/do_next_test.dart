@@ -140,7 +140,7 @@ void main() {
       await TestApp.settle(tester);
       expect(find.text('No tasks match'), findsOneWidget);
       expect(find.text('Try a different search or clear your filters.'), findsOneWidget);
-      expect(find.text('Clear filters'), findsOneWidget);
+      expect(find.text('Clear filters'), findsNWidgets(2), reason: 'in the banner and under the message');
       await app.dispose(tester);
     });
   });
@@ -197,10 +197,10 @@ void main() {
         final box = find
             .ancestor(
               of: find.descendant(of: find.byType(WeekSummaryCard), matching: find.text('overdue')),
-              matching: find.byType(Container),
+              matching: find.byType(Material),
             )
             .first;
-        return (tester.widget<Container>(box).decoration! as BoxDecoration).color;
+        return tester.widget<Material>(box).color;
       }
 
       expect(overdueBox(), PandaColors.rice);

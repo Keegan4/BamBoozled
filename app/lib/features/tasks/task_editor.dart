@@ -11,6 +11,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../domain/models/priority.dart';
 import '../../domain/models/task.dart';
+import '../welcome/welcome_controller.dart';
 
 /// Opens the add/edit task form: a dialog on wide screens, a bottom sheet on phones.
 Future<void> showTaskEditor(BuildContext context, {Task? task, DateTime? initialDay}) {
@@ -97,6 +98,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
       : DateTime(_dueDay.year, _dueDay.month, _dueDay.day, _time!.hour, _time!.minute);
 
   Future<void> _save() async {
+    if (_saving) return; // a double click or a held Enter key must not save twice
     if (_title.text.trim().isEmpty) {
       setState(() => _showErrors = true);
       return;
@@ -105,20 +107,28 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
     final repo = ref.read(taskRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final filter = ref.read(taskFilterProvider);
+    final filters = ref.read(taskFilterProvider.notifier);
+    final categories = ref.read(categoryMapProvider);
+    final now = ref.read(clockProvider);
+
+    final Task saved;
     if (_editing) {
-      await repo.updateTask(
-        widget.task!.copyWith(
-          title: _title.text,
-          dueAt: _dueAt,
-          priority: _priority,
-          categoryId: _categoryId,
-          estimateMinutes: () => _estimate,
-          notes: () => _notes.text,
-          repeat: _repeat,
-        ),
+      // Start from the stored task, not the copy this form opened with, so that anything that changed
+      // meanwhile (finished, or edited on another device) isn't overwritten by stale values.
+      final current = await repo.getTask(widget.task!.id) ?? widget.task!;
+      saved = current.copyWith(
+        title: _title.text,
+        dueAt: _dueAt,
+        priority: _priority,
+        categoryId: _categoryId,
+        estimateMinutes: () => _estimate,
+        notes: () => _notes.text,
+        repeat: _repeat,
       );
+      await repo.updateTask(saved);
     } else {
-      await repo.addTask(
+      saved = await repo.addTask(
         TaskDraft(
           title: _title.text,
           dueAt: _dueAt,
@@ -131,9 +141,18 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
       );
     }
     navigator.pop();
+
+    // If the filters on the page would hide the task just saved, say so: otherwise it looks lost.
+    final hidden = !filter.matches(saved, now, categories);
+    final verb = _editing ? 'Task updated' : 'Task added';
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(_editing ? 'Task updated' : 'Task added')));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(hidden ? '$verb — your filters are hiding it' : verb),
+          action: hidden ? SnackBarAction(label: 'Show it', onPressed: filters.reset) : null,
+        ),
+      );
   }
 
   Future<void> _delete() async {
@@ -535,7 +554,16 @@ class _NewCategoryDialog extends ConsumerStatefulWidget {
 
 class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
   final _name = TextEditingController();
-  Color _color = PandaColors.categoryChoices.values.first;
+  late Color _color = _firstUnusedColor();
+  bool _busy = false;
+  String? _error;
+
+  /// New categories start with a colour no existing category uses, so they can be told apart.
+  Color _firstUnusedColor() {
+    final used = {for (final c in ref.read(categoriesProvider).value ?? const []) c.color};
+    final choices = PandaColors.categoryChoices.values;
+    return choices.firstWhere((c) => !used.contains(c), orElse: () => choices.first);
+  }
 
   @override
   void dispose() {
@@ -544,9 +572,34 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
   }
 
   Future<void> _add() async {
-    if (_name.text.trim().isEmpty) return;
-    final c = await ref.read(taskRepositoryProvider).addCategory(_name.text, _color);
-    if (mounted) Navigator.of(context).pop(c.id);
+    if (_busy) return; // a double click (or click plus Enter) must not add two categories
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Give the category a name');
+      return;
+    }
+    final taken = (ref.read(categoriesProvider).value ?? const []).any(
+      (c) => c.name.toLowerCase() == name.toLowerCase(),
+    );
+    if (taken) {
+      setState(() => _error = 'You already have a category called “$name”');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final c = await ref.read(taskRepositoryProvider).addCategory(name, _color);
+      if (mounted) Navigator.of(context).pop(c.id);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = 'Couldn’t save the category. Please try again.';
+        });
+      }
+    }
   }
 
   @override
@@ -560,7 +613,11 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
           controller: _name,
           autofocus: true,
           maxLength: 40,
-          decoration: const InputDecoration(hintText: 'e.g. Exams', counterText: ''),
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(hintText: 'e.g. Exams', counterText: '', errorText: _error),
+          onChanged: (_) {
+            if (_error != null) setState(() => _error = null);
+          },
           onSubmitted: (_) => _add(),
         ),
         const SizedBox(height: 16),
@@ -605,8 +662,8 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
       ],
     ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-      FilledButton(onPressed: _add, child: const Text('Add category')),
+      TextButton(onPressed: _busy ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+      FilledButton(onPressed: _busy ? null : _add, child: const Text('Add category')),
     ],
   );
 }

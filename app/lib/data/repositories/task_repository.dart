@@ -150,12 +150,14 @@ class TaskRepository {
           .insertOnConflictUpdate(
             _taskToCompanion(task.copyWith(completedAt: () => done ? now : null, updatedAt: now), dirty: true),
           );
-      if (done && task.repeat != Repeat.none) {
-        final nextDue = task.repeat.next(task.dueAt);
-        final exists = await (db.select(
+      if (task.repeat == Repeat.none) return;
+      final nextDue = task.repeat.next(task.dueAt);
+      if (done) {
+        // Ticking off a repeating task schedules the next one, unless it is already there.
+        final existing = await (db.select(
           db.tasks,
-        )..where((t) => t.title.equals(task.title) & t.dueAt.equals(nextDue) & t.deletedAt.isNull())).getSingleOrNull();
-        if (exists == null) {
+        )..where((t) => t.title.equals(task.title) & t.dueAt.equals(nextDue) & t.deletedAt.isNull())).get();
+        if (existing.isEmpty) {
           await db
               .into(db.tasks)
               .insert(
@@ -175,6 +177,29 @@ class TaskRepository {
                   dirty: true,
                 ),
               );
+        }
+      } else {
+        // Un-ticking takes that next copy away again, so the task is back exactly as it was. A copy
+        // the user has since edited or finished (updatedAt moved on) is theirs, and is left alone.
+        final untouched =
+            await (db.select(db.tasks)
+                  ..where(
+                    (t) =>
+                        t.title.equals(task.title) &
+                        t.dueAt.equals(nextDue) &
+                        t.categoryId.equals(task.categoryId) &
+                        t.repeat.equals(task.repeat.index) &
+                        t.deletedAt.isNull() &
+                        t.completedAt.isNull() &
+                        t.createdAt.equalsExp(t.updatedAt),
+                  )
+                  ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+                  ..limit(1))
+                .get();
+        for (final copy in untouched) {
+          await (db.update(db.tasks)..where((t) => t.id.equals(copy.id))).write(
+            TasksCompanion(deletedAt: Value(now), updatedAt: Value(now), dirty: const Value(true)),
+          );
         }
       }
     });

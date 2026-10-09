@@ -46,11 +46,18 @@ class TestApp {
   final AppDatabase db;
   final TaskRepository repo;
 
-  static Future<TestApp> create({bool withSampleTasks = true, String? name = 'Ms Tan'}) async {
+  /// [ticking] makes the clock the repository stamps tasks with move forward a minute on every use,
+  /// so "most recently finished" has a clear answer. (By default every stamp is exactly [testNow].)
+  static Future<TestApp> create({bool withSampleTasks = true, String? name = 'Ms Tan', bool ticking = false}) async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
     var ids = 0;
-    final repo = TaskRepository(db, clock: () => testNow, newId: () => 'id${ids++}');
+    var minutes = 0;
+    final repo = TaskRepository(
+      db,
+      clock: ticking ? () => testNow.add(Duration(minutes: minutes++)) : () => testNow,
+      newId: () => 'id${ids++}',
+    );
     await repo.ensureDefaultCategories();
     if (name != null) await db.setSetting(displayNameKey, name);
     if (withSampleTasks) await addSampleTasks(repo);
@@ -79,10 +86,15 @@ class TestApp {
     await repo.setDone(done.id, true);
   }
 
-  Widget widget({List<Override> overrides = const [], String location = '/', DateTime? now}) => ProviderScope(
+  Widget widget({
+    List<Override> overrides = const [],
+    String location = '/',
+    DateTime? now,
+    TaskRepository? repository,
+  }) => ProviderScope(
     overrides: [
       databaseProvider.overrideWithValue(db),
-      taskRepositoryProvider.overrideWithValue(repo),
+      taskRepositoryProvider.overrideWithValue(repository ?? repo),
       clockProvider.overrideWith(now == null ? FixedClock.new : () => ClockAt(now)),
       routerProvider.overrideWith((ref) => buildRouter(initialLocation: location)),
       ...overrides,
@@ -96,11 +108,12 @@ class TestApp {
     List<Override> overrides = const [],
     String location = '/',
     DateTime? now,
+    TaskRepository? repository,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(widget(overrides: overrides, location: location, now: now));
+    await tester.pumpWidget(widget(overrides: overrides, location: location, now: now, repository: repository));
     await settle(tester);
   }
 
