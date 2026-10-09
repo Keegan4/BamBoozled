@@ -465,6 +465,42 @@ void main() {
     });
   });
 
+  group('the colour swatches', () {
+    testWidgets('the hover highlight is a circle exactly the size of the swatch', (tester) async {
+      final app = await TestApp.create();
+      await app.pump(tester, size: tall);
+      await openNewCategory(tester);
+      final ink = find.descendant(of: find.byTooltip('Honey'), matching: find.byType(InkWell));
+      expect(tester.widget<InkWell>(ink).customBorder, isA<CircleBorder>());
+      expect(tester.getSize(ink), const Size(34, 34));
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      await mouse.moveTo(tester.getCenter(ink));
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('Honey'), findsOneWidget, reason: 'the name shows on hover');
+      await mouse.removePointer();
+      await app.dispose(tester);
+    });
+
+    testWidgets('tapping a swatch selects it', (tester) async {
+      final app = await TestApp.create();
+      await app.pump(tester, size: tall);
+      await openNewCategory(tester);
+      await tester.tap(find.descendant(of: find.byTooltip('Lavender'), matching: find.byType(InkWell)));
+      await tester.pump();
+      final material = tester.widget<Material>(
+        find
+            .ancestor(
+              of: find.descendant(of: find.byTooltip('Lavender'), matching: find.byType(InkWell)),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect((material.shape as CircleBorder).side.width, 3, reason: 'the selected one gets a thick ring');
+      await app.dispose(tester);
+    });
+  });
+
   group('saving a task safely', () {
     testWidgets('pressing Enter twice saves one task', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);

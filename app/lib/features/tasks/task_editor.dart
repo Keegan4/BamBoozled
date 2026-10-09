@@ -634,23 +634,26 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
                 excludeSemantics: true,
                 child: Tooltip(
                   message: e.key,
-                  child: InkResponse(
-                    onTap: () => setState(() => _color = e.value),
-                    radius: 24,
-                    child: SizedBox.square(
-                      dimension: 48,
-                      child: Center(
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: e.value,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: e.value == _color ? PandaColors.ink : PandaColors.line,
-                              width: e.value == _color ? 3 : 1,
-                            ),
+                  excludeFromSemantics: true,
+                  child: SizedBox.square(
+                    dimension: 48,
+                    child: Center(
+                      // The swatch is its own button, so the hover and press highlight is clipped to
+                      // the circle instead of spilling into a bigger blob around it.
+                      child: Material(
+                        color: e.value,
+                        shape: CircleBorder(
+                          side: BorderSide(
+                            color: e.value == _color ? PandaColors.ink : PandaColors.line,
+                            width: e.value == _color ? 3 : 1,
                           ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          hoverColor: PandaColors.ink.withValues(alpha: 0.12),
+                          onTap: () => setState(() => _color = e.value),
+                          child: const SizedBox.square(dimension: 34),
                         ),
                       ),
                     ),
