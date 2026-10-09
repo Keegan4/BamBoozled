@@ -1,0 +1,110 @@
+import 'dart:ui' show ImageFilter;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../core/theme/colors.dart';
+import '../../../domain/models/daily_note.dart';
+import 'daily_card.dart';
+
+/// Opens a collected card on its own, over the rest of the app, which is blurred out. The card
+/// starts on the photo (it has already been revealed) and each tap flips it. Tapping outside it,
+/// the close button, Escape or Back closes it.
+Future<void> showNoteViewer(BuildContext context, DailyNote note, {String? footer}) {
+  final still = MediaQuery.disableAnimationsOf(context);
+  return showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Close',
+    barrierColor: Colors.transparent,
+    transitionDuration: still ? Duration.zero : const Duration(milliseconds: 260),
+    pageBuilder: (context, _, _) => NoteViewer(note: note, footer: footer),
+    transitionBuilder: (context, animation, _, child) {
+      final t = Curves.easeOut.transform(animation.value);
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          // Blurs and dims everything behind the card.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12 * t, sigmaY: 12 * t),
+                child: ColoredBox(color: PandaColors.ink.withValues(alpha: 0.28 * t)),
+              ),
+            ),
+          ),
+          Opacity(
+            opacity: t,
+            child: Transform.scale(scale: 0.94 + 0.06 * t, child: child),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class NoteViewer extends StatefulWidget {
+  const NoteViewer({super.key, required this.note, this.footer});
+
+  final DailyNote note;
+  final String? footer;
+
+  @override
+  State<NoteViewer> createState() => _NoteViewerState();
+}
+
+class _NoteViewerState extends State<NoteViewer> {
+  var _stage = CardStage.revealed;
+
+  void _flip() => setState(() => _stage = _stage == CardStage.back ? CardStage.revealed : CardStage.back);
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    // As big as fits, keeping the 4:5 card shape, with room for the close button.
+    final width = [420.0, size.width - 32, (size.height - 140) * 4 / 5].reduce((a, b) => a < b ? a : b);
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): () => Navigator.of(context).pop()},
+      child: Focus(
+        autofocus: true,
+        child: Stack(
+          children: [
+            // Taps on the blurred background close the viewer.
+            Positioned.fill(
+              child: GestureDetector(
+                key: const ValueKey('viewer-backdrop'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
+            Center(
+              child: SizedBox(
+                key: const ValueKey('viewer-card'),
+                width: width,
+                child: DailyCard(note: widget.note, stage: _stage, onTap: _flip, footer: widget.footer),
+              ),
+            ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: IconButton.filled(
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: IconButton.styleFrom(
+                      backgroundColor: PandaColors.surface,
+                      foregroundColor: PandaColors.ink,
+                      minimumSize: const Size(48, 48),
+                    ),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

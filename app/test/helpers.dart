@@ -8,7 +8,11 @@ import 'package:bamboozled/features/tasks/task_editor.dart';
 import 'package:bamboozled/features/tasks/widgets/task_card.dart';
 import 'package:drift/drift.dart' show DatabaseConnection, driftRuntimeOptions;
 import 'package:drift/native.dart';
+
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -98,6 +102,7 @@ class TestApp {
       taskRepositoryProvider.overrideWithValue(repository ?? repo),
       clockProvider.overrideWith(now == null ? FixedClock.new : () => ClockAt(now)),
       routerProvider.overrideWith((ref) => buildRouter(initialLocation: location)),
+      assetBundleProvider.overrideWithValue(DiskAssetBundle()),
       ...overrides,
     ],
     child: const BamBoozledApp(),
@@ -180,3 +185,25 @@ class SyncedOverrides {
 
 /// The title box of the add/edit task form (the first text box in it), whatever its hint text says.
 Finder titleField() => find.descendant(of: find.byType(TaskEditor), matching: find.byType(TextField)).first;
+
+/// Reads app assets straight from the project folder, without caching. rootBundle caches each
+/// file's Future, and a Future made in one widget test never completes in the next one.
+class DiskAssetBundle extends AssetBundle {
+  @override
+  Future<ByteData> load(String key) async {
+    if (key == 'AssetManifest.bin') {
+      final files = Directory('assets').listSync(recursive: true).whereType<File>().map((f) => f.path);
+      return const StandardMessageCodec().encodeMessage({
+        for (final path in files)
+          path: [
+            {'asset': path},
+          ],
+      })!;
+    }
+    final bytes = await File(key).readAsBytes();
+    return ByteData.sublistView(bytes);
+  }
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async => File(key).readAsString();
+}

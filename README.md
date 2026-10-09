@@ -17,6 +17,7 @@ The welcome page has:
 - **This week:** the *due*, *done* and *overdue* boxes are buttons. Click one to see those tasks.
 - **Finished tasks stay visible:** a "Recently done" section sits under "Do next", and the Status filter has a Done view.
 - **Canvas assignments:** connect a Canvas calendar feed in Settings and your assignments appear as tasks (see [Canvas](#canvas) below).
+- **Notes: a daily card:** one surprise card a day — a blurred photo you tap to reveal, then flip to read a short message. Opened cards are collected. Add your own photos and messages: see [docs/daily-notes.md](docs/daily-notes.md).
 - **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
 The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
@@ -174,6 +175,7 @@ BamBoozled/
 ├── README.md
 ├── docs/
 │   ├── task-format.md              # recommended task format
+│   ├── daily-notes.md              # adding cards to the Notes tab
 │   └── priority-algorithm.md       # "Do next" scoring
 ├── design/                         # Figma link, exported frames, app screenshots
 ├── supabase/
@@ -185,6 +187,7 @@ BamBoozled/
 └── app/                            # Flutter project
     ├── pubspec.yaml
     ├── android/ ios/ windows/ macos/ linux/ web/
+    ├── assets/daily_notes/         # the Notes tab's cards: notes.yaml + photos
     ├── tool/check_coverage.dart    # the coverage gate used by CI
     ├── tool/build_web.sh           # builds the web app (with its browser database files)
     ├── lib/

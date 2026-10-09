@@ -1,12 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../domain/models/category.dart';
+import '../domain/models/daily_note.dart';
+import '../domain/services/daily_note_picker.dart';
 import '../domain/models/task.dart';
 import 'canvas/canvas_service.dart';
+import 'daily_notes/daily_note_library.dart';
+import 'daily_notes/daily_note_store.dart';
 import 'local/app_database.dart';
 import 'remote/auth_service.dart';
 import 'remote/supabase_remote_store.dart';
@@ -131,3 +137,37 @@ final categoryMapProvider = Provider<Map<String, Category>>(
 const displayNameKey = 'display_name';
 
 final displayNameProvider = StreamProvider<String?>((ref) => ref.watch(databaseProvider).watchSetting(displayNameKey));
+
+// ---- Daily cards (Notes tab) ----
+
+/// Where bundled files come from. Tests can swap in their own.
+final assetBundleProvider = Provider<AssetBundle>((ref) => rootBundle);
+
+final dailyNotesProvider = FutureProvider<DailyNoteLibrary>((ref) => loadDailyNotes(ref.watch(assetBundleProvider)));
+
+final dailyNoteStoreProvider = Provider<DailyNoteStore>((ref) => DailyNoteStore(ref.watch(databaseProvider)));
+
+final dailyNoteStateProvider = StreamProvider<DailyNoteState>((ref) => ref.watch(dailyNoteStoreProvider).watch());
+
+/// Shuffles the cards per person: the account id when signed in (so phone and computer agree),
+/// otherwise an id made once for this install.
+final dailyNoteSeedProvider = FutureProvider<String>((ref) async {
+  final userId = ref.watch(currentUserProvider.select((u) => u.value?.id));
+  return userId ?? ref.watch(dailyNoteStoreProvider).installId(const Uuid().v4);
+});
+
+/// Today's card, or null when there are no cards. A card already revealed today stays today's card,
+/// even if the shuffle would now pick another (e.g. after signing in).
+final todaysNoteProvider = Provider<AsyncValue<DailyNote?>>((ref) {
+  final today = ref.watch(clockProvider.select((d) => DateTime(d.year, d.month, d.day)));
+  final library = ref.watch(dailyNotesProvider);
+  final state = ref.watch(dailyNoteStateProvider);
+  final seed = ref.watch(dailyNoteSeedProvider);
+  if (library.hasError) return AsyncValue.error(library.error!, library.stackTrace!);
+  if (!library.hasValue || !state.hasValue || !seed.hasValue) return const AsyncValue.loading();
+  final notes = {for (final n in library.value!.notes) n.id: n};
+  final pinned = notes[state.value!.opened[DailyNoteState.dateKey(today)]];
+  if (pinned != null) return AsyncValue.data(pinned);
+  final id = DailyNotePicker.pick(notes.keys, seed.value!, today);
+  return AsyncValue.data(id == null ? null : notes[id]);
+});
