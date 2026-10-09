@@ -254,7 +254,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
               textCapitalization: TextCapitalization.sentences,
               style: PandaText.body,
               decoration: InputDecoration(
-                hintText: 'e.g. Mark 3A essays',
+                hintText: 'E.g. I am quite fat.',
                 counterText: '',
                 errorText: _showErrors && _title.text.trim().isEmpty ? 'Give your task a short name' : null,
               ),
@@ -265,7 +265,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Tip: start with an action word — Mark, Email, Prepare, Submit. Put details in Notes.',
+              'Tip: Why do you need a tip its literally adding tasks',
               style: PandaText.caption.copyWith(color: PandaColors.muted),
             ),
           ],
