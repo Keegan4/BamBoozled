@@ -15,14 +15,14 @@ class PriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final urgent = priority == Priority.urgent;
-    final fg = urgent ? PandaColors.overdue : PandaColors.bambooDark;
+    final fg = urgent ? context.panda.overdue : context.panda.bambooDark;
     return Semantics(
       label: '${priority.label} priority',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: urgent ? PandaColors.overdueTint : PandaColors.bambooTint,
+          color: urgent ? context.panda.overdueTint : context.panda.bambooTint,
           borderRadius: BorderRadius.circular(PandaSizes.pill),
         ),
         child: Row(

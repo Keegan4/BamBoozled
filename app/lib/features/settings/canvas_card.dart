@@ -45,7 +45,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep connected')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: PandaColors.overdue),
+            style: FilledButton.styleFrom(backgroundColor: context.panda.overdue),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Disconnect'),
           ),
@@ -69,7 +69,7 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
       content = [
         Text(
           'See your Canvas assignments in BamBoozled, with their due dates, sorted into a category for each course.',
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
         ),
         const SizedBox(height: 16),
         Align(
@@ -91,11 +91,11 @@ class _CanvasCardState extends ConsumerState<CanvasCard> {
         const SizedBox(height: 4),
         Text(
           '$when · ${status.itemCount} ${status.itemCount == 1 ? 'assignment' : 'assignments'} · checks every hour',
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
         ),
         if (status.lastError != null) ...[
           const SizedBox(height: 8),
-          Text(status.lastError!, style: PandaText.body.copyWith(color: PandaColors.overdue)),
+          Text(status.lastError!, style: PandaText.body.copyWith(color: context.panda.overdue)),
         ],
         const SizedBox(height: 16),
         Wrap(
@@ -210,11 +210,11 @@ class _ConnectCanvasDialogState extends ConsumerState<ConnectCanvasDialog> {
                         'It stays in this browser; your own sync server uses it to fetch the calendar.'
                   : 'Keep this link private: anyone who has it can see your Canvas calendar. '
                         'It stays on this device and is not synced.',
-              style: PandaText.caption.copyWith(color: PandaColors.muted),
+              style: PandaText.caption.copyWith(color: context.panda.muted),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: PandaText.caption.copyWith(color: PandaColors.overdue)),
+              Text(_error!, style: PandaText.caption.copyWith(color: context.panda.overdue)),
             ],
           ],
         ),

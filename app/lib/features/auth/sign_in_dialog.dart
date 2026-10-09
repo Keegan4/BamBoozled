@@ -77,7 +77,7 @@ class _SignInDialogState extends ConsumerState<SignInDialog> {
           children: [
             Text(
               'Use the email and password you were given.',
-              style: PandaText.body.copyWith(color: PandaColors.muted),
+              style: PandaText.body.copyWith(color: context.panda.muted),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -105,7 +105,7 @@ class _SignInDialogState extends ConsumerState<SignInDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: PandaText.caption.copyWith(color: PandaColors.overdue)),
+              Text(_error!, style: PandaText.caption.copyWith(color: context.panda.overdue)),
             ],
           ],
         ),

@@ -15,6 +15,15 @@ The screens are built from component instances. If you change a component, every
 | ![Desktop welcome](exports/desktop-welcome.png) | ![Android welcome](exports/android-welcome.png) |
 | ![Add task dialog](exports/desktop-add-task-dialog.png) | ![Empty state](exports/android-empty-state.png) |
 
+## Dark mode
+![Dark mode mockup](exports/dark-mode-mockup.png)
+
+Same layout, same components, same category colours and the same panda. Only the palette changes (see the table in the root README). The working app in dark mode:
+
+| Desktop | Android |
+|---|---|
+| ![Desktop welcome, dark](app-screenshots/desktop-welcome-dark.png) | ![Android welcome, dark](app-screenshots/android-welcome-dark.png) |
+
 ## Original wireframe spec
 
 ## Frames

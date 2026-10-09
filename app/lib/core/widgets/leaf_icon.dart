@@ -4,15 +4,17 @@ import '../theme/colors.dart';
 
 /// A bamboo leaf. Priority is shown as 1–4 leaves.
 class LeafIcon extends StatelessWidget {
-  const LeafIcon({super.key, this.size = 16, this.color = PandaColors.bamboo});
+  const LeafIcon({super.key, this.size = 16, this.color});
 
   final double size;
-  final Color color;
+
+  /// Defaults to the theme's bamboo green.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
     dimension: size,
-    child: CustomPaint(painter: _LeafPainter(color)),
+    child: CustomPaint(painter: _LeafPainter(color ?? context.panda.bamboo)),
   );
 }
 

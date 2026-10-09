@@ -61,6 +61,8 @@ class BamBoozledApp extends ConsumerWidget {
       title: 'BamBoozled',
       debugShowCheckedModeBanner: false,
       theme: buildPandaTheme(),
+      darkTheme: buildPandaTheme(brightness: Brightness.dark),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
     );
   }

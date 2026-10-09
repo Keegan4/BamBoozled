@@ -34,7 +34,7 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final overdue = task.isOverdue(now);
     final done = task.isDone;
-    final metaColor = overdue ? PandaColors.overdue : PandaColors.muted;
+    final metaColor = overdue ? context.panda.overdue : context.panda.muted;
     final due = dueLabel(task.dueAt, now, done: done);
     final card = LayoutBuilder(
       builder: (context, constraints) {
@@ -43,10 +43,10 @@ class TaskCard extends StatelessWidget {
         return Opacity(
           opacity: done ? 0.7 : 1,
           child: Material(
-            color: PandaColors.surface,
+            color: context.panda.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
-              side: BorderSide(color: overdue ? PandaColors.overdue : PandaColors.line, width: overdue ? 1.5 : 1),
+              side: BorderSide(color: overdue ? context.panda.overdue : context.panda.line, width: overdue ? 1.5 : 1),
             ),
             clipBehavior: Clip.antiAlias,
             elevation: 0,
@@ -70,7 +70,7 @@ class TaskCard extends StatelessWidget {
                               maxLines: compact ? 2 : 1,
                               overflow: TextOverflow.ellipsis,
                               style: PandaText.bodyStrong.copyWith(
-                                color: done ? PandaColors.muted : PandaColors.ink,
+                                color: done ? context.panda.muted : context.panda.ink,
                                 decoration: done ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -141,10 +141,10 @@ class _TickBox extends StatelessWidget {
             height: 26,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: done ? PandaColors.bamboo : null,
-              border: done ? null : Border.all(color: PandaColors.ink, width: 2),
+              color: done ? context.panda.bamboo : null,
+              border: done ? null : Border.all(color: context.panda.ink, width: 2),
             ),
-            child: done ? const Icon(Icons.check_rounded, size: 18, color: PandaColors.ink) : null,
+            child: done ? Icon(Icons.check_rounded, size: 18, color: context.panda.onBamboo) : null,
           ),
         ),
       ),

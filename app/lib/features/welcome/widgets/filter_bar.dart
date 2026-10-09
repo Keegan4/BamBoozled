@@ -40,8 +40,8 @@ class _TaskSearchFieldState extends ConsumerState<TaskSearchField> {
       onChanged: (q) => ref.read(taskFilterProvider.notifier).setQuery(q),
       decoration: InputDecoration(
         hintText: 'Search tasks or notes…',
-        fillColor: PandaColors.surface,
-        prefixIcon: const Icon(Icons.search_rounded, color: PandaColors.muted),
+        fillColor: context.panda.surface,
+        prefixIcon: Icon(Icons.search_rounded, color: context.panda.muted),
         suffixIcon: ListenableBuilder(
           listenable: _controller,
           builder: (context, _) => _controller.text.isEmpty
@@ -56,13 +56,13 @@ class _TaskSearchFieldState extends ConsumerState<TaskSearchField> {
                 ),
         ),
         border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(PandaSizes.pill))),
-        enabledBorder: const OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(PandaSizes.pill)),
-          borderSide: BorderSide(color: PandaColors.line, width: 1.5),
+          borderSide: BorderSide(color: context.panda.line, width: 1.5),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(PandaSizes.pill)),
-          borderSide: BorderSide(color: PandaColors.bambooDark, width: 2),
+          borderSide: BorderSide(color: context.panda.bambooDark, width: 2),
         ),
       ),
     );
@@ -177,19 +177,19 @@ class ActiveFilterBanner extends ConsumerWidget {
         key: const ValueKey('active-filters'),
         padding: const EdgeInsets.only(left: 16, right: 4),
         decoration: BoxDecoration(
-          color: PandaColors.bambooTint,
+          color: context.panda.bambooTint,
           borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
         ),
         child: Row(
           children: [
-            const Icon(Icons.filter_alt_rounded, size: 18, color: PandaColors.bambooDark),
+            Icon(Icons.filter_alt_rounded, size: 18, color: context.panda.bambooDark),
             const SizedBox(width: 8),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   'Showing only: ${parts.join(' · ')}',
-                  style: PandaText.captionStrong.copyWith(color: PandaColors.bambooDark),
+                  style: PandaText.captionStrong.copyWith(color: context.panda.bambooDark),
                 ),
               ),
             ),
@@ -218,7 +218,7 @@ class FilterBar extends ConsumerWidget {
     final filter = ref.watch(taskFilterProvider);
     final notifier = ref.read(taskFilterProvider.notifier);
     final menus = [
-      const Icon(Icons.filter_alt_outlined, color: PandaColors.muted, size: 20),
+      Icon(Icons.filter_alt_outlined, color: context.panda.muted, size: 20),
       DropdownPill<Priority?>(
         label: 'Priority',
         value: filter.priority,
@@ -274,7 +274,7 @@ class CompactFilterBar extends ConsumerWidget {
             showDragHandle: true,
             isScrollControlled: true,
             useSafeArea: true,
-            backgroundColor: PandaColors.surface,
+            backgroundColor: context.panda.surface,
             builder: (_) => const FilterSheet(),
           ),
         ),

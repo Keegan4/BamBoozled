@@ -44,7 +44,7 @@ class DoNextList extends ConsumerWidget {
     final header = Row(
       children: [
         onlyFinished
-            ? const Icon(Icons.check_circle_rounded, size: 22, color: PandaColors.bamboo)
+            ? Icon(Icons.check_circle_rounded, size: 22, color: context.panda.bamboo)
             : const LeafIcon(size: 22),
         const SizedBox(width: 8),
         Text(onlyFinished ? 'Done' : 'Do next', style: PandaText.title),
@@ -54,7 +54,7 @@ class DoNextList extends ConsumerWidget {
             child: Text(
               onlyFinished ? 'Most recent first' : 'By deadline + priority',
               overflow: TextOverflow.ellipsis,
-              style: PandaText.caption.copyWith(color: PandaColors.muted),
+              style: PandaText.caption.copyWith(color: context.panda.muted),
             ),
           ),
       ],
@@ -196,13 +196,13 @@ class _RecentlyDoneState extends ConsumerState<_RecentlyDone> {
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline_rounded, size: 20, color: PandaColors.bambooDark),
+                    Icon(Icons.check_circle_outline_rounded, size: 20, color: context.panda.bambooDark),
                     const SizedBox(width: 8),
                     Text('Recently done', style: PandaText.heading),
                     const SizedBox(width: 8),
-                    Text('${widget.tasks.length}', style: PandaText.captionStrong.copyWith(color: PandaColors.muted)),
+                    Text('${widget.tasks.length}', style: PandaText.captionStrong.copyWith(color: context.panda.muted)),
                     const Spacer(),
-                    Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: PandaColors.muted),
+                    Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded, color: context.panda.muted),
                   ],
                 ),
               ),
@@ -238,10 +238,13 @@ class _RankBubble extends StatelessWidget {
       width: 32,
       height: 32,
       alignment: Alignment.center,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: rank == 1 ? PandaColors.ink : PandaColors.bambooTint),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: rank == 1 ? context.panda.ink : context.panda.bambooTint,
+      ),
       child: Text(
         '$rank',
-        style: PandaText.heading.copyWith(color: rank == 1 ? PandaColors.rice : PandaColors.bambooDark),
+        style: PandaText.heading.copyWith(color: rank == 1 ? context.panda.rice : context.panda.bambooDark),
       ),
     ),
   );
@@ -265,7 +268,7 @@ class _Message extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           text,
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
@@ -334,7 +337,7 @@ class WeekSummaryCard extends ConsumerWidget {
             children: [
               const Text('This week', style: PandaText.title),
               const Spacer(),
-              Text('Tap a box to see the tasks', style: PandaText.caption.copyWith(color: PandaColors.muted)),
+              Text('Tap a box to see the tasks', style: PandaText.caption.copyWith(color: context.panda.muted)),
             ],
           ),
           const SizedBox(height: 14),
@@ -342,16 +345,16 @@ class WeekSummaryCard extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                stat(WeekView.due, s.dueThisWeek, 'due this week', PandaColors.bambooTint, PandaColors.bambooDark),
+                stat(WeekView.due, s.dueThisWeek, 'due this week', context.panda.bambooTint, context.panda.bambooDark),
                 const SizedBox(width: 12),
-                stat(WeekView.done, s.doneThisWeek, 'done', PandaColors.rice, PandaColors.ink),
+                stat(WeekView.done, s.doneThisWeek, 'done', context.panda.rice, context.panda.ink),
                 const SizedBox(width: 12),
                 stat(
                   WeekView.overdue,
                   s.overdue,
                   'overdue',
-                  s.overdue > 0 ? PandaColors.overdueTint : PandaColors.rice,
-                  s.overdue > 0 ? PandaColors.overdue : PandaColors.ink,
+                  s.overdue > 0 ? context.panda.overdueTint : context.panda.rice,
+                  s.overdue > 0 ? context.panda.overdue : context.panda.ink,
                 ),
               ],
             ),
@@ -362,8 +365,8 @@ class WeekSummaryCard extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: PandaColors.line,
-              color: PandaColors.bamboo,
+              backgroundColor: context.panda.line,
+              color: context.panda.bamboo,
               semanticsLabel: 'Weekly progress: ${s.doneThisWeek} of ${s.dueThisWeek} done',
             ),
           ),
@@ -372,7 +375,7 @@ class WeekSummaryCard extends ConsumerWidget {
             s.dueThisWeek == 0
                 ? 'Nothing due this week yet.'
                 : '${s.doneThisWeek} of ${s.dueThisWeek} done${progress >= 1 ? ' — amazing!' : ' — keep going!'}',
-            style: PandaText.caption.copyWith(color: PandaColors.muted),
+            style: PandaText.caption.copyWith(color: context.panda.muted),
           ),
         ],
       ),
