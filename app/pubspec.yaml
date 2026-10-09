@@ -60,6 +60,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/daily_notes/
+    - assets/trivia/
   fonts:
     - family: Nunito
       fonts:
