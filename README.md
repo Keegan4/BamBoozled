@@ -133,6 +133,8 @@ Every release also publishes BamBoozled as a website at **https://keegan4.github
 - **On Android:** open it in Chrome and choose **Install app** (or Add to Home screen).
 - **On a computer:** just bookmark it, or use Chrome/Edge's **Install** button in the address bar.
 
+On phones the web app draws everything at 85% size, so menus, buttons and sheets fit the smaller screen (tablets, computers and the installed apps stay full size). It is compiled to WebAssembly, which scrolls and animates more smoothly; browsers that can't run WebAssembly get the JavaScript version automatically.
+
 Tasks are kept in the browser's own storage, so they survive closing the tab. Sign in (Settings) to sync them with your phone and computer. Clearing the browser's data for the site deletes the local copy, but anything synced is safe on the server.
 
 **One-time setup:** after the first release, go to the repository's **Settings → Pages**, choose **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**, and save. Each release then updates the site by itself.

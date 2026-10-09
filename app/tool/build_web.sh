@@ -6,6 +6,9 @@
 #   web/sqlite3.wasm    SQLite compiled for the web, downloaded from the sqlite3 package's releases
 #   web/drift_worker.js the database worker, compiled from tool/drift_worker.dart
 # Both are made here (and git-ignored) so they always match the package versions in pubspec.lock.
+#
+# The app is compiled to WebAssembly (--wasm), which draws noticeably more smoothly, especially on
+# phones. Browsers that can't run it are given the JavaScript build from the same folder instead.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -22,4 +25,4 @@ fi
 dart compile js -O4 -o web/drift_worker.js tool/drift_worker.dart
 rm -f web/drift_worker.js.deps web/drift_worker.js.map
 
-flutter build web --release --no-web-resources-cdn "$@"
+flutter build web --release --wasm --no-web-resources-cdn "$@"
