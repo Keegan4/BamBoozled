@@ -38,7 +38,7 @@ void main() {
       await tester.tap(rail('Notes'));
       await TestApp.settle(tester);
       expect(find.text('Today’s card'), findsOneWidget);
-      expect(find.text('Tap to reveal'), findsOneWidget);
+      expect(find.text('Tap to open'), findsOneWidget);
 
       await tester.tap(rail('Settings'));
       await TestApp.settle(tester);

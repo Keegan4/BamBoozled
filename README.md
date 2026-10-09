@@ -195,6 +195,7 @@ BamBoozled/
 ├── docs/
 │   ├── task-format.md              # recommended task format
 │   ├── daily-notes.md              # adding cards to the Notes tab
+│   ├── ideas/daily-packs.md        # saved idea: daily packs, binder, finishes, exchange
 │   ├── trivia.md                   # the Play tab's trivia rules and question bank
 │   └── priority-algorithm.md       # "Do next" scoring
 ├── design/                         # Figma link, exported frames, app screenshots
@@ -225,7 +226,7 @@ BamBoozled/
     │   ├── domain/                 # Task, Category, Priority, Repeat, PriorityScorer (pure Dart)
     │   └── features/
     │       ├── welcome/            # Welcome page, filters, calendar panel, Do next, This week
-    │       ├── calendar/  tasks/  settings/  auth/  notes/
+    │       ├── calendar/  tasks/  settings/  auth/  notes/  play/
     └── test/                       # unit, sync, widget and screenshot tests
 ```
 

@@ -27,11 +27,15 @@ class NotesPage extends ConsumerWidget {
     final library = ref.watch(dailyNotesProvider).value?.notes ?? const <DailyNote>[];
     final stage = state.stageOn(today);
 
-    Future<void> tapToday(DailyNote n) => ref.read(dailyNoteStoreProvider).setStage(today, n.id, switch (stage) {
-      CardStage.hidden => CardStage.revealed,
-      CardStage.revealed => CardStage.back,
-      CardStage.back => CardStage.revealed,
-    });
+    // Today's card opens in the focused viewer; whatever happens there is saved, so the card on the
+    // page (a preview) and the collection keep up.
+    Future<void> openToday(DailyNote n) => showNoteViewer(
+      context,
+      n,
+      footer: formatShortDate(today, now),
+      initialStage: stage,
+      onStageChanged: (s) => ref.read(dailyNoteStoreProvider).setStage(today, n.id, s),
+    );
 
     final notesById = {for (final n in library) n.id: n};
     final collected = [
@@ -48,7 +52,7 @@ class NotesPage extends ConsumerWidget {
           note.value == null
               ? ''
               : stage == CardStage.hidden
-              ? 'Tap the card to reveal today’s photo.'
+              ? 'Open today’s card to reveal the photo.'
               : 'A new card ${_untilMidnight(now)}.',
           key: const ValueKey('card-hint'),
           style: PandaText.body.copyWith(color: p.muted),
@@ -62,8 +66,9 @@ class NotesPage extends ConsumerWidget {
                 key: const ValueKey('todays-card'),
                 note: n,
                 stage: stage,
-                onTap: () => tapToday(n),
+                onTap: () => openToday(n),
                 footer: formatShortDate(today, now),
+                actionLabel: 'Tap to open',
               ),
             ),
           ),
