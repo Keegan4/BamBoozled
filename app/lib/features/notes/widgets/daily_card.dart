@@ -12,7 +12,14 @@ import '../../../domain/models/daily_note.dart';
 /// Tapping it (or pressing Enter/Space) calls [onTap]; the parent decides the next [stage].
 /// Animations are skipped when the device asks for reduced motion.
 class DailyCard extends StatelessWidget {
-  const DailyCard({super.key, required this.note, required this.stage, required this.onTap, this.footer});
+  const DailyCard({
+    super.key,
+    required this.note,
+    required this.stage,
+    required this.onTap,
+    this.footer,
+    this.actionLabel,
+  });
 
   final DailyNote note;
   final CardStage stage;
@@ -20,6 +27,9 @@ class DailyCard extends StatelessWidget {
 
   /// Small text at the bottom of the back, e.g. the date it was opened.
   final String? footer;
+
+  /// Replaces the "Tap to reveal / flip" hints, e.g. "Tap to open" when the card is only a preview.
+  final String? actionLabel;
 
   static const _blur = 22.0;
 
@@ -29,9 +39,11 @@ class DailyCard extends StatelessWidget {
     final still = MediaQuery.disableAnimationsOf(context);
     Duration d(int ms) => still ? Duration.zero : Duration(milliseconds: ms);
     final label = switch (stage) {
-      CardStage.hidden => 'Today’s card, hidden. Tap to reveal the photo.',
-      CardStage.revealed => 'Card photo${note.title == null ? '' : ': ${note.title}'}. Tap to flip and read it.',
-      CardStage.back => '${note.title == null ? '' : '${note.title}. '}${note.text} Tap to flip back to the photo.',
+      CardStage.hidden => 'Today’s card, hidden. ${actionLabel ?? 'Tap to reveal the photo'}.',
+      CardStage.revealed =>
+        'Card photo${note.title == null ? '' : ': ${note.title}'}. ${actionLabel ?? 'Tap to flip and read it'}.',
+      CardStage.back =>
+        '${note.title == null ? '' : '${note.title}. '}${note.text} ${actionLabel ?? 'Tap to flip back to the photo'}.',
     };
     return AspectRatio(
       aspectRatio: 4 / 5,
@@ -101,14 +113,21 @@ class DailyCard extends StatelessWidget {
               children: [
                 const PandaMascot(size: 72, sleeping: true),
                 const SizedBox(height: 12),
-                _pill(p, Icons.touch_app_rounded, 'Tap to reveal'),
+                _pill(p, Icons.touch_app_rounded, actionLabel ?? 'Tap to reveal'),
               ],
             ),
           ),
           _ => Align(
             key: const ValueKey('flip-hint'),
             alignment: Alignment.bottomRight,
-            child: Padding(padding: const EdgeInsets.all(14), child: _pill(p, Icons.autorenew_rounded, 'Tap to flip')),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: _pill(
+                p,
+                actionLabel == null ? Icons.autorenew_rounded : Icons.open_in_full_rounded,
+                actionLabel ?? 'Tap to flip',
+              ),
+            ),
           ),
         },
       ),
@@ -135,7 +154,7 @@ class DailyCard extends StatelessWidget {
             const Spacer(),
             Icon(Icons.autorenew_rounded, size: 18, color: p.muted),
             const SizedBox(width: 4),
-            Text('Tap to flip back', style: PandaText.caption.copyWith(color: p.muted)),
+            Text(actionLabel ?? 'Tap to flip back', style: PandaText.caption.copyWith(color: p.muted)),
           ],
         ),
       ],

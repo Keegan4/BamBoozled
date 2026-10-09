@@ -43,54 +43,106 @@ Future<TestApp> openNotes(WidgetTester tester, {DateTime? now, Size size = tall,
   return a;
 }
 
-Future<void> tapToday(WidgetTester tester) async {
+Finder viewerCard() => find.descendant(of: find.byType(NoteViewer), matching: find.byType(DailyCard));
+CardStage viewerStage(WidgetTester tester) => tester.widget<DailyCard>(viewerCard()).stage;
+
+/// Taps today's card on the page, which opens it in the viewer.
+Future<void> openToday(WidgetTester tester) async {
   await tester.tap(todaysCard());
+  await settleFully(tester);
+}
+
+Future<void> tapViewer(WidgetTester tester) async {
+  await tester.tap(viewerCard());
+  await settleFully(tester);
+}
+
+Future<void> closeViewer(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('Close'));
   await settleFully(tester);
 }
 
 void main() {
   group('today’s card', () {
-    testWidgets('starts hidden: a blurred photo with "Tap to reveal"', (tester) async {
+    testWidgets('starts hidden: a blurred photo with "Tap to open"', (tester) async {
       final app = await openNotes(tester);
       expect(find.text('Today’s card'), findsOneWidget);
-      expect(find.text('Tap to reveal'), findsOneWidget);
-      expect(find.text('Tap the card to reveal today’s photo.'), findsOneWidget);
+      expect(find.text('Tap to open'), findsOneWidget);
+      expect(find.text('Open today’s card to reveal the photo.'), findsOneWidget);
       expect(todaysStage(tester), CardStage.hidden);
       expect(find.descendant(of: todaysCard(), matching: find.byType(ImageFiltered)), findsOneWidget);
       expect(find.text(todaysNote(tester).text), findsNothing, reason: 'the message stays hidden');
       await app.dispose(tester);
     });
 
-    testWidgets('tap reveals the photo, tap again flips to the message, then taps flip back and forth', (tester) async {
+    testWidgets('a tap opens it on its own, still hidden, with the rest of the app blurred', (tester) async {
+      final app = await openNotes(tester);
+      await openToday(tester);
+      expect(find.byType(NoteViewer), findsOneWidget);
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      expect(viewerStage(tester), CardStage.hidden);
+      expect(find.descendant(of: find.byType(NoteViewer), matching: find.text('Tap to reveal')), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('in the viewer: tap reveals, tap flips to the message, and taps flip back and forth', (tester) async {
       final app = await openNotes(tester);
       final note = todaysNote(tester);
+      await openToday(tester);
 
-      await tapToday(tester);
-      expect(todaysStage(tester), CardStage.revealed);
-      expect(find.text('Tap to reveal'), findsNothing);
-      expect(find.text('Tap to flip'), findsOneWidget);
+      await tapViewer(tester);
+      expect(viewerStage(tester), CardStage.revealed);
       expect(
-        find.descendant(of: todaysCard(), matching: find.byType(ImageFiltered)),
+        find.descendant(of: viewerCard(), matching: find.byType(ImageFiltered)),
         findsNothing,
         reason: 'unblurred',
       );
+      expect(find.descendant(of: viewerCard(), matching: find.text('Tap to flip')), findsOneWidget);
 
-      await tapToday(tester);
-      expect(todaysStage(tester), CardStage.back);
-      expect(find.text(note.text), findsOneWidget);
-      expect(find.text(note.title!), findsOneWidget);
+      await tapViewer(tester);
+      expect(viewerStage(tester), CardStage.back);
+      expect(find.descendant(of: viewerCard(), matching: find.text(note.text)), findsOneWidget);
+      expect(find.descendant(of: viewerCard(), matching: find.text(note.title!)), findsOneWidget);
 
-      await tapToday(tester);
-      expect(todaysStage(tester), CardStage.revealed);
-      expect(find.text(note.text), findsNothing);
-      await tapToday(tester);
-      expect(todaysStage(tester), CardStage.back);
+      await tapViewer(tester);
+      expect(viewerStage(tester), CardStage.revealed);
+      await tapViewer(tester);
+      expect(viewerStage(tester), CardStage.back);
+      await app.dispose(tester);
+    });
+
+    testWidgets('closing keeps the card as it was left, on the page and when opened again', (tester) async {
+      final app = await openNotes(tester);
+      await openToday(tester);
+      await tapViewer(tester);
+      await tapViewer(tester);
+      await closeViewer(tester);
+      expect(find.byType(NoteViewer), findsNothing);
+      expect(find.byType(BackdropFilter), findsNothing);
+      expect(todaysStage(tester), CardStage.back, reason: 'the page shows the back too');
+      expect(find.text('Collected · 1'), findsOneWidget, reason: 'revealing it collected it');
+
+      await openToday(tester);
+      expect(viewerStage(tester), CardStage.back, reason: 'reopens where it was left');
+      await app.dispose(tester);
+    });
+
+    testWidgets('closing while still hidden leaves it hidden and uncollected', (tester) async {
+      final app = await openNotes(tester);
+      await openToday(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
+      expect(find.byType(NoteViewer), findsNothing);
+      expect(todaysStage(tester), CardStage.hidden);
+      expect(find.textContaining('Collected'), findsNothing);
       await app.dispose(tester);
     });
 
     testWidgets('once opened it counts down to the next card at midnight', (tester) async {
       final app = await openNotes(tester);
-      await tapToday(tester);
+      await openToday(tester);
+      await tapViewer(tester);
+      await closeViewer(tester);
       expect(find.text('A new card in 15 h.'), findsOneWidget);
       await app.dispose(tester);
     });
@@ -111,8 +163,10 @@ void main() {
 
     testWidgets('leaving the tab and coming back keeps the card as it was', (tester) async {
       final app = await openNotes(tester);
-      await tapToday(tester);
-      await tapToday(tester);
+      await openToday(tester);
+      await tapViewer(tester);
+      await tapViewer(tester);
+      await closeViewer(tester);
       await tester.tap(find.text('Home').first);
       await TestApp.settle(tester);
       await tester.tap(find.text('Notes').first);
@@ -125,7 +179,9 @@ void main() {
       final app = await TestApp.create(withSampleTasks: false);
       await openNotes(tester, app: app);
       final first = todaysNote(tester);
-      await tapToday(tester);
+      await openToday(tester);
+      await tapViewer(tester);
+      await closeViewer(tester);
 
       await openNotes(tester, now: day2, app: app);
       expect(todaysStage(tester), CardStage.hidden);
@@ -144,10 +200,10 @@ void main() {
       await laptop.dispose(tester);
     });
 
-    testWidgets('can be opened with the keyboard and is described to screen readers', (tester) async {
+    testWidgets('works with the keyboard and is described to screen readers', (tester) async {
       final handle = tester.ensureSemantics();
       final app = await openNotes(tester);
-      expect(find.bySemanticsLabel('Today’s card, hidden. Tap to reveal the photo.'), findsOneWidget);
+      expect(find.bySemanticsLabel('Today’s card, hidden. Tap to open.'), findsOneWidget);
       bool cardFocused() =>
           FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<DailyCard>() != null;
       for (var i = 0; i < 40 && !cardFocused(); i++) {
@@ -157,19 +213,27 @@ void main() {
       expect(cardFocused(), isTrue, reason: 'reachable with Tab');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await settleFully(tester);
-      expect(todaysStage(tester), CardStage.revealed);
+      expect(find.byType(NoteViewer), findsOneWidget);
+      expect(find.bySemanticsLabel('Today’s card, hidden. Tap to reveal the photo.'), findsOneWidget);
+      await tapViewer(tester);
       expect(find.bySemanticsLabel(RegExp(r'^Card photo: .+\. Tap to flip and read it\.$')), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
+      expect(find.byType(NoteViewer), findsNothing);
       handle.dispose();
       await app.dispose(tester);
     });
 
-    testWidgets('fits on a phone', (tester) async {
+    testWidgets('fits on a phone, on the page and in the viewer', (tester) async {
       final app = await openNotes(tester, size: phone);
       expect(tester.takeException(), isNull);
-      final card = tester.getRect(todaysCard());
+      expect(tester.getRect(todaysCard()).width, lessThanOrEqualTo(phone.width - 32));
+      await openToday(tester);
+      await tapViewer(tester);
+      await tapViewer(tester);
+      final card = tester.getRect(find.byKey(const ValueKey('viewer-card')));
       expect(card.width, lessThanOrEqualTo(phone.width - 32));
-      await tapToday(tester);
-      await tapToday(tester);
+      expect(card.bottom, lessThanOrEqualTo(phone.height));
       expect(tester.takeException(), isNull);
       await app.dispose(tester);
     });
@@ -276,7 +340,9 @@ void main() {
 
     testWidgets('today’s card joins the collection once revealed, marked Today', (tester) async {
       final app = await withCollection(tester);
-      await tapToday(tester);
+      await openToday(tester);
+      await tapViewer(tester);
+      await closeViewer(tester);
       expect(find.text('Collected · 4'), findsOneWidget);
       expect(find.text('Today'), findsOneWidget);
       await app.dispose(tester);

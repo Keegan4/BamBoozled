@@ -7,10 +7,17 @@ import '../../../core/theme/colors.dart';
 import '../../../domain/models/daily_note.dart';
 import 'daily_card.dart';
 
-/// Opens a collected card on its own, over the rest of the app, which is blurred out. The card
-/// starts on the photo (it has already been revealed) and each tap flips it. Tapping outside it,
-/// the close button, Escape or Back closes it.
-Future<void> showNoteViewer(BuildContext context, DailyNote note, {String? footer}) {
+/// Opens a card on its own, over the rest of the app, which is blurred out. It starts at
+/// [initialStage]: a collected card starts on the photo, today's card may still be hidden. A tap
+/// on a hidden card reveals it; after that each tap flips it. Every change is reported to
+/// [onStageChanged]. Tapping outside it, the close button, Escape or Back closes it.
+Future<void> showNoteViewer(
+  BuildContext context,
+  DailyNote note, {
+  String? footer,
+  CardStage initialStage = CardStage.revealed,
+  ValueChanged<CardStage>? onStageChanged,
+}) {
   final still = MediaQuery.disableAnimationsOf(context);
   return showGeneralDialog<void>(
     context: context,
@@ -18,7 +25,8 @@ Future<void> showNoteViewer(BuildContext context, DailyNote note, {String? foote
     barrierLabel: 'Close',
     barrierColor: Colors.transparent,
     transitionDuration: still ? Duration.zero : const Duration(milliseconds: 260),
-    pageBuilder: (context, _, _) => NoteViewer(note: note, footer: footer),
+    pageBuilder: (context, _, _) =>
+        NoteViewer(note: note, footer: footer, initialStage: initialStage, onStageChanged: onStageChanged),
     transitionBuilder: (context, animation, _, child) {
       final t = Curves.easeOut.transform(animation.value);
       return Stack(
@@ -44,19 +52,36 @@ Future<void> showNoteViewer(BuildContext context, DailyNote note, {String? foote
 }
 
 class NoteViewer extends StatefulWidget {
-  const NoteViewer({super.key, required this.note, this.footer});
+  const NoteViewer({
+    super.key,
+    required this.note,
+    this.footer,
+    this.initialStage = CardStage.revealed,
+    this.onStageChanged,
+  });
 
   final DailyNote note;
   final String? footer;
+  final CardStage initialStage;
+  final ValueChanged<CardStage>? onStageChanged;
 
   @override
   State<NoteViewer> createState() => _NoteViewerState();
 }
 
 class _NoteViewerState extends State<NoteViewer> {
-  var _stage = CardStage.revealed;
+  late var _stage = widget.initialStage;
 
-  void _flip() => setState(() => _stage = _stage == CardStage.back ? CardStage.revealed : CardStage.back);
+  void _tap() {
+    setState(
+      () => _stage = switch (_stage) {
+        CardStage.hidden => CardStage.revealed,
+        CardStage.revealed => CardStage.back,
+        CardStage.back => CardStage.revealed,
+      },
+    );
+    widget.onStageChanged?.call(_stage);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +107,7 @@ class _NoteViewerState extends State<NoteViewer> {
               child: SizedBox(
                 key: const ValueKey('viewer-card'),
                 width: width,
-                child: DailyCard(note: widget.note, stage: _stage, onTap: _flip, footer: widget.footer),
+                child: DailyCard(note: widget.note, stage: _stage, onTap: _tap, footer: widget.footer),
               ),
             ),
             SafeArea(
