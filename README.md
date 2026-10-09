@@ -50,11 +50,34 @@ In the app, people go to **Settings → Sign in to sync**, type their email, the
 ```bash
 cd app
 flutter analyze
-flutter test                                        # unit, sync and widget tests
+flutter test                                        # all Dart tests (unit, sync, widget)
+flutter test --coverage && dart run tool/check_coverage.dart 95
 dart run build_runner build                         # after changing the database tables
 SCREENSHOTS=1 flutter test --update-goldens test/screenshots   # refresh design/app-screenshots
 ```
 
+The database migration has its own tests, which run it on a real PostgreSQL server (you need `psql` and a
+server you can create databases on):
+
+```bash
+PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres supabase/tests/run.sh
+```
+
+## Automated checks and releases (GitHub Actions)
+
+| Workflow | When | What it does |
+|---|---|---|
+| [CI](.github/workflows/ci.yml) | every push and pull request | checks formatting, runs the analyzer, all tests with a 95% coverage minimum, the SQL tests on PostgreSQL 16, then builds the Linux, Windows, macOS and Android apps |
+| [Release](.github/workflows/release.yml) | pushing a tag like `v1.0.0` | re-runs the checks, builds the four apps, and attaches them to a GitHub Release with generated notes |
+
+To publish a release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settings → Secrets and variables → Actions) if the released apps should sync. Without them the apps work, but keep tasks on one device. The Android file is signed with Flutter's debug key: it installs by tapping the file on a phone, but it can't go on the Play Store until a release keystore is set up.
 
 ## Recommended framework
 
