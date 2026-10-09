@@ -37,8 +37,8 @@ void main() {
 
       await tester.tap(rail('Notes'));
       await TestApp.settle(tester);
-      expect(find.text('Today’s card'), findsOneWidget);
-      expect(find.text('Tap to open'), findsOneWidget);
+      expect(find.text('Daily pack'), findsOneWidget);
+      expect(find.text('Binder'), findsOneWidget);
 
       await tester.tap(rail('Settings'));
       await TestApp.settle(tester);
@@ -73,7 +73,7 @@ void main() {
       ('/', 'Good morning, Ms Tan'),
       ('/tasks', 'All tasks'),
       ('/calendar', 'October 2026'),
-      ('/notes', 'Today’s card'),
+      ('/notes', 'Daily pack'),
       ('/settings', 'Your name'),
     ]) {
       testWidgets('opening $path directly shows the right page', (tester) async {
@@ -111,7 +111,7 @@ void main() {
       expect(find.text('Calendar'), findsWidgets);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Notes')));
       await TestApp.settle(tester);
-      expect(find.text('Today’s card'), findsOneWidget);
+      expect(find.text('Daily pack'), findsOneWidget);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Settings')));
       await TestApp.settle(tester);
       expect(find.text('Your name'), findsOneWidget);
@@ -219,11 +219,11 @@ void main() {
   });
 
   group('Notes page', () {
-    testWidgets('is a friendly placeholder on every screen size', (tester) async {
+    testWidgets('shows the daily pack on every screen size', (tester) async {
       final app = await TestApp.create();
       for (final size in [phone, const Size(800, 900), const Size(1440, 900)]) {
         await app.pump(tester, size: size, location: '/notes');
-        expect(find.text('Today’s card'), findsOneWidget);
+        expect(find.text('Daily pack'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       }

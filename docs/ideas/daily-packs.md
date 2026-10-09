@@ -1,7 +1,8 @@
 # Idea: daily card packs, a binder and the Panda Exchange
 
-Status: **idea, not built.** Saved for a later milestone. It would replace the current one-card-a-day
-Notes tab (see [../daily-notes.md](../daily-notes.md)).
+Status: **partly built.** The daily pack, the stack, the overview, the binder and all the finishes
+are in the app (see [../card-packs.md](../card-packs.md)). The Panda Exchange and bought packs are
+not built yet; the pack types and costs are already in `pack_roller.dart`.
 
 Interactive mockup: https://claude.ai/artifact/R529YMPH3Aq898XZU8tocB (private to the project owner
 until shared). It shows pack opening, the binder, every finish and the exchange, with sample cards.
@@ -12,14 +13,14 @@ until shared). It shows pack opening, the binder, every finish and the exchange,
 2. **Rip it open by sliding** a finger or the mouse across the dashed line at the top of the pack
    (like Pokémon TCG Pocket); a glowing cut follows your finger, and letting go before about 70%
    snaps it back. Enter/Space also opens it, for keyboards and screen readers.
-3. The 7 cards come out as **one stack**. Tap the top card to reveal it; its back **glows in its
-   rarity colour** first (blue Rare, purple Epic, orange Legendary). Tap again to put it aside and
-   show the next. "Reveal the rest" plays through the stack. At the end all 7 are laid out in a row.
+3. The 7 cards come out **face up in one stack**, glowing in their rarity colour (blue Rare, purple
+   Epic, orange Legendary). A tap or swipe slides the top card off to the side. After the last one,
+   a separate overview shows all 7 with **New** badges.
 4. Every card goes into the **binder**. Duplicates add to a copy count.
 5. Spare copies can be traded at the **Panda Exchange** for bamboo shoots, which buy **better packs**.
 6. Idea: finishing every task on a day earns a second free pack (ties the game to the planner).
 
-## Rarity (set per card in notes.yaml)
+## Rarity (set per card in cards.yaml)
 
 | Rarity | Gem | Cards 1–5 | Cards 6–7 |
 |---|---|---|---|
@@ -83,7 +84,7 @@ You always keep one copy of each card + finish; spares can be traded for **bambo
 | Jade Booster | 25 shoots | ~2× Legendary chance (1% / 18%), double finish odds, card 7 triple |
 | Golden Booster | 70 shoots | a Legendary and a shiny finish (Holo or better) guaranteed, triple finish odds |
 
-## Card format (extends notes.yaml)
+## Card format (cards.yaml)
 
 ```yaml
 - id: story-of-amara           # never change once released

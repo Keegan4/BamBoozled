@@ -1,444 +1,366 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show ImageFilter, PointerDeviceKind;
 
-import 'package:bamboozled/core/theme/colors.dart';
-import 'package:bamboozled/core/theme/panda_theme.dart';
-import 'package:bamboozled/data/daily_notes/daily_note_library.dart';
-import 'package:bamboozled/data/daily_notes/daily_note_store.dart';
+import 'package:bamboozled/data/cards/card_library.dart';
+import 'package:bamboozled/data/cards/collection_store.dart';
 import 'package:bamboozled/data/providers.dart';
-import 'package:bamboozled/domain/models/daily_note.dart';
-import 'package:bamboozled/features/notes/notes_page.dart';
-import 'package:bamboozled/features/notes/widgets/daily_card.dart';
-import 'package:bamboozled/features/notes/widgets/note_viewer.dart';
+import 'package:bamboozled/domain/models/cards.dart';
+import 'package:bamboozled/features/notes/binder_page.dart';
+import 'package:bamboozled/features/notes/widgets/booster_pack.dart';
+import 'package:bamboozled/features/notes/widgets/card_detail.dart';
+import 'package:bamboozled/features/notes/widgets/collectible_card.dart';
+import 'package:bamboozled/features/notes/widgets/pack_opening.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers.dart';
 
-const tall = Size(1440, 1800);
 const phone = Size(412, 915);
-final day1 = DateTime(2026, 10, 9, 9);
-final day2 = DateTime(2026, 10, 10, 9);
+final pack = find.byKey(const ValueKey('booster-pack'));
+final stackTop = find.byKey(const ValueKey('stack-top'));
 
-final seed = dailyNoteSeedProvider.overrideWith((ref) async => 'test-seed');
-
-/// Lets animations (blur, flip) finish as well as the database.
+/// Lets drift (real async), the pack's animations and the overlay all finish.
 Future<void> settleFully(WidgetTester tester) async {
-  await TestApp.settle(tester);
-  await tester.pump(const Duration(seconds: 1));
-  await TestApp.settle(tester);
+  for (var i = 0; i < 12; i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
-Finder todaysCard() => find.byKey(const ValueKey('todays-card'));
-DailyNote todaysNote(WidgetTester tester) => tester.widget<DailyCard>(todaysCard()).note;
-CardStage todaysStage(WidgetTester tester) => tester.widget<DailyCard>(todaysCard()).stage;
-Finder thumbs() => find.descendant(of: find.byKey(const ValueKey('collected')), matching: find.byType(InkWell));
-
-Future<TestApp> openNotes(WidgetTester tester, {DateTime? now, Size size = tall, TestApp? app}) async {
-  final a = app ?? await TestApp.create(withSampleTasks: false);
-  // Start from scratch so new overrides (e.g. another day) take effect.
-  if (app != null) await tester.pumpWidget(const SizedBox());
-  await a.pump(tester, size: size, location: '/notes', now: now ?? day1, overrides: [seed]);
-  await settleFully(tester);
-  return a;
-}
-
-Finder viewerCard() => find.descendant(of: find.byType(NoteViewer), matching: find.byType(DailyCard));
-CardStage viewerStage(WidgetTester tester) => tester.widget<DailyCard>(viewerCard()).stage;
-
-/// Taps today's card on the page, which opens it in the viewer.
-Future<void> openToday(WidgetTester tester) async {
-  await tester.tap(todaysCard());
+/// Slides across the top of the pack, [fraction] of the way.
+Future<void> slide(WidgetTester tester, {double fraction = 1}) async {
+  final w = tester.getSize(pack).width;
+  await tester.dragFrom(tester.getTopLeft(pack) + const Offset(6, 20), Offset(w * fraction, 0));
   await settleFully(tester);
 }
 
-Future<void> tapViewer(WidgetTester tester) async {
-  await tester.tap(viewerCard());
-  await settleFully(tester);
-}
+String count(WidgetTester tester) => tester.widget<Text>(find.byKey(const ValueKey('stack-count'))).data!;
 
-Future<void> closeViewer(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Close'));
-  await settleFully(tester);
-}
+Future<CollectionState> collection(TestApp app) async =>
+    CollectionState.fromSetting(await app.db.getSetting(CollectionState.key));
+
+Future<void> own(TestApp app, Map<String, int> copies) =>
+    app.db.setSetting(CollectionState.key, CollectionState(copies: copies).toSetting());
 
 void main() {
-  group('today’s card', () {
-    testWidgets('starts hidden: a blurred photo with "Tap to open"', (tester) async {
-      final app = await openNotes(tester);
-      expect(find.text('Today’s card'), findsOneWidget);
-      expect(find.text('Tap to open'), findsOneWidget);
-      expect(find.text('Open today’s card to reveal the photo.'), findsOneWidget);
-      expect(todaysStage(tester), CardStage.hidden);
-      expect(find.descendant(of: todaysCard(), matching: find.byType(ImageFiltered)), findsOneWidget);
-      expect(find.text(todaysNote(tester).text), findsNothing, reason: 'the message stays hidden');
-      await app.dispose(tester);
-    });
-
-    testWidgets('a tap opens it on its own, still hidden, with the rest of the app blurred', (tester) async {
-      final app = await openNotes(tester);
-      await openToday(tester);
-      expect(find.byType(NoteViewer), findsOneWidget);
-      expect(find.byType(BackdropFilter), findsOneWidget);
-      expect(viewerStage(tester), CardStage.hidden);
-      expect(find.descendant(of: find.byType(NoteViewer), matching: find.text('Tap to reveal')), findsOneWidget);
-      await app.dispose(tester);
-    });
-
-    testWidgets('in the viewer: tap reveals, tap flips to the message, and taps flip back and forth', (tester) async {
-      final app = await openNotes(tester);
-      final note = todaysNote(tester);
-      await openToday(tester);
-
-      await tapViewer(tester);
-      expect(viewerStage(tester), CardStage.revealed);
-      expect(
-        find.descendant(of: viewerCard(), matching: find.byType(ImageFiltered)),
-        findsNothing,
-        reason: 'unblurred',
-      );
-      expect(find.descendant(of: viewerCard(), matching: find.text('Tap to flip')), findsOneWidget);
-
-      await tapViewer(tester);
-      expect(viewerStage(tester), CardStage.back);
-      expect(find.descendant(of: viewerCard(), matching: find.text(note.text)), findsOneWidget);
-      expect(find.descendant(of: viewerCard(), matching: find.text(note.title!)), findsOneWidget);
-
-      await tapViewer(tester);
-      expect(viewerStage(tester), CardStage.revealed);
-      await tapViewer(tester);
-      expect(viewerStage(tester), CardStage.back);
-      await app.dispose(tester);
-    });
-
-    testWidgets('closing keeps the card as it was left, on the page and when opened again', (tester) async {
-      final app = await openNotes(tester);
-      await openToday(tester);
-      await tapViewer(tester);
-      await tapViewer(tester);
-      await closeViewer(tester);
-      expect(find.byType(NoteViewer), findsNothing);
-      expect(find.byType(BackdropFilter), findsNothing);
-      expect(todaysStage(tester), CardStage.back, reason: 'the page shows the back too');
-      expect(find.text('Collected · 1'), findsOneWidget, reason: 'revealing it collected it');
-
-      await openToday(tester);
-      expect(viewerStage(tester), CardStage.back, reason: 'reopens where it was left');
-      await app.dispose(tester);
-    });
-
-    testWidgets('closing while still hidden leaves it hidden and uncollected', (tester) async {
-      final app = await openNotes(tester);
-      await openToday(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await settleFully(tester);
-      expect(find.byType(NoteViewer), findsNothing);
-      expect(todaysStage(tester), CardStage.hidden);
-      expect(find.textContaining('Collected'), findsNothing);
-      await app.dispose(tester);
-    });
-
-    testWidgets('once opened it counts down to the next card at midnight', (tester) async {
-      final app = await openNotes(tester);
-      await openToday(tester);
-      await tapViewer(tester);
-      await closeViewer(tester);
-      expect(find.text('A new card in 15 h.'), findsOneWidget);
-      await app.dispose(tester);
-    });
-
-    testWidgets('the countdown reads naturally close to midnight', (tester) async {
-      for (final (time, text) in [
-        (DateTime(2026, 10, 9, 21, 30), 'A new card in 2 h 30 min.'),
-        (DateTime(2026, 10, 9, 23, 20), 'A new card in 40 min.'),
-        (DateTime(2026, 10, 9, 23, 59, 30), 'A new card in a minute.'),
-      ]) {
-        final app = await TestApp.create(withSampleTasks: false);
-        await tester.runAsync(() => DailyNoteStore(app.db).setStage(time, 'bamboo-forest', CardStage.revealed));
-        await openNotes(tester, now: time, app: app);
-        expect(find.text(text), findsOneWidget, reason: '$time');
-        await app.dispose(tester);
-      }
-    });
-
-    testWidgets('leaving the tab and coming back keeps the card as it was', (tester) async {
-      final app = await openNotes(tester);
-      await openToday(tester);
-      await tapViewer(tester);
-      await tapViewer(tester);
-      await closeViewer(tester);
-      await tester.tap(find.text('Home').first);
-      await TestApp.settle(tester);
-      await tester.tap(find.text('Notes').first);
-      await settleFully(tester);
-      expect(todaysStage(tester), CardStage.back);
-      await app.dispose(tester);
-    });
-
-    testWidgets('the next day brings a new, hidden card and yesterday’s goes into Collected', (tester) async {
+  group('daily pack', () {
+    testWidgets('starts sealed, with the binder empty', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      await openNotes(tester, app: app);
-      final first = todaysNote(tester);
-      await openToday(tester);
-      await tapViewer(tester);
-      await closeViewer(tester);
-
-      await openNotes(tester, now: day2, app: app);
-      expect(todaysStage(tester), CardStage.hidden);
-      expect(todaysNote(tester).id, isNot(first.id), reason: 'no repeats until every card has been seen');
-      expect(find.text('Collected · 1'), findsOneWidget);
-      expect(find.text('Fri 9 Oct'), findsOneWidget);
+      await app.pump(tester, location: '/notes');
+      expect(find.text('Daily pack'), findsOneWidget);
+      expect(pack, findsOneWidget);
+      expect(find.text('Slide across the top of the pack to tear it open.'), findsOneWidget);
+      expect(find.text('0 of 12 cards collected'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('Bamboo Booster, sealed')), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('the same person gets the same card on another device', (tester) async {
-      final phoneApp = await openNotes(tester);
-      final onPhone = todaysNote(tester);
-      await phoneApp.dispose(tester);
-      final laptop = await openNotes(tester);
-      expect(todaysNote(tester), onPhone);
-      await laptop.dispose(tester);
+    testWidgets('a short slide springs back and leaves it sealed', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await slide(tester, fraction: 0.4);
+      expect(pack, findsOneWidget);
+      expect(find.byType(PackOpening), findsNothing);
+      expect((await tester.runAsync(() => collection(app)))!.copies, isEmpty);
+      await app.dispose(tester);
     });
 
-    testWidgets('works with the keyboard and is described to screen readers', (tester) async {
-      final handle = tester.ensureSemantics();
-      final app = await openNotes(tester);
-      expect(find.bySemanticsLabel('Today’s card, hidden. Tap to open.'), findsOneWidget);
-      bool cardFocused() =>
-          FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<DailyCard>() != null;
-      for (var i = 0; i < 40 && !cardFocused(); i++) {
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pump();
-      }
-      expect(cardFocused(), isTrue, reason: 'reachable with Tab');
+    testWidgets('a quick flick opens it even if it does not reach the end', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await tester.flingFrom(tester.getTopLeft(pack) + const Offset(6, 20), const Offset(140, 0), 2000);
+      await settleFully(tester);
+      expect(find.byType(PackOpening), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('sliding across tears it open into a face-up stack over the blurred app', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await slide(tester);
+
+      expect(find.byType(PackOpening), findsOneWidget);
+      final blur = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
+      expect(blur.filter, ImageFilter.blur(sigmaX: 12, sigmaY: 12));
+      expect(count(tester), '1 / 7');
+      expect(find.byKey(const ValueKey('pull-0')), findsOneWidget);
+
+      final saved = (await tester.runAsync(() => collection(app)))!;
+      expect(saved.copies.values.fold<int>(0, (a, b) => a + b), 7);
+      expect(saved.dailyOpenedOn, '2026-10-08');
+
+      // Tap, swipe either way, or use the keyboard: each slides the top card off.
+      await tester.tap(stackTop);
+      await settleFully(tester);
+      expect(count(tester), '2 / 7');
+      await tester.drag(stackTop, const Offset(-200, 0));
+      await settleFully(tester);
+      expect(count(tester), '3 / 7');
+      await tester.drag(stackTop, const Offset(200, 0));
+      await settleFully(tester);
+      expect(count(tester), '4 / 7');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await settleFully(tester);
+      expect(count(tester), '5 / 7');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await settleFully(tester);
+      expect(count(tester), '6 / 7');
+
+      // A small nudge isn't a swipe.
+      await tester.drag(stackTop, const Offset(30, 0));
+      await settleFully(tester);
+      expect(count(tester), '6 / 7');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await settleFully(tester);
+      expect(count(tester), '7 / 7');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await settleFully(tester);
-      expect(find.byType(NoteViewer), findsOneWidget);
-      expect(find.bySemanticsLabel('Today’s card, hidden. Tap to reveal the photo.'), findsOneWidget);
-      await tapViewer(tester);
-      expect(find.bySemanticsLabel(RegExp(r'^Card photo: .+\. Tap to flip and read it\.$')), findsOneWidget);
+
+      // Then the overview, with the new ones marked.
+      expect(find.text('Today’s pack'), findsOneWidget);
+      final pulls = saved.last!.pulls;
+      expect(find.text('New'), findsNWidgets(pulls.where((p) => p.$2).length));
+      expect(find.text('New finish'), findsNWidgets(pulls.where((p) => p.$3).length));
+      for (var i = 0; i < 7; i++) {
+        expect(find.byKey(ValueKey('overview-$i')), findsOneWidget);
+      }
+
+      await tester.tap(find.text('Done'));
+      await settleFully(tester);
+      expect(find.byType(PackOpening), findsNothing);
+      expect(pack, findsNothing);
+      expect(find.text('Today’s pack is open. A new one in 15 h.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('todays-fan')), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('the pack is the same for the same person on another device', (tester) async {
+      Future<List<String>> openOnce() async {
+        final app = await TestApp.create(withSampleTasks: false);
+        await app.pump(tester, location: '/notes', overrides: [packSeedProvider.overrideWith((ref) async => 'user-1')]);
+        await slide(tester);
+        final keys = (await tester.runAsync(() => collection(app)))!.last!.pulls.map((p) => p.$1).toList();
+        await app.dispose(tester);
+        return keys;
+      }
+
+      expect(await openOnce(), await openOnce());
+    });
+
+    testWidgets('Enter opens a focused pack, and Escape closes the stack', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await tester.tap(pack);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await settleFully(tester);
+      expect(find.byType(PackOpening), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await settleFully(tester);
-      expect(find.byType(NoteViewer), findsNothing);
-      handle.dispose();
+      expect(find.byType(PackOpening), findsNothing);
+      expect(find.text('See today’s cards'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('fits on a phone, on the page and in the viewer', (tester) async {
-      final app = await openNotes(tester, size: phone);
-      expect(tester.takeException(), isNull);
-      expect(tester.getRect(todaysCard()).width, lessThanOrEqualTo(phone.width - 32));
-      await openToday(tester);
-      await tapViewer(tester);
-      await tapViewer(tester);
-      final card = tester.getRect(find.byKey(const ValueKey('viewer-card')));
-      expect(card.width, lessThanOrEqualTo(phone.width - 32));
-      expect(card.bottom, lessThanOrEqualTo(phone.height));
-      expect(tester.takeException(), isNull);
+    testWidgets('today’s cards can be seen again, looked at closely, and lead to the binder', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, size: phone, location: '/notes');
+      await slide(tester);
+      await tester.tap(find.byTooltip('Close'));
+      await settleFully(tester);
+
+      await tester.tap(find.text('See today’s cards'));
+      await settleFully(tester);
+      expect(find.text('Today’s pack'), findsOneWidget, reason: 'goes straight to the overview');
+      expect(find.byKey(const ValueKey('stack-count')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('overview-0')));
+      await settleFully(tester);
+      expect(find.byType(CardDetail), findsOneWidget);
+      expect(find.byKey(const ValueKey('card-lore')), findsOneWidget);
+      await tester.tap(find.byTooltip('Close').last);
+      await settleFully(tester);
+      expect(find.byType(CardDetail), findsNothing);
+
+      await tester.ensureVisible(find.text('See binder'));
+      await tester.tap(find.text('See binder'));
+      await settleFully(tester);
+      expect(find.byType(BinderPage), findsOneWidget);
+      expect(find.byType(PackOpening), findsNothing);
       await app.dispose(tester);
     });
 
-    testWidgets('with no cards it says how to add them', (tester) async {
+    testWidgets('the fan of today’s cards opens the overview too', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await slide(tester);
+      await tester.tapAt(const Offset(4, 4));
+      await settleFully(tester);
+      expect(find.byType(PackOpening), findsNothing, reason: 'tapping the blurred background closes it');
+      await tester.tap(find.byKey(const ValueKey('todays-fan')));
+      await settleFully(tester);
+      expect(find.text('Today’s pack'), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('a new pack comes the next day', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.db.setSetting(CollectionState.key, const CollectionState(dailyOpenedOn: '2026-10-07').toSetting());
+      await app.pump(tester, location: '/notes');
+      expect(pack, findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('the countdown reads naturally near midnight', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.db.setSetting(CollectionState.key, const CollectionState(dailyOpenedOn: '2026-10-08').toSetting());
+      for (final (time, text) in [
+        (DateTime(2026, 10, 8, 23, 59, 30), 'in a minute'),
+        (DateTime(2026, 10, 8, 23, 20), 'in 40 min'),
+        (DateTime(2026, 10, 8, 21, 30), 'in 2 h 30 min'),
+      ]) {
+        await app.pump(tester, location: '/notes', now: time);
+        expect(find.text('Today’s pack is open. A new one $text.'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+      }
+      await app.dispose(tester);
+    });
+
+    testWidgets('with reduced motion everything still works, without the animations', (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+        disableAnimations: true,
+      );
+      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes');
+      await slide(tester, fraction: 0.3);
+      expect(pack, findsOneWidget);
+      await slide(tester);
+      expect(count(tester), '1 / 7');
+      await tester.tap(stackTop);
+      await settleFully(tester);
+      expect(count(tester), '2 / 7');
+      final card = find.byKey(const ValueKey('pull-1'));
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: tester.getCenter(card));
+      await gesture.moveTo(tester.getTopLeft(card) + const Offset(10, 10));
+      await tester.pump();
+      final tilts = tester
+          .widgetList<Transform>(find.descendant(of: card, matching: find.byType(Transform)))
+          .where((t) => t.transform.entry(3, 2) != 0);
+      expect(tilts, isEmpty, reason: 'no tilt');
+      await gesture.removePointer();
+      await app.dispose(tester);
+    });
+
+    testWidgets('with no cards there is a friendly note instead', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
       await app.pump(
         tester,
-        size: tall,
         location: '/notes',
-        now: day1,
-        overrides: [seed, dailyNotesProvider.overrideWith((ref) async => const DailyNoteLibrary([]))],
+        overrides: [cardLibraryProvider.overrideWith((ref) async => const CardLibrary([]))],
       );
-      await settleFully(tester);
       expect(find.text('No cards yet'), findsOneWidget);
-      expect(todaysCard(), findsNothing);
+      expect(pack, findsNothing);
       await app.dispose(tester);
     });
   });
 
-  group('looking at collected cards again', () {
-    /// Three days of cards opened, now on the fourth day.
-    Future<TestApp> withCollection(WidgetTester tester, {Size size = tall}) async {
+  group('binder', () {
+    testWidgets('shows progress, copies, finishes and gaps', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      await tester.runAsync(() async {
-        final store = DailyNoteStore(app.db);
-        await store.setStage(DateTime(2026, 10, 6), 'bamboo-forest', CardStage.back);
-        await store.setStage(DateTime(2026, 10, 7), 'morning-light', CardStage.revealed);
-        await store.setStage(DateTime(2026, 10, 8), 'starry-night', CardStage.back);
-      });
-      await openNotes(tester, app: app, size: size);
-      return app;
-    }
+      await own(app, {'bamboo-grove|none': 1, 'bamboo-grove|holo': 1, 'tea-break|none': 1, 'starry-snooze|gold': 1});
+      await app.pump(tester, location: '/notes/binder');
+      expect(find.text('3 of 12 cards · 4 finishes collected'), findsOneWidget);
+      expect(find.text('×2'), findsOneWidget);
+      expect(find.byKey(const ValueKey('missing-early-start')), findsOneWidget);
+      expect(find.byKey(const ValueKey('slot-bamboo-grove')), findsOneWidget);
+      // The showiest copy is the one on show.
+      final shown = tester.widget<CollectibleCard>(
+        find.descendant(of: find.byKey(const ValueKey('slot-bamboo-grove')), matching: find.byType(CollectibleCard)),
+      );
+      expect(shown.finish, Finish.holo);
 
-    testWidgets('they are listed newest first, with the day they were opened', (tester) async {
-      final app = await withCollection(tester);
-      expect(find.text('Collected · 3'), findsOneWidget);
-      final dates = ['Thu 8 Oct', 'Wed 7 Oct', 'Tue 6 Oct'].map((d) => tester.getTopLeft(find.text(d)).dx).toList();
-      expect(dates, orderedEquals([...dates]..sort()));
+      await tester.tap(find.text('Collected'));
+      await TestApp.settle(tester);
+      expect(find.byKey(const ValueKey('missing-early-start')), findsNothing);
+      expect(find.byKey(const ValueKey('slot-tea-break')), findsOneWidget);
+
+      await tester.tap(find.text('Missing'));
+      await TestApp.settle(tester);
+      expect(find.byKey(const ValueKey('slot-tea-break')), findsNothing);
+      expect(find.byKey(const ValueKey('missing-early-start')), findsOneWidget);
+
+      await tester.tap(find.text('All'));
+      await TestApp.settle(tester);
+      await tester.tap(find.text('Notes').first);
+      await TestApp.settle(tester);
+      expect(find.text('Daily pack'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('a click opens the card straight on the photo, with everything else blurred', (tester) async {
-      final app = await withCollection(tester);
-      await tester.tap(thumbs().first);
-      await settleFully(tester);
-      final viewer = find.byType(NoteViewer);
-      expect(viewer, findsOneWidget);
-      final card = tester.widget<DailyCard>(find.descendant(of: viewer, matching: find.byType(DailyCard)));
-      expect(card.note.id, 'starry-night');
-      expect(card.stage, CardStage.revealed, reason: 'goes straight to the second stage');
-      expect(find.descendant(of: viewer, matching: find.text('Tap to reveal')), findsNothing);
-      expect(find.descendant(of: viewer, matching: find.text('Tap to flip')), findsOneWidget);
-      final blur = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
-      expect(blur.filter, isA<ImageFilter>());
-      await app.dispose(tester);
-    });
-
-    testWidgets('a click on the card flips it to the message, and back again', (tester) async {
-      final app = await withCollection(tester);
-      await tester.tap(thumbs().first);
-      await settleFully(tester);
-      final viewerCard = find.descendant(of: find.byType(NoteViewer), matching: find.byType(DailyCard));
-      await tester.tap(viewerCard);
-      await settleFully(tester);
-      expect(tester.widget<DailyCard>(viewerCard).stage, CardStage.back);
-      expect(find.text("Even pandas need a good night's sleep.\nClose the laptop on time tonight."), findsOneWidget);
-      expect(find.descendant(of: viewerCard, matching: find.text('Thu 8 Oct')), findsOneWidget);
-      await tester.tap(viewerCard);
-      await settleFully(tester);
-      expect(tester.widget<DailyCard>(viewerCard).stage, CardStage.revealed);
-      await app.dispose(tester);
-    });
-
-    testWidgets('it closes by clicking outside, with the close button, or with Escape', (tester) async {
-      final app = await withCollection(tester);
-      for (final close in <Future<void> Function()>[
-        () => tester.tapAt(const Offset(20, 900)),
-        () => tester.tap(find.byTooltip('Close')),
-        () => tester.sendKeyEvent(LogicalKeyboardKey.escape),
-      ]) {
-        await tester.tap(thumbs().first);
-        await settleFully(tester);
-        expect(find.byType(NoteViewer), findsOneWidget);
-        await close();
-        await settleFully(tester);
-        expect(find.byType(NoteViewer), findsNothing);
-        expect(find.byType(BackdropFilter), findsNothing, reason: 'the blur goes away too');
-      }
-      await app.dispose(tester);
-    });
-
-    testWidgets('opening an old card does not change today’s card', (tester) async {
-      final app = await withCollection(tester);
-      await tester.tap(thumbs().last);
-      await settleFully(tester);
-      await tester.tap(find.descendant(of: find.byType(NoteViewer), matching: find.byType(DailyCard)));
-      await settleFully(tester);
-      await tester.tap(find.byTooltip('Close'));
-      await settleFully(tester);
-      expect(todaysStage(tester), CardStage.hidden);
-      await app.dispose(tester);
-    });
-
-    testWidgets('today’s card joins the collection once revealed, marked Today', (tester) async {
-      final app = await withCollection(tester);
-      await openToday(tester);
-      await tapViewer(tester);
-      await closeViewer(tester);
-      expect(find.text('Collected · 4'), findsOneWidget);
-      expect(find.text('Today'), findsOneWidget);
-      await app.dispose(tester);
-    });
-
-    testWidgets('the gallery shows small thumbnails side by side, 3 across on a phone, and the viewer fits a phone', (
-      tester,
-    ) async {
-      var app = await withCollection(tester);
-      double rowY(int i) => tester.getTopLeft(thumbs().at(i)).dy;
-      expect(rowY(0), rowY(2), reason: 'three in one row on a computer');
-      expect(tester.getSize(thumbs().first).width, lessThanOrEqualTo(160));
-      await app.dispose(tester);
-
-      app = await withCollection(tester, size: phone);
-      await tester.scrollUntilVisible(thumbs().first, 300, scrollable: find.byType(Scrollable).first);
-      expect(rowY(0), rowY(2));
-      await tester.tap(thumbs().first);
-      await settleFully(tester);
-      final card = tester.getRect(find.byKey(const ValueKey('viewer-card')));
-      expect(card.width, lessThanOrEqualTo(phone.width - 32));
-      expect(card.bottom, lessThanOrEqualTo(phone.height));
-      expect(tester.takeException(), isNull);
-      await app.dispose(tester);
-    });
-
-    testWidgets('a card no longer in notes.yaml is left out of the collection', (tester) async {
+    testWidgets('a card opens with its story, and its finishes can be switched', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      await tester.runAsync(
-        () => DailyNoteStore(app.db).setStage(DateTime(2026, 10, 6), 'deleted-card', CardStage.back),
-      );
-      await openNotes(tester, app: app);
-      expect(find.textContaining('Collected'), findsNothing);
-      await app.dispose(tester);
-    });
-  });
+      await own(app, {'bamboo-grove|none': 2, 'bamboo-grove|holo': 1});
+      await app.pump(tester, size: phone, location: '/notes/binder');
+      await tester.tap(find.byKey(const ValueKey('slot-bamboo-grove')));
+      await settleFully(tester);
 
-  group('the card on its own', () {
-    const note = DailyNote(id: 'x', photo: 'assets/daily_notes/bamboo-forest.jpg', title: 'Hi', text: 'Message');
+      expect(find.byKey(const ValueKey('card-lore')), findsOneWidget);
+      expect(find.textContaining('Pandas spend up to 14 hours'), findsOneWidget);
+      expect(find.text('Photo: Ms Tan'), findsOneWidget);
+      expect(find.text('FINISHES OWNED'), findsOneWidget);
+      CollectibleCard big() => tester.widget(find.byKey(const ValueKey('detail-card')));
+      expect(big().finish, Finish.holo);
+      expect(find.text('No finish ×2'), findsOneWidget);
 
-    testWidgets('with reduced motion it changes at once, without animating', (tester) async {
-      Widget card(CardStage stage) => MaterialApp(
-        home: MediaQuery(
-          data: const MediaQueryData(disableAnimations: true),
-          child: Center(
-            child: SizedBox(
-              width: 300,
-              child: DailyCard(note: note, stage: stage, onTap: () {}),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpWidget(card(CardStage.hidden));
-      await tester.pumpWidget(card(CardStage.back));
+      await tester.ensureVisible(find.byKey(const ValueKey('finish-none')));
+      await tester.tap(find.byKey(const ValueKey('finish-none')));
       await tester.pump();
-      expect(find.text('Message'), findsOneWidget, reason: 'already flipped after a single frame');
+      expect(big().finish, Finish.none);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
+      expect(find.byType(CardDetail), findsNothing);
+      await app.dispose(tester);
     });
 
-    testWidgets('a card without a title still reads well', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Center(
-            child: SizedBox(
-              width: 300,
-              child: DailyCard(
-                note: const DailyNote(id: 'x', photo: 'assets/daily_notes/bamboo-forest.jpg', text: 'Only text'),
-                stage: CardStage.back,
-                onTap: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.text('Only text'), findsOneWidget);
+    testWidgets('empty filters say so', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(tester, location: '/notes/binder');
+      await tester.tap(find.text('Collected'));
+      await TestApp.settle(tester);
+      expect(find.text('No cards here yet. Open today’s pack!'), findsOneWidget);
+      await app.dispose(tester);
     });
 
-    testWidgets('follows dark mode: the back of the card uses the dark paper colour', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: buildPandaTheme(brightness: Brightness.dark),
-          home: Center(
-            child: SizedBox(
-              width: 300,
-              child: DailyCard(note: note, stage: CardStage.back, onTap: () {}),
-            ),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(seconds: 1));
-      final card = tester.widget<Material>(find.byKey(const ValueKey('card-back')));
-      expect(card.color, PandaPalette.dark.rice);
+    testWidgets('a full binder has nothing missing', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      final lib = await tester.runAsync(() => loadCards(DiskAssetBundle()));
+      await own(app, {for (final c in lib!.cards) '${c.id}|none': 1});
+      await app.pump(tester, location: '/notes/binder');
+      await tester.tap(find.text('Missing'));
+      await TestApp.settle(tester);
+      expect(find.text('You have every card. Well done!'), findsOneWidget);
+      await app.dispose(tester);
     });
+  });
 
-    testWidgets('the Notes page builds on its own', (tester) async {
-      expect(const NotesPage(), isA<Widget>());
-    });
+  testWidgets('the booster pack calls back once, however it is opened', (tester) async {
+    var opened = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Center(child: BoosterPack(width: 200, onOpened: () => opened++)),
+      ),
+    );
+    final semantics = tester.ensureSemantics();
+    tester.semantics.tap(find.semantics.byLabel(RegExp('sealed')));
+    await tester.pumpAndSettle();
+    expect(opened, 1);
+    await tester.drag(pack, const Offset(300, 0));
+    await tester.pumpAndSettle();
+    expect(opened, 1);
+    semantics.dispose();
   });
 }
