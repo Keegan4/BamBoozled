@@ -9,11 +9,15 @@ until shared). It shows pack opening, the binder, every finish and the exchange,
 ## The loop
 
 1. **A free pack every day** (the Bamboo Booster) with **7 cards**.
-2. Tear it open; 7 cards appear face down. Their backs **glow in their rarity colour** before you
-   flip them (blue Rare, purple Epic, orange Legendary). Tap each to flip, or "Reveal all".
-3. Every card goes into the **binder**. Duplicates add to a copy count.
-4. Spare copies can be traded at the **Panda Exchange** for bamboo shoots, which buy **better packs**.
-5. Idea: finishing every task on a day earns a second free pack (ties the game to the planner).
+2. **Rip it open by sliding** a finger or the mouse across the dashed line at the top of the pack
+   (like Pokémon TCG Pocket); a glowing cut follows your finger, and letting go before about 70%
+   snaps it back. Enter/Space also opens it, for keyboards and screen readers.
+3. The 7 cards come out as **one stack**. Tap the top card to reveal it; its back **glows in its
+   rarity colour** first (blue Rare, purple Epic, orange Legendary). Tap again to put it aside and
+   show the next. "Reveal the rest" plays through the stack. At the end all 7 are laid out in a row.
+4. Every card goes into the **binder**. Duplicates add to a copy count.
+5. Spare copies can be traded at the **Panda Exchange** for bamboo shoots, which buy **better packs**.
+6. Idea: finishing every task on a day earns a second free pack (ties the game to the planner).
 
 ## Rarity (set per card in notes.yaml)
 
