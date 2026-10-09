@@ -99,7 +99,7 @@ enum OptionPillStyle {
   tint,
 }
 
-/// A pill that opens a menu, e.g. "Priority: Any ▾".
+/// A pill that opens a menu, e.g. "Priority: Any ▾". [T] may be nullable (null = "Any").
 class DropdownPill<T> extends StatelessWidget {
   const DropdownPill({
     super.key,
@@ -115,16 +115,18 @@ class DropdownPill<T> extends StatelessWidget {
   final ValueChanged<T> onSelected;
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton<T>(
+  Widget build(BuildContext context) => PopupMenuButton<_Choice<T>>(
     tooltip: 'Change $label',
-    initialValue: value,
-    onSelected: onSelected,
+    initialValue: _Choice(value),
+    // Values are wrapped because PopupMenuButton never reports a null value, which would
+    // make a "null = Any" choice silently do nothing.
+    onSelected: (choice) => onSelected(choice.value),
     position: PopupMenuPosition.under,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     itemBuilder: (_) => [
       for (final e in items.entries)
         PopupMenuItem(
-          value: e.key,
+          value: _Choice(e.key),
           height: 48,
           child: Text(e.value, style: PandaText.body),
         ),
@@ -146,6 +148,17 @@ class DropdownPill<T> extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _Choice<T> {
+  const _Choice(this.value);
+  final T value;
+
+  @override
+  bool operator ==(Object other) => other is _Choice<T> && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
 }
 
 /// White rounded card used for the main panels.

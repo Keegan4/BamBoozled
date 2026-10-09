@@ -66,7 +66,7 @@ class TaskCard extends StatelessWidget {
                           children: [
                             Text(
                               task.title,
-                              maxLines: 1,
+                              maxLines: compact ? 2 : 1,
                               overflow: TextOverflow.ellipsis,
                               style: PandaText.bodyStrong.copyWith(
                                 color: done ? PandaColors.muted : PandaColors.ink,
