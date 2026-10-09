@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/layout/adaptive_scaffold.dart';
+import 'core/layout/compact_scale.dart';
 import 'core/theme/panda_theme.dart';
 import 'data/providers.dart';
 import 'features/calendar/calendar_page.dart';
@@ -57,6 +58,7 @@ class BamBoozledApp extends ConsumerWidget {
     ref.watch(syncServiceProvider);
     ref.watch(repeatSpawnerProvider);
     ref.watch(canvasAutoRefreshProvider);
+    final compact = ref.watch(compactPhoneLayoutProvider);
     return MaterialApp.router(
       title: 'BamBoozled',
       debugShowCheckedModeBanner: false,
@@ -64,6 +66,7 @@ class BamBoozledApp extends ConsumerWidget {
       darkTheme: buildPandaTheme(brightness: Brightness.dark),
       themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) => CompactScale(enabled: compact, child: child!),
     );
   }
 }

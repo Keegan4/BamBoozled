@@ -92,6 +92,9 @@ final repeatSpawnerProvider = Provider<void>((ref) {
 /// [fetchFeedViaSupabase]).
 final canvasNeedsProxyProvider = Provider<bool>((ref) => kIsWeb);
 
+/// True in the web version, which draws everything a little smaller on phones (see CompactScale).
+final compactPhoneLayoutProvider = Provider<bool>((ref) => kIsWeb);
+
 /// How Canvas feeds are downloaded. Tests swap in sample feeds.
 final canvasFetcherProvider = Provider<FeedFetcher>(
   (ref) => ref.watch(canvasNeedsProxyProvider)
