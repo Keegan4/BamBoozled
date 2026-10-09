@@ -184,6 +184,7 @@ BamBoozled/
 ├── docs/
 │   ├── task-format.md              # recommended task format
 │   ├── daily-notes.md              # adding cards to the Notes tab
+│   ├── ideas/daily-packs.md        # saved idea: daily packs, binder, finishes, exchange
 │   └── priority-algorithm.md       # "Do next" scoring
 ├── design/                         # Figma link, exported frames, app screenshots
 ├── supabase/
