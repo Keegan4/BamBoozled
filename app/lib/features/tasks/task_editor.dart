@@ -8,6 +8,7 @@ import '../../core/utils/dates.dart';
 import '../../core/widgets/leaf_icon.dart';
 import '../../core/widgets/pills.dart';
 import '../../data/providers.dart';
+import 'widgets/open_link.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../domain/models/priority.dart';
 import '../../domain/models/task.dart';
@@ -117,14 +118,16 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
       // Start from the stored task, not the copy this form opened with, so that anything that changed
       // meanwhile (finished, or edited on another device) isn't overwritten by stale values.
       final current = await repo.getTask(widget.task!.id) ?? widget.task!;
+      // Canvas owns the title and due date of imported assignments, so those stay as Canvas has them.
+      final fromCanvas = current.isFromCanvas;
       saved = current.copyWith(
-        title: _title.text,
-        dueAt: _dueAt,
+        title: fromCanvas ? current.title : _title.text,
+        dueAt: fromCanvas ? current.dueAt : _dueAt,
         priority: _priority,
         categoryId: _categoryId,
         estimateMinutes: () => _estimate,
         notes: () => _notes.text,
-        repeat: _repeat,
+        repeat: fromCanvas ? Repeat.none : _repeat,
       );
       await repo.updateTask(saved);
     } else {
@@ -241,69 +244,73 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
       ),
     );
 
+    final canvasTask = widget.task?.isFromCanvas ?? false;
     final fields = <Widget>[
-      _Field(
-        label: 'What needs doing?',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _title,
-              autofocus: !_editing,
-              maxLength: 200,
-              textCapitalization: TextCapitalization.sentences,
-              style: PandaText.body,
-              decoration: InputDecoration(
-                hintText: 'E.g. I am quite fat.',
-                counterText: '',
-                errorText: _showErrors && _title.text.trim().isEmpty ? 'Give your task a short name' : null,
+      if (canvasTask) _FromCanvas(task: widget.task!, now: now),
+      if (!canvasTask)
+        _Field(
+          label: 'What needs doing?',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _title,
+                autofocus: !_editing,
+                maxLength: 200,
+                textCapitalization: TextCapitalization.sentences,
+                style: PandaText.body,
+                decoration: InputDecoration(
+                  hintText: 'E.g. I am quite fat.',
+                  counterText: '',
+                  errorText: _showErrors && _title.text.trim().isEmpty ? 'Give your task a short name' : null,
+                ),
+                onChanged: (_) {
+                  if (_showErrors) setState(() {});
+                },
+                onSubmitted: (_) => _save(),
               ),
-              onChanged: (_) {
-                if (_showErrors) setState(() {});
-              },
-              onSubmitted: (_) => _save(),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tip: Why do you need a tip its literally adding tasks',
-              style: PandaText.caption.copyWith(color: PandaColors.muted),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Tip: Why do you need a tip its literally adding tasks',
+                style: PandaText.caption.copyWith(color: PandaColors.muted),
+              ),
+            ],
+          ),
         ),
-      ),
-      _Field(
-        label: 'When is it due?',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DueDayOptions(
-              today: dateOnly(now),
-              selected: _dueDay,
-              onSelect: (d) => setState(() => _dueDay = d),
-              onPick: _pickDate,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                OptionPill(
-                  label: _time == null ? 'Add a time' : formatTime(_dueAt),
-                  selected: false,
-                  icon: Icons.schedule_rounded,
-                  onTap: _pickTime,
-                  onRemove: _time == null ? null : () => setState(() => _time = null),
-                ),
-                Text(
-                  'Time is optional — defaults to end of day',
-                  style: PandaText.caption.copyWith(color: PandaColors.muted),
-                ),
-              ],
-            ),
-          ],
+      if (!canvasTask)
+        _Field(
+          label: 'When is it due?',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DueDayOptions(
+                today: dateOnly(now),
+                selected: _dueDay,
+                onSelect: (d) => setState(() => _dueDay = d),
+                onPick: _pickDate,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  OptionPill(
+                    label: _time == null ? 'Add a time' : formatTime(_dueAt),
+                    selected: false,
+                    icon: Icons.schedule_rounded,
+                    onTap: _pickTime,
+                    onRemove: _time == null ? null : () => setState(() => _time = null),
+                  ),
+                  Text(
+                    'Time is optional — defaults to end of day',
+                    style: PandaText.caption.copyWith(color: PandaColors.muted),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
       _Field(
         label: 'How important is it?',
         child: Row(
@@ -363,22 +370,23 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
           decoration: const InputDecoration(hintText: 'Add any details, links or reminders…'),
         ),
       ),
-      _Field(
-        label: 'Repeat',
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final r in Repeat.values)
-              OptionPill(
-                label: r.label,
-                icon: r == Repeat.none ? null : Icons.repeat_rounded,
-                selected: r == _repeat,
-                onTap: () => setState(() => _repeat = r),
-              ),
-          ],
+      if (!canvasTask)
+        _Field(
+          label: 'Repeat',
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final r in Repeat.values)
+                OptionPill(
+                  label: r.label,
+                  icon: r == Repeat.none ? null : Icons.repeat_rounded,
+                  selected: r == _repeat,
+                  onTap: () => setState(() => _repeat = r),
+                ),
+            ],
+          ),
         ),
-      ),
     ];
 
     final cancel = OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel'));
@@ -668,5 +676,52 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
       TextButton(onPressed: _busy ? null : () => Navigator.pop(context), child: const Text('Cancel')),
       FilledButton(onPressed: _busy ? null : _add, child: const Text('Add category')),
     ],
+  );
+}
+
+/// Shown instead of the title, due date and repeat boxes for an assignment imported from Canvas:
+/// those follow Canvas, so they can't be changed here.
+class _FromCanvas extends ConsumerWidget {
+  const _FromCanvas({required this.task, required this.now});
+
+  final Task task;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Container(
+    key: const ValueKey('from-canvas'),
+    margin: const EdgeInsets.only(bottom: 20),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(color: PandaColors.rice, borderRadius: BorderRadius.circular(16)),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.school_rounded, size: 18, color: PandaColors.bambooDark),
+            const SizedBox(width: 6),
+            Text('From Canvas', style: PandaText.captionStrong.copyWith(color: PandaColors.bambooDark)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(task.title, style: PandaText.heading),
+        const SizedBox(height: 2),
+        Text(dueLabel(task.dueAt, now), style: PandaText.body.copyWith(color: PandaColors.muted)),
+        const SizedBox(height: 8),
+        Text(
+          'The name and due date follow Canvas. You can still set the priority, category, time needed '
+          'and notes, and tick it off here.',
+          style: PandaText.caption.copyWith(color: PandaColors.muted),
+        ),
+        if (task.link != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => openLink(context, ref, task.link!),
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open in Canvas'),
+          ),
+        ],
+      ],
+    ),
   );
 }

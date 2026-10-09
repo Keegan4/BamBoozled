@@ -317,9 +317,26 @@ void main() {
         createdAt: DateTime(2026, 10, 1),
         updatedAt: DateTime(2026, 10, 9, 12, 30, 15, 250),
         deletedAt: DateTime(2026, 10, 10),
+        link: 'https://canvas.nus.edu.sg/courses/55/assignments/101',
       );
       final json = SupabaseRemoteStore.taskToJson(t, 'u');
       expect(SupabaseRemoteStore.taskFromJson(jsonDecode(jsonEncode(json)) as Map<String, dynamic>), t);
+    });
+
+    test('a task without a link sends no link column, so servers without 0002 still accept it', () {
+      final json = SupabaseRemoteStore.taskToJson(
+        Task(
+          id: 'x',
+          title: 'x',
+          dueAt: DateTime(2026),
+          categoryId: 'g',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        ),
+        'u',
+      );
+      expect(json.containsKey('link'), isFalse);
+      expect(SupabaseRemoteStore.taskFromJson({...json, 'server_updated_at': 'x'}).link, isNull);
     });
 
     test('timestamps are sent in UTC and read back in local time', () {

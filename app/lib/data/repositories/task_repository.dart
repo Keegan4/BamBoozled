@@ -8,6 +8,7 @@ import '../../core/theme/colors.dart';
 import '../../domain/models/category.dart';
 import '../../domain/models/priority.dart';
 import '../../domain/models/task.dart';
+import '../canvas/canvas_feed.dart';
 import '../local/app_database.dart';
 
 /// What the user fills in on the add/edit task form.
@@ -29,6 +30,17 @@ class TaskDraft {
   final int? estimateMinutes;
   final String? notes;
   final Repeat repeat;
+}
+
+/// What an import from Canvas changed.
+class CanvasImportResult {
+  const CanvasImportResult({this.added = 0, this.updated = 0, this.removed = 0, this.total = 0});
+  final int added;
+  final int updated;
+  final int removed;
+
+  /// Items in the feed that are now tasks.
+  final int total;
 }
 
 /// Categories every new install starts with. Fixed ids so two devices that
@@ -282,6 +294,143 @@ class TaskRepository {
     }
   });
 
+  // ---- Canvas ----
+
+  /// Task id for a Canvas item. Built from Canvas's own id, so the phone and the computer make the
+  /// same task when both read the feed, and sync merges them instead of doubling them.
+  static String canvasTaskId(String uid) => '${Task.canvasIdPrefix}${uid.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_')}';
+
+  /// Category id for a course, the same on every device.
+  static String canvasCategoryId(String? course) {
+    if (course == null) return 'canvas-course';
+    final slug = course.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+    return 'canvas-course-${slug.length > 60 ? slug.substring(0, 60) : slug}';
+  }
+
+  /// Brings the tasks in line with the feed:
+  /// * new items become tasks, in a category for their course;
+  /// * Canvas owns the title, due date and link, so changes there are copied over. The user's own
+  ///   priority, category, notes, estimate and tick are never touched;
+  /// * an unfinished task whose item has gone from the feed is removed, but only if it falls within
+  ///   the dates the feed covers (Canvas leaves old items out of the feed; they are kept);
+  /// * a task the user deleted stays deleted, unless [restoreDeleted] (used when connecting again).
+  Future<CanvasImportResult> applyCanvasItems(List<CanvasItem> items, {bool restoreDeleted = false}) async {
+    final now = _clock();
+    var added = 0, updated = 0, removed = 0;
+    final byId = <String, CanvasItem>{};
+    for (final item in items) {
+      byId.putIfAbsent(canvasTaskId(item.uid), () => item);
+    }
+    await db.transaction(() async {
+      final existing = {
+        for (final r in await (db.select(db.tasks)..where((t) => t.id.like('${Task.canvasIdPrefix}%'))).get())
+          r.id: _taskFromRow(r),
+      };
+      final categories = {for (final c in await db.select(db.categories).get()) c.id: _categoryFromRow(c)};
+
+      Future<String> categoryFor(String? course) async {
+        final id = canvasCategoryId(course);
+        final current = categories[id];
+        if (current != null && !current.isDeleted) return id;
+        if (current != null) {
+          final restored = Category(
+            id: id,
+            name: current.name,
+            color: current.color,
+            sortOrder: current.sortOrder,
+            updatedAt: now,
+          );
+          await db.into(db.categories).insertOnConflictUpdate(_categoryToCompanion(restored, dirty: true));
+          categories[id] = restored;
+          return id;
+        }
+        final used = {for (final c in categories.values.where((c) => !c.isDeleted)) c.color};
+        final choices = PandaColors.categoryChoices.values.toList();
+        final color = choices.firstWhere(
+          (c) => !used.contains(c),
+          orElse: () => choices[categories.length % choices.length],
+        );
+        final name = course ?? 'Canvas';
+        final category = Category(
+          id: id,
+          name: name.length > 40 ? name.substring(0, 40) : name,
+          color: color,
+          sortOrder: categories.length,
+          updatedAt: now,
+        );
+        await db.into(db.categories).insert(_categoryToCompanion(category, dirty: true));
+        categories[id] = category;
+        return id;
+      }
+
+      for (final MapEntry(key: id, value: item) in byId.entries) {
+        final current = existing[id];
+        if (current == null) {
+          final task = Task(
+            id: id,
+            title: item.title,
+            dueAt: item.dueAt,
+            categoryId: await categoryFor(item.course),
+            link: item.link,
+            createdAt: now,
+            updatedAt: now,
+          );
+          await db.into(db.tasks).insert(_taskToCompanion(task, dirty: true));
+          added++;
+          continue;
+        }
+        if (current.isDeleted && !restoreDeleted) continue;
+        final changed = current.title != item.title || current.dueAt != item.dueAt || current.link != item.link;
+        if (!changed && !current.isDeleted) continue;
+        var categoryId = current.categoryId;
+        if (current.isDeleted && categories[categoryId]?.isDeleted != false) {
+          categoryId = await categoryFor(item.course);
+        }
+        final next = current.copyWith(
+          title: item.title,
+          dueAt: item.dueAt,
+          link: () => item.link,
+          categoryId: categoryId,
+          deletedAt: () => null,
+          updatedAt: now,
+        );
+        await db.into(db.tasks).insertOnConflictUpdate(_taskToCompanion(next, dirty: true));
+        if (current.isDeleted) {
+          added++;
+        } else {
+          updated++;
+        }
+      }
+
+      if (byId.isNotEmpty) {
+        final windowStart = byId.values.map((i) => i.dueAt).reduce((a, b) => a.isBefore(b) ? a : b);
+        for (final t in existing.values) {
+          if (byId.containsKey(t.id) || t.isDeleted || t.isDone || t.dueAt.isBefore(windowStart)) continue;
+          await db
+              .into(db.tasks)
+              .insertOnConflictUpdate(_taskToCompanion(t.copyWith(deletedAt: () => now, updatedAt: now), dirty: true));
+          removed++;
+        }
+      }
+    });
+    if (added + updated + removed > 0) _changed();
+    return CanvasImportResult(added: added, updated: updated, removed: removed, total: byId.length);
+  }
+
+  /// Removes every task and course category that came from Canvas (when disconnecting).
+  Future<int> removeCanvasTasks() async {
+    final now = _clock();
+    final removed =
+        await (db.update(db.tasks)..where((t) => t.id.like('${Task.canvasIdPrefix}%') & t.deletedAt.isNull())).write(
+          TasksCompanion(deletedAt: Value(now), updatedAt: Value(now), dirty: const Value(true)),
+        );
+    await (db.update(db.categories)..where((c) => c.id.like('canvas-course%') & c.deletedAt.isNull())).write(
+      CategoriesCompanion(deletedAt: Value(now), updatedAt: Value(now), dirty: const Value(true)),
+    );
+    _changed();
+    return removed;
+  }
+
   /// Applies rows pulled from the server. The newest `updatedAt` wins; a local
   /// row that is newer (and not yet pushed) is kept. Returns rows applied.
   Future<int> applyRemoteTasks(List<Task> remote) async {
@@ -338,6 +487,7 @@ class TaskRepository {
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     deletedAt: r.deletedAt,
+    link: r.link,
   );
 
   static TasksCompanion _taskToCompanion(Task t, {required bool dirty}) => TasksCompanion.insert(
@@ -354,6 +504,7 @@ class TaskRepository {
     updatedAt: t.updatedAt,
     deletedAt: Value(t.deletedAt),
     dirty: Value(dirty),
+    link: Value(t.link),
   );
 
   static Category _categoryFromRow(CategoryRow r) => Category(

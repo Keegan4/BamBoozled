@@ -16,6 +16,7 @@ The welcome page has:
 - **Filter, search and colour coding:** each category has its own colour, and priority is shown with leaf badges. When filters hide tasks, a "Showing only: …" banner says so, with a Clear filters button.
 - **This week:** the *due*, *done* and *overdue* boxes are buttons. Click one to see those tasks.
 - **Finished tasks stay visible:** a "Recently done" section sits under "Do next", and the Status filter has a Done view.
+- **Canvas assignments:** connect a Canvas calendar feed in Settings and your assignments appear as tasks (see [Canvas](#canvas) below).
 - **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
 The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
@@ -44,7 +45,7 @@ flutter build windows --release --dart-define=... # Windows
 Sync uses [Supabase](https://supabase.com). **You** create each person's account in the Supabase dashboard. The app has no sign-up screen and sends no emails, so you don't need to set up email or a mail server.
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the project's **SQL Editor**, paste and run [supabase/migrations/0001_tasks.sql](supabase/migrations/0001_tasks.sql). Or, with the Supabase CLI: `supabase link` then `supabase db push`.
+2. In the project's **SQL Editor**, paste and run [supabase/migrations/0001_tasks.sql](supabase/migrations/0001_tasks.sql), then [supabase/migrations/0002_task_link.sql](supabase/migrations/0002_task_link.sql) (it lets Canvas assignments carry their link). Or, with the Supabase CLI: `supabase link` then `supabase db push`. If you set up sync before 0002 existed, just run 0002 now: it is safe to run more than once.
 3. In the dashboard (menu names may differ slightly), go to **Authentication → Sign In / Providers**:
    - Make sure **Email** is on.
    - Turn **off** "Allow new users to sign up", so only the accounts you add can sign in.
@@ -65,6 +66,22 @@ To remove someone, or to change their password, open the same **Users** list and
 In the app, go to **Settings → Sign in to sync**, type the email and password, and press **Sign in**. Tasks added before signing in are uploaded automatically. Use the same account on every device and the tasks stay in step. You can sign out from the same Settings page.
 
 If sign-in fails, the app says whether the email or password was wrong, or whether it couldn't reach the server.
+
+### Canvas
+
+BamBoozled can show your Canvas assignments, using Canvas's **calendar feed** (a private link that every Canvas user has; no admin approval needed).
+
+1. In Canvas, open **Calendar**, choose **Calendar Feed** (bottom right) and copy the link.
+2. In BamBoozled, go to **Settings → Canvas → Connect Canvas** and paste it.
+
+What happens:
+- Each assignment becomes a task, with its due date, in a colour-coded category for its course, and a **Canvas** label. Office hours and other calendar events are left out.
+- The app reads the feed when it opens and then every hour (or press **Update now**). If Canvas changes a title or due date, the task follows. If an assignment is removed from Canvas, it is removed here, unless you had already ticked it off.
+- Canvas owns the name and due date. You can set the priority, category, time needed and notes, tick it off, and use **Open in Canvas** to go to the assignment.
+- Canvas's feed doesn't say whether you've submitted, so tick assignments off yourself. A refresh never un-ticks them.
+- **Disconnect** removes everything that came from Canvas. Nothing changes in Canvas itself.
+
+Treat the feed link like a password: anyone with it can read your Canvas calendar. It stays on the device where you paste it and is never uploaded. The assignments themselves sync to your other devices like any task, so connecting on one device is enough. Canvas only refreshes its feed every few hours, so a brand-new assignment can take a while to appear.
 
 ### Developing
 
@@ -116,7 +133,7 @@ The publishable key is meant to be shipped inside the app (it only allows what t
 ### How sync works
 1. The UI only ever talks to the local Drift database, so it stays fast and works offline.
 2. `SyncService` pushes rows that changed locally to Supabase. It compares `updated_at` timestamps, and the most recent change wins.
-3. `SyncService` pulls remote changes regularly in the background, and catches up fully when the app starts and after signing in.
+3. `SyncService` pulls remote changes when Supabase Realtime says something changed, regularly in the background, and fully when the app starts and after signing in.
 4. Deleted tasks are not removed straight away. They are marked with `deleted_at` (a soft delete), so the deletion syncs to the other device.
 5. The server ignores a write that is older than the copy it already has, and stamps every row with its own `server_updated_at`, so devices with wrong clocks still pull every change.
 
@@ -131,6 +148,7 @@ BamBoozled/
 ├── design/                         # Figma link, exported frames, app screenshots
 ├── supabase/
 │   ├── migrations/0001_tasks.sql   # tasks, categories + RLS policies
+│   ├── migrations/0002_task_link.sql  # task links (Canvas assignments)
 │   └── tests/                      # SQL tests, run on a real PostgreSQL
 ├── .github/workflows/              # ci.yml, release.yml
 └── app/                            # Flutter project
@@ -142,7 +160,8 @@ BamBoozled/
     │   ├── app.dart                # routes, theme, keeps sync and repeats running
     │   ├── core/                   # theme, layout breakpoints, shared widgets, date helpers
     │   ├── data/
-    │   │   ├── local/              # Drift tables and database (SQLite)
+    │   │   ├── canvas/             # reads Canvas calendar feeds and keeps the assignments in step
+│   │   ├── local/              # Drift tables and database (SQLite)
     │   │   ├── remote/             # Supabase: sign-in (auth_service) and task upload/download
     │   │   ├── sync/sync_service.dart
     │   │   ├── repositories/task_repository.dart   # the only code that changes tasks

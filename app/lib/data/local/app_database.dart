@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +26,9 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await m.createIndex(Index('tasks_due_at', 'CREATE INDEX tasks_due_at ON tasks (due_at)'));
       await m.createIndex(Index('tasks_dirty', 'CREATE INDEX tasks_dirty ON tasks (dirty)'));
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.addColumn(tasks, tasks.link);
     },
   );
 

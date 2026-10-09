@@ -56,6 +56,7 @@ class BamBoozledApp extends ConsumerWidget {
     // Keep background sync running while the app is open.
     ref.watch(syncServiceProvider);
     ref.watch(repeatSpawnerProvider);
+    ref.watch(canvasAutoRefreshProvider);
     return MaterialApp.router(
       title: 'BamBoozled',
       debugShowCheckedModeBanner: false,

@@ -26,8 +26,36 @@ void main() {
     expect(indexes, containsAll(['tasks_due_at', 'tasks_dirty']));
   });
 
-  test('schema version is 1 (bump it, with a migration, when tables change)', () {
-    expect(db.schemaVersion, 1);
+  test('schema version is 2 (bump it, with a migration, when tables change)', () {
+    expect(db.schemaVersion, 2);
+  });
+
+  test('a version 1 database (before links) is upgraded and keeps its tasks', () async {
+    final file = NativeDatabase.memory(
+      setup: (raw) {
+        raw.execute('''
+          CREATE TABLE tasks (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, due_at TEXT NOT NULL,
+            priority INTEGER NOT NULL, category_id TEXT NOT NULL, estimate_minutes INTEGER, notes TEXT,
+            repeat INTEGER NOT NULL DEFAULT 0, completed_at TEXT, created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL, deleted_at TEXT, dirty INTEGER NOT NULL DEFAULT 1);
+          CREATE TABLE categories (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, color_value INTEGER NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, deleted_at TEXT,
+            dirty INTEGER NOT NULL DEFAULT 1);
+          CREATE TABLE settings (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL);
+          INSERT INTO tasks (id, title, due_at, priority, category_id, created_at, updated_at)
+            VALUES ('old', 'Made before the upgrade', '2026-10-09T17:00:00.000', 2, 'general',
+              '2026-10-01T09:00:00.000', '2026-10-01T09:00:00.000');
+          PRAGMA user_version = 1;
+        ''');
+      },
+    );
+    final upgraded = AppDatabase(DatabaseConnection(file, closeStreamsSynchronously: true));
+    final rows = await upgraded.select(upgraded.tasks).get();
+    expect(rows.single.title, 'Made before the upgrade');
+    expect(rows.single.link, isNull);
+    await upgraded.customStatement("UPDATE tasks SET link = 'https://canvas.example/a/1' WHERE id = 'old'");
+    expect((await upgraded.select(upgraded.tasks).getSingle()).link, 'https://canvas.example/a/1');
+    await upgraded.close();
   });
 
   group('settings', () {

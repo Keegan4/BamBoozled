@@ -9,6 +9,7 @@ import '../../core/widgets/pills.dart';
 import '../../data/providers.dart';
 import '../../data/sync/sync_service.dart';
 import '../auth/sign_in_dialog.dart';
+import 'canvas_card.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -25,7 +26,7 @@ class SettingsPage extends ConsumerWidget {
           constraints: const BoxConstraints(maxWidth: 640),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [_NameCard(), SizedBox(height: 16), _SyncCard()],
+            children: [_NameCard(), SizedBox(height: 16), _SyncCard(), SizedBox(height: 16), CanvasCard()],
           ),
         ),
       ],

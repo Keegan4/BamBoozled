@@ -97,6 +97,8 @@ class SupabaseRemoteStore implements RemoteStore {
     'created_at': _ts(t.createdAt),
     'updated_at': _ts(t.updatedAt),
     'deleted_at': t.deletedAt == null ? null : _ts(t.deletedAt!),
+    // Only sent when set, so a project that hasn't run 0002_task_link.sql still syncs everything else.
+    if (t.link != null) 'link': t.link,
   };
 
   static Task taskFromJson(Map<String, dynamic> j) => Task(
@@ -112,6 +114,7 @@ class SupabaseRemoteStore implements RemoteStore {
     createdAt: _parse(j['created_at']),
     updatedAt: _parse(j['updated_at']),
     deletedAt: _parseOpt(j['deleted_at']),
+    link: j['link'] as String?,
   );
 
   static Map<String, dynamic> categoryToJson(Category c, String userId) => {

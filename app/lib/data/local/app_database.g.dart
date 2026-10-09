@@ -516,6 +516,15 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("dirty" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _linkMeta = const VerificationMeta('link');
+  @override
+  late final GeneratedColumn<String> link = GeneratedColumn<String>(
+    'link',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -531,6 +540,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     updatedAt,
     deletedAt,
     dirty,
+    link,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -597,6 +607,9 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
     if (data.containsKey('dirty')) {
       context.handle(_dirtyMeta, dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta));
     }
+    if (data.containsKey('link')) {
+      context.handle(_linkMeta, link.isAcceptableOrUnknown(data['link']!, _linkMeta));
+    }
     return context;
   }
 
@@ -619,6 +632,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskRow> {
       updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
       deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       dirty: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}dirty'])!,
+      link: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}link']),
     );
   }
 
@@ -642,6 +656,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
+
+  /// Added in schema version 2: a web page for the task (e.g. the assignment in Canvas).
+  final String? link;
   const TaskRow({
     required this.id,
     required this.title,
@@ -656,6 +673,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
+    this.link,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -681,6 +699,9 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || link != null) {
+      map['link'] = Variable<String>(link);
+    }
     return map;
   }
 
@@ -699,6 +720,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
       dirty: Value(dirty),
+      link: link == null && nullToAbsent ? const Value.absent() : Value(link),
     );
   }
 
@@ -718,6 +740,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
+      link: serializer.fromJson<String?>(json['link']),
     );
   }
   @override
@@ -737,6 +760,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
+      'link': serializer.toJson<String?>(link),
     };
   }
 
@@ -754,6 +778,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
+    Value<String?> link = const Value.absent(),
   }) => TaskRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -768,6 +793,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
+    link: link.present ? link.value : this.link,
   );
   TaskRow copyWithCompanion(TasksCompanion data) {
     return TaskRow(
@@ -784,6 +810,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      link: data.link.present ? data.link.value : this.link,
     );
   }
 
@@ -802,7 +829,8 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('dirty: $dirty, ')
+          ..write('link: $link')
           ..write(')'))
         .toString();
   }
@@ -822,6 +850,7 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
     updatedAt,
     deletedAt,
     dirty,
+    link,
   );
   @override
   bool operator ==(Object other) =>
@@ -839,7 +868,8 @@ class TaskRow extends DataClass implements Insertable<TaskRow> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.dirty == this.dirty &&
+          other.link == this.link);
 }
 
 class TasksCompanion extends UpdateCompanion<TaskRow> {
@@ -856,6 +886,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
+  final Value<String?> link;
   final Value<int> rowid;
   const TasksCompanion({
     this.id = const Value.absent(),
@@ -871,6 +902,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
+    this.link = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
@@ -887,6 +919,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
+    this.link = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -909,6 +942,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
+    Expression<String>? link,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -925,6 +959,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
+      if (link != null) 'link': link,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -943,6 +978,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
+    Value<String?>? link,
     Value<int>? rowid,
   }) {
     return TasksCompanion(
@@ -959,6 +995,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
+      link: link ?? this.link,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1005,6 +1042,9 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
+    if (link.present) {
+      map['link'] = Variable<String>(link.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1027,6 +1067,7 @@ class TasksCompanion extends UpdateCompanion<TaskRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
+          ..write('link: $link, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1415,6 +1456,7 @@ typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
   Value<bool> dirty,
+  Value<String?> link,
   Value<int> rowid,
 });
 typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
@@ -1431,6 +1473,7 @@ typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
   Value<bool> dirty,
+  Value<String?> link,
   Value<int> rowid,
 });
 
@@ -1478,6 +1521,8 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
       $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get dirty => $composableBuilder(column: $table.dirty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get link => $composableBuilder(column: $table.link, builder: (column) => ColumnFilters(column));
 }
 
 class $$TasksTableOrderingComposer extends Composer<_$AppDatabase, $TasksTable> {
@@ -1525,6 +1570,9 @@ class $$TasksTableOrderingComposer extends Composer<_$AppDatabase, $TasksTable> 
 
   ColumnOrderings<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get link =>
+      $composableBuilder(column: $table.link, builder: (column) => ColumnOrderings(column));
 }
 
 class $$TasksTableAnnotationComposer extends Composer<_$AppDatabase, $TasksTable> {
@@ -1562,6 +1610,8 @@ class $$TasksTableAnnotationComposer extends Composer<_$AppDatabase, $TasksTable
   GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   GeneratedColumn<bool> get dirty => $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get link => $composableBuilder(column: $table.link, builder: (column) => column);
 }
 
 class $$TasksTableTableManager
@@ -1602,6 +1652,7 @@ class $$TasksTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
+                Value<String?> link = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
@@ -1617,6 +1668,7 @@ class $$TasksTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
+                link: link,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1634,6 +1686,7 @@ class $$TasksTableTableManager
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
+                Value<String?> link = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
@@ -1649,6 +1702,7 @@ class $$TasksTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
+                link: link,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

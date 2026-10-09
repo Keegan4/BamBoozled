@@ -15,6 +15,7 @@ class Task {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
+    this.link,
   });
 
   final String id;
@@ -31,6 +32,13 @@ class Task {
 
   /// Soft delete marker, so deletions sync to other devices.
   final DateTime? deletedAt;
+
+  /// A web page for the task, e.g. the assignment in Canvas.
+  final String? link;
+
+  /// Imported from a Canvas calendar feed. Canvas owns the title and due date of these.
+  bool get isFromCanvas => id.startsWith(canvasIdPrefix);
+  static const canvasIdPrefix = 'canvas-';
 
   bool get isDone => completedAt != null;
   bool get isDeleted => deletedAt != null;
@@ -60,6 +68,7 @@ class Task {
     DateTime? Function()? completedAt,
     DateTime? updatedAt,
     DateTime? Function()? deletedAt,
+    String? Function()? link,
   }) => Task(
     id: id,
     title: title ?? this.title,
@@ -73,6 +82,7 @@ class Task {
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt != null ? deletedAt() : this.deletedAt,
+    link: link != null ? link() : this.link,
   );
 
   @override
@@ -89,7 +99,8 @@ class Task {
       other.completedAt == completedAt &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt &&
-      other.deletedAt == deletedAt;
+      other.deletedAt == deletedAt &&
+      other.link == link;
 
   @override
   int get hashCode => Object.hash(
@@ -105,6 +116,7 @@ class Task {
     createdAt,
     updatedAt,
     deletedAt,
+    link,
   );
 
   @override

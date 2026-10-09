@@ -85,6 +85,7 @@ class TaskCard extends StatelessWidget {
                                       due,
                                       ?category?.name,
                                       if (task.repeat != Repeat.none) '↻ ${task.repeat.label}',
+                                      if (task.isFromCanvas) 'Canvas',
                                     ].join(' · '),
                                     maxLines: compact ? 2 : 1,
                                     overflow: TextOverflow.ellipsis,

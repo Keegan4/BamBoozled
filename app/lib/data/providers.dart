@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/models/category.dart';
 import '../domain/models/task.dart';
+import 'canvas/canvas_service.dart';
 import 'local/app_database.dart';
 import 'remote/auth_service.dart';
 import 'remote/supabase_remote_store.dart';
@@ -82,6 +83,32 @@ final repeatSpawnerProvider = Provider<void>((ref) {
   ref.watch(clockProvider.select((d) => DateTime(d.year, d.month, d.day)));
   final repo = ref.watch(taskRepositoryProvider);
   Future.microtask(repo.spawnNextRepeats);
+});
+
+/// How Canvas feeds are downloaded. Tests swap in sample feeds.
+final canvasFetcherProvider = Provider<FeedFetcher>((ref) => fetchFeedOverHttp);
+
+final canvasServiceProvider = Provider<CanvasService>(
+  (ref) => CanvasService(
+    db: ref.watch(databaseProvider),
+    repo: ref.watch(taskRepositoryProvider),
+    fetch: ref.watch(canvasFetcherProvider),
+  ),
+);
+
+final canvasStatusProvider = StreamProvider<CanvasStatus>(
+  (ref) => ref.watch(databaseProvider).watchSetting(CanvasStatus.key).map(CanvasStatus.fromSetting),
+);
+
+/// While connected to Canvas, reads the feed when the app opens and then every hour. Watch it once,
+/// near the top of the app.
+final canvasAutoRefreshProvider = Provider<void>((ref) {
+  final url = ref.watch(canvasStatusProvider.select((s) => s.value?.feedUrl));
+  if (url == null) return;
+  final canvas = ref.watch(canvasServiceProvider);
+  Future.microtask(canvas.refresh);
+  final timer = Timer.periodic(const Duration(hours: 1), (_) => canvas.refresh());
+  ref.onDispose(timer.cancel);
 });
 
 final tasksProvider = StreamProvider<List<Task>>((ref) => ref.watch(taskRepositoryProvider).watchTasks());

@@ -33,6 +33,9 @@ class Tasks extends Table {
   DateTimeColumn get deletedAt => dateTime().nullable()();
   BoolColumn get dirty => boolean().withDefault(const Constant(true))();
 
+  /// Added in schema version 2: a web page for the task (e.g. the assignment in Canvas).
+  TextColumn get link => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
