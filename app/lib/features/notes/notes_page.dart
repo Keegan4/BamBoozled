@@ -18,6 +18,7 @@ class NotesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final p = context.panda;
     final phone = Breakpoints.isPhone(context);
     final now = ref.watch(clockProvider);
     final today = DateTime(now.year, now.month, now.day);
@@ -50,7 +51,7 @@ class NotesPage extends ConsumerWidget {
               ? 'Tap the card to reveal today’s photo.'
               : 'A new card ${_untilMidnight(now)}.',
           key: const ValueKey('card-hint'),
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: p.muted),
         ),
         const SizedBox(height: 20),
         switch (note) {
@@ -73,7 +74,7 @@ class NotesPage extends ConsumerWidget {
           const SizedBox(height: 36),
           Text('Collected · ${collected.length}', style: PandaText.title),
           const SizedBox(height: 4),
-          Text('Tap a card to look at it again.', style: PandaText.caption.copyWith(color: PandaColors.muted)),
+          Text('Tap a card to look at it again.', style: PandaText.caption.copyWith(color: p.muted)),
           const SizedBox(height: 14),
           GridView(
             key: const ValueKey('collected'),
@@ -114,6 +115,7 @@ class _CollectedThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.panda;
     final caption = today ? 'Today' : label;
     return Semantics(
       button: true,
@@ -127,7 +129,7 @@ class _CollectedThumb extends StatelessWidget {
             child: Material(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
-                side: const BorderSide(color: PandaColors.line),
+                side: BorderSide(color: p.line),
               ),
               clipBehavior: Clip.antiAlias,
               child: Ink.image(
@@ -143,7 +145,7 @@ class _CollectedThumb extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: PandaText.caption.copyWith(color: PandaColors.muted),
+            style: PandaText.caption.copyWith(color: p.muted),
           ),
         ],
       ),
@@ -165,7 +167,7 @@ class _NoCards extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Add photos and messages to assets/daily_notes to start getting a card a day.',
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
           textAlign: TextAlign.center,
         ),
       ],

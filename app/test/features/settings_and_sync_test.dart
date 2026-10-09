@@ -272,6 +272,8 @@ void main() {
 
     testWidgets('fits on a phone with the keyboard-sized window', (tester) async {
       final (app, s) = await syncedApp(tester, size: const Size(412, 500));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in to sync'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in to sync'));
       await TestApp.settle(tester);
       expect(find.byType(SignInDialog), findsOneWidget);

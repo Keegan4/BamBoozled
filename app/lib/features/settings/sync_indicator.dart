@@ -18,12 +18,12 @@ class SyncIndicator extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).value;
     final status = ref.watch(syncStatusProvider).value;
     final (icon, color, tip) = switch ((user, status?.phase)) {
-      (null, _) => (Icons.cloud_off_rounded, PandaColors.muted, 'Not syncing — sign in to use on all your devices'),
-      (_, SyncPhase.syncing) => (Icons.cloud_sync_rounded, PandaColors.bambooDark, 'Syncing…'),
-      (_, SyncPhase.error) => (Icons.cloud_off_rounded, PandaColors.overdue, 'Couldn’t sync — will retry'),
+      (null, _) => (Icons.cloud_off_rounded, context.panda.muted, 'Not syncing — sign in to use on all your devices'),
+      (_, SyncPhase.syncing) => (Icons.cloud_sync_rounded, context.panda.bambooDark, 'Syncing…'),
+      (_, SyncPhase.error) => (Icons.cloud_off_rounded, context.panda.overdue, 'Couldn’t sync — will retry'),
       _ => (
         Icons.cloud_done_rounded,
-        PandaColors.bambooDark,
+        context.panda.bambooDark,
         status?.lastSyncedAt == null ? 'Synced' : 'Synced at ${formatTime(status!.lastSyncedAt!)}',
       ),
     };
@@ -33,8 +33,8 @@ class SyncIndicator extends ConsumerWidget {
         tooltip: tip,
         onPressed: () => context.go('/settings'),
         style: IconButton.styleFrom(
-          backgroundColor: PandaColors.surface,
-          side: const BorderSide(color: PandaColors.line, width: 1.5),
+          backgroundColor: context.panda.surface,
+          side: BorderSide(color: context.panda.line, width: 1.5),
           minimumSize: const Size(48, 48),
         ),
         icon: Icon(icon, color: color),

@@ -60,6 +60,7 @@ class _NoteViewerState extends State<NoteViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.panda;
     final size = MediaQuery.sizeOf(context);
     // As big as fits, keeping the 4:5 card shape, with room for the close button.
     final width = [420.0, size.width - 32, (size.height - 140) * 4 / 5].reduce((a, b) => a < b ? a : b);
@@ -93,8 +94,8 @@ class _NoteViewerState extends State<NoteViewer> {
                     tooltip: 'Close',
                     onPressed: () => Navigator.of(context).pop(),
                     style: IconButton.styleFrom(
-                      backgroundColor: PandaColors.surface,
-                      foregroundColor: PandaColors.ink,
+                      backgroundColor: p.surface,
+                      foregroundColor: p.ink,
                       minimumSize: const Size(48, 48),
                     ),
                     icon: const Icon(Icons.close_rounded),

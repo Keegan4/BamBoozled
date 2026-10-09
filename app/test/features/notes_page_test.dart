@@ -1,5 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:bamboozled/core/theme/colors.dart';
+import 'package:bamboozled/core/theme/panda_theme.dart';
 import 'package:bamboozled/data/daily_notes/daily_note_library.dart';
 import 'package:bamboozled/data/daily_notes/daily_note_store.dart';
 import 'package:bamboozled/data/providers.dart';
@@ -350,6 +352,23 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('Only text'), findsOneWidget);
+    });
+
+    testWidgets('follows dark mode: the back of the card uses the dark paper colour', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildPandaTheme(brightness: Brightness.dark),
+          home: Center(
+            child: SizedBox(
+              width: 300,
+              child: DailyCard(note: note, stage: CardStage.back, onTap: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      final card = tester.widget<Material>(find.byKey(const ValueKey('card-back')));
+      expect(card.color, PandaPalette.dark.rice);
     });
 
     testWidgets('the Notes page builds on its own', (tester) async {

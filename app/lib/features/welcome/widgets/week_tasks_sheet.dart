@@ -28,14 +28,14 @@ Future<void> showWeekTasks(BuildContext context, WeekView initial) {
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      backgroundColor: PandaColors.surface,
+      backgroundColor: context.panda.surface,
       builder: (_) => sheet,
     );
   }
   return showDialog<void>(
     context: context,
     builder: (context) => Dialog(
-      backgroundColor: PandaColors.surface,
+      backgroundColor: context.panda.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 560, maxHeight: MediaQuery.sizeOf(context).height * 0.85),
@@ -85,7 +85,7 @@ class _WeekTasksSheetState extends ConsumerState<WeekTasksSheet> {
               IconButton(
                 tooltip: 'Close',
                 onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(backgroundColor: PandaColors.rice, minimumSize: const Size(48, 48)),
+                style: IconButton.styleFrom(backgroundColor: context.panda.rice, minimumSize: const Size(48, 48)),
                 icon: const Icon(Icons.close_rounded),
               ),
             ],
@@ -105,11 +105,11 @@ class _WeekTasksSheetState extends ConsumerState<WeekTasksSheet> {
             selected: {_view},
             onSelectionChanged: (s) => setState(() => _view = s.first),
             style: SegmentedButton.styleFrom(
-              backgroundColor: PandaColors.rice,
-              selectedBackgroundColor: PandaColors.ink,
-              selectedForegroundColor: PandaColors.rice,
-              foregroundColor: PandaColors.ink,
-              side: const BorderSide(color: PandaColors.line),
+              backgroundColor: context.panda.rice,
+              selectedBackgroundColor: context.panda.ink,
+              selectedForegroundColor: context.panda.rice,
+              foregroundColor: context.panda.ink,
+              side: BorderSide(color: context.panda.line),
               minimumSize: const Size(0, 48),
               textStyle: PandaText.bodyStrong,
             ),
@@ -120,7 +120,7 @@ class _WeekTasksSheetState extends ConsumerState<WeekTasksSheet> {
           child: tasks.isEmpty
               ? Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                  child: Text(_view.empty, style: PandaText.body.copyWith(color: PandaColors.muted)),
+                  child: Text(_view.empty, style: PandaText.body.copyWith(color: context.panda.muted)),
                 )
               : ListView(
                   key: ValueKey('week-${_view.name}'),

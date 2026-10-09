@@ -42,7 +42,7 @@ class AllTasksPage extends ConsumerWidget {
         if (ranked.isEmpty && done.isEmpty)
           Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('No tasks match.', style: PandaText.body.copyWith(color: PandaColors.muted)),
+            child: Text('No tasks match.', style: PandaText.body.copyWith(color: context.panda.muted)),
           ),
         for (final r in ranked)
           Padding(

@@ -42,7 +42,91 @@ void main() {
     });
   });
 
+  group('Dark palette', () {
+    const d = PandaPalette.dark;
+
+    test('matches the dark mode mockup', () {
+      expect(d.rice, const Color(0xFF121412));
+      expect(d.surface, const Color(0xFF1B1E1B));
+      expect(d.ink, const Color(0xFFEDEBE4));
+      expect(d.line, const Color(0xFF2D312C));
+      expect(d.muted, const Color(0xFFA2A69E));
+      expect(d.bamboo, const Color(0xFF8CC490));
+      expect(d.bambooDark, const Color(0xFFA9D8AC));
+      expect(d.bambooTint, const Color(0xFF223426));
+      expect(d.overdue, const Color(0xFFF28B8B));
+      expect(d.overdueTint, const Color(0xFF3B2323));
+    });
+
+    test('the light palette is the original Panda colours', () {
+      const l = PandaPalette.light;
+      expect(
+        [l.ink, l.rice, l.surface, l.muted, l.line, l.bamboo, l.bambooDark, l.bambooTint, l.overdue],
+        [
+          PandaColors.ink,
+          PandaColors.rice,
+          PandaColors.surface,
+          PandaColors.muted,
+          PandaColors.line,
+          PandaColors.bamboo,
+          PandaColors.bambooDark,
+          PandaColors.bambooTint,
+          PandaColors.overdue,
+        ],
+      );
+    });
+
+    test('body text on every dark background meets WCAG AA (4.5:1)', () {
+      for (final bg in [d.rice, d.surface, d.bambooTint, d.overdueTint]) {
+        expect(_contrast(d.ink, bg), greaterThanOrEqualTo(4.5), reason: 'ink on $bg');
+      }
+      for (final bg in [d.rice, d.surface]) {
+        expect(_contrast(d.muted, bg), greaterThanOrEqualTo(4.5), reason: 'muted on $bg');
+        expect(_contrast(d.overdue, bg), greaterThanOrEqualTo(4.5), reason: 'overdue on $bg');
+      }
+      expect(_contrast(d.bambooDark, d.bambooTint), greaterThanOrEqualTo(4.5));
+      expect(_contrast(d.overdue, d.overdueTint), greaterThanOrEqualTo(4.5));
+    });
+
+    test('button text on bamboo is readable in both modes', () {
+      for (final p in [PandaPalette.light, d]) {
+        expect(_contrast(p.onBamboo, p.bamboo), greaterThanOrEqualTo(4.5));
+      }
+    });
+
+    test('blends smoothly between light and dark', () {
+      expect(PandaPalette.light.lerp(d, 0), PandaPalette.light.copyWith());
+      expect(PandaPalette.light.lerp(d, 1).rice, d.rice);
+      expect(PandaPalette.light.lerp(null, 0.5), PandaPalette.light);
+      expect(d.copyWith(ink: PandaColors.ink).ink, PandaColors.ink);
+    });
+  });
+
   group('Panda theme', () {
+    test('dark theme uses the dark palette on the same type and shapes', () {
+      final dark = buildPandaTheme(brightness: Brightness.dark);
+      expect(dark.brightness, Brightness.dark);
+      expect(dark.scaffoldBackgroundColor, PandaPalette.dark.rice);
+      expect(dark.extension<PandaPalette>(), PandaPalette.dark);
+      expect(dark.colorScheme.primary, PandaPalette.dark.bamboo);
+      expect(dark.textTheme.bodyLarge!.color, PandaPalette.dark.ink);
+      expect(dark.textTheme.bodyLarge!.fontFamily, 'Nunito');
+      expect(buildPandaTheme().extension<PandaPalette>(), PandaPalette.light);
+    });
+
+    testWidgets('context.panda falls back to the light palette outside the app theme', (tester) async {
+      late PandaPalette found;
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            found = context.panda;
+            return const SizedBox();
+          },
+        ),
+      );
+      expect(found, PandaPalette.light);
+    });
+
     test('uses Nunito and the rice background', () {
       final theme = buildPandaTheme();
       expect(theme.scaffoldBackgroundColor, PandaColors.rice);

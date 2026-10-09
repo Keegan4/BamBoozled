@@ -25,6 +25,7 @@ class DailyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.panda;
     final still = MediaQuery.disableAnimationsOf(context);
     Duration d(int ms) => still ? Duration.zero : Duration(milliseconds: ms);
     final label = switch (stage) {
@@ -51,19 +52,19 @@ class DailyCard extends StatelessWidget {
                 ..rotateY(angle),
               child: Material(
                 key: ValueKey(showBack ? 'card-back' : 'card-front'),
-                color: showBack ? PandaColors.rice : PandaColors.surface,
+                color: showBack ? p.rice : p.surface,
                 elevation: 6,
-                shadowColor: PandaColors.ink.withValues(alpha: 0.25),
+                shadowColor: p.ink.withValues(alpha: 0.25),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(PandaSizes.cardRadius),
-                  side: const BorderSide(color: PandaColors.line),
+                  side: BorderSide(color: p.line),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: onTap,
                   child: showBack
-                      ? Transform(alignment: Alignment.center, transform: Matrix4.rotationY(math.pi), child: _back())
-                      : _front(d),
+                      ? Transform(alignment: Alignment.center, transform: Matrix4.rotationY(math.pi), child: _back(p))
+                      : _front(p, d),
                 ),
               ),
             );
@@ -73,7 +74,7 @@ class DailyCard extends StatelessWidget {
     );
   }
 
-  Widget _front(Duration Function(int) d) => Stack(
+  Widget _front(PandaPalette p, Duration Function(int) d) => Stack(
     fit: StackFit.expand,
     children: [
       TweenAnimationBuilder<double>(
@@ -93,33 +94,33 @@ class DailyCard extends StatelessWidget {
         child: switch (stage) {
           CardStage.hidden => Container(
             key: const ValueKey('hidden-overlay'),
-            color: PandaColors.rice.withValues(alpha: 0.35),
+            color: p.rice.withValues(alpha: 0.35),
             alignment: Alignment.center,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const PandaMascot(size: 72, sleeping: true),
                 const SizedBox(height: 12),
-                _pill(Icons.touch_app_rounded, 'Tap to reveal'),
+                _pill(p, Icons.touch_app_rounded, 'Tap to reveal'),
               ],
             ),
           ),
           _ => Align(
             key: const ValueKey('flip-hint'),
             alignment: Alignment.bottomRight,
-            child: Padding(padding: const EdgeInsets.all(14), child: _pill(Icons.autorenew_rounded, 'Tap to flip')),
+            child: Padding(padding: const EdgeInsets.all(14), child: _pill(p, Icons.autorenew_rounded, 'Tap to flip')),
           ),
         },
       ),
     ],
   );
 
-  Widget _back() => Padding(
+  Widget _back(PandaPalette p) => Padding(
     padding: const EdgeInsets.fromLTRB(28, 32, 28, 20),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.format_quote_rounded, color: PandaColors.bamboo, size: 32),
+        Icon(Icons.format_quote_rounded, color: p.bamboo, size: 32),
         const SizedBox(height: 8),
         if (note.title != null) ...[Text(note.title!, style: PandaText.title), const SizedBox(height: 12)],
         Expanded(
@@ -130,30 +131,30 @@ class DailyCard extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            if (footer != null) Text(footer!, style: PandaText.caption.copyWith(color: PandaColors.muted)),
+            if (footer != null) Text(footer!, style: PandaText.caption.copyWith(color: p.muted)),
             const Spacer(),
-            const Icon(Icons.autorenew_rounded, size: 18, color: PandaColors.muted),
+            Icon(Icons.autorenew_rounded, size: 18, color: p.muted),
             const SizedBox(width: 4),
-            Text('Tap to flip back', style: PandaText.caption.copyWith(color: PandaColors.muted)),
+            Text('Tap to flip back', style: PandaText.caption.copyWith(color: p.muted)),
           ],
         ),
       ],
     ),
   );
 
-  static Widget _pill(IconData icon, String text) => Container(
+  static Widget _pill(PandaPalette p, IconData icon, String text) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     decoration: BoxDecoration(
-      color: PandaColors.surface.withValues(alpha: 0.92),
+      color: p.surface.withValues(alpha: 0.92),
       borderRadius: BorderRadius.circular(PandaSizes.pill),
-      boxShadow: [BoxShadow(color: PandaColors.ink.withValues(alpha: 0.12), blurRadius: 8)],
+      boxShadow: [BoxShadow(color: p.ink.withValues(alpha: 0.12), blurRadius: 8)],
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: PandaColors.bambooDark),
+        Icon(icon, size: 18, color: p.bambooDark),
         const SizedBox(width: 6),
-        Text(text, style: PandaText.captionStrong.copyWith(color: PandaColors.ink)),
+        Text(text, style: PandaText.captionStrong.copyWith(color: p.ink)),
       ],
     ),
   );

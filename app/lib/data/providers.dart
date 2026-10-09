@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/theme/appearance.dart';
 import '../domain/models/category.dart';
 import '../domain/models/daily_note.dart';
 import '../domain/services/daily_note_picker.dart';
@@ -96,6 +98,9 @@ final repeatSpawnerProvider = Provider<void>((ref) {
 /// [fetchFeedViaSupabase]).
 final canvasNeedsProxyProvider = Provider<bool>((ref) => kIsWeb);
 
+/// True in the web version, which draws everything a little smaller on phones (see CompactScale).
+final compactPhoneLayoutProvider = Provider<bool>((ref) => kIsWeb);
+
 /// How Canvas feeds are downloaded. Tests swap in sample feeds.
 final canvasFetcherProvider = Provider<FeedFetcher>(
   (ref) => ref.watch(canvasNeedsProxyProvider)
@@ -137,6 +142,19 @@ final categoryMapProvider = Provider<Map<String, Category>>(
 const displayNameKey = 'display_name';
 
 final displayNameProvider = StreamProvider<String?>((ref) => ref.watch(databaseProvider).watchSetting(displayNameKey));
+
+/// Light, dark, match the device, or dark on a schedule (Settings → Appearance).
+final appearanceProvider = StreamProvider<Appearance>(
+  (ref) => ref.watch(databaseProvider).watchSetting(Appearance.key).map(Appearance.fromSetting),
+);
+
+/// The theme mode to show now. On a schedule it changes within a minute of the set time, because
+/// [clockProvider] ticks every minute.
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final appearance = ref.watch(appearanceProvider).value ?? const Appearance();
+  if (appearance.mode != AppearanceMode.scheduled) return appearance.themeModeAt(DateTime(0));
+  return ref.watch(clockProvider.select(appearance.themeModeAt));
+});
 
 // ---- Daily cards (Notes tab) ----
 

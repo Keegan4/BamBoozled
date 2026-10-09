@@ -23,7 +23,7 @@ Future<void> showTaskEditor(BuildContext context, {Task? task, DateTime? initial
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      backgroundColor: PandaColors.surface,
+      backgroundColor: context.panda.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (context) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -34,7 +34,7 @@ Future<void> showTaskEditor(BuildContext context, {Task? task, DateTime? initial
   return showDialog<void>(
     context: context,
     builder: (context) => Dialog(
-      backgroundColor: PandaColors.surface,
+      backgroundColor: context.panda.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 600, maxHeight: MediaQuery.sizeOf(context).height * 0.9),
@@ -168,7 +168,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep it')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: PandaColors.overdue),
+            style: FilledButton.styleFrom(backgroundColor: context.panda.overdue),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -231,13 +231,13 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
           if (_editing && phone)
             TextButton(
               onPressed: _delete,
-              style: TextButton.styleFrom(foregroundColor: PandaColors.overdue),
+              style: TextButton.styleFrom(foregroundColor: context.panda.overdue),
               child: const Text('Delete'),
             ),
           IconButton(
             tooltip: 'Close',
             onPressed: () => Navigator.of(context).pop(),
-            style: IconButton.styleFrom(backgroundColor: PandaColors.rice, minimumSize: const Size(48, 48)),
+            style: IconButton.styleFrom(backgroundColor: context.panda.rice, minimumSize: const Size(48, 48)),
             icon: const Icon(Icons.close_rounded),
           ),
         ],
@@ -272,7 +272,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
               const SizedBox(height: 8),
               Text(
                 'Tip: Why do you need a tip its literally adding tasks',
-                style: PandaText.caption.copyWith(color: PandaColors.muted),
+                style: PandaText.caption.copyWith(color: context.panda.muted),
               ),
             ],
           ),
@@ -304,7 +304,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
                   ),
                   Text(
                     'Time is optional — defaults to end of day',
-                    style: PandaText.caption.copyWith(color: PandaColors.muted),
+                    style: PandaText.caption.copyWith(color: context.panda.muted),
                   ),
                 ],
               ),
@@ -406,7 +406,7 @@ class _TaskEditorState extends ConsumerState<TaskEditor> {
                 if (_editing)
                   TextButton.icon(
                     onPressed: _delete,
-                    style: TextButton.styleFrom(foregroundColor: PandaColors.overdue),
+                    style: TextButton.styleFrom(foregroundColor: context.panda.overdue),
                     icon: const Icon(Icons.delete_outline_rounded),
                     label: const Text('Delete'),
                   ),
@@ -460,7 +460,7 @@ class _Field extends StatelessWidget {
             if (hint != null)
               TextSpan(
                 text: '  $hint',
-                style: PandaText.caption.copyWith(color: PandaColors.muted),
+                style: PandaText.caption.copyWith(color: context.panda.muted),
               ),
           ],
         ),
@@ -516,18 +516,18 @@ class _PriorityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final urgent = priority == Priority.urgent;
-    final leafColor = urgent ? PandaColors.overdue : PandaColors.bambooDark;
-    final textColor = selected ? PandaColors.bambooDark : (urgent ? PandaColors.overdue : PandaColors.ink);
+    final leafColor = urgent ? context.panda.overdue : context.panda.bambooDark;
+    final textColor = selected ? context.panda.bambooDark : (urgent ? context.panda.overdue : context.panda.ink);
     return Semantics(
       button: true,
       selected: selected,
       label: '${priority.label} priority',
       excludeSemantics: true,
       child: Material(
-        color: selected ? PandaColors.bambooTint : PandaColors.surface,
+        color: selected ? context.panda.bambooTint : context.panda.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
-          side: BorderSide(color: selected ? PandaColors.bambooDark : PandaColors.line, width: selected ? 2 : 1.5),
+          side: BorderSide(color: selected ? context.panda.bambooDark : context.panda.line, width: selected ? 2 : 1.5),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -652,14 +652,14 @@ class _NewCategoryDialogState extends ConsumerState<_NewCategoryDialog> {
                         color: e.value,
                         shape: CircleBorder(
                           side: BorderSide(
-                            color: e.value == _color ? PandaColors.ink : PandaColors.line,
+                            color: e.value == _color ? context.panda.ink : context.panda.line,
                             width: e.value == _color ? 3 : 1,
                           ),
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          hoverColor: PandaColors.ink.withValues(alpha: 0.12),
+                          hoverColor: context.panda.ink.withValues(alpha: 0.12),
                           onTap: () => setState(() => _color = e.value),
                           child: const SizedBox.square(dimension: 34),
                         ),
@@ -692,26 +692,26 @@ class _FromCanvas extends ConsumerWidget {
     key: const ValueKey('from-canvas'),
     margin: const EdgeInsets.only(bottom: 20),
     padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: PandaColors.rice, borderRadius: BorderRadius.circular(16)),
+    decoration: BoxDecoration(color: context.panda.rice, borderRadius: BorderRadius.circular(16)),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(Icons.school_rounded, size: 18, color: PandaColors.bambooDark),
+            Icon(Icons.school_rounded, size: 18, color: context.panda.bambooDark),
             const SizedBox(width: 6),
-            Text('From Canvas', style: PandaText.captionStrong.copyWith(color: PandaColors.bambooDark)),
+            Text('From Canvas', style: PandaText.captionStrong.copyWith(color: context.panda.bambooDark)),
           ],
         ),
         const SizedBox(height: 8),
         Text(task.title, style: PandaText.heading),
         const SizedBox(height: 2),
-        Text(dueLabel(task.dueAt, now), style: PandaText.body.copyWith(color: PandaColors.muted)),
+        Text(dueLabel(task.dueAt, now), style: PandaText.body.copyWith(color: context.panda.muted)),
         const SizedBox(height: 8),
         Text(
           'The name and due date follow Canvas. You can still set the priority, category, time needed '
           'and notes, and tick it off here.',
-          style: PandaText.caption.copyWith(color: PandaColors.muted),
+          style: PandaText.caption.copyWith(color: context.panda.muted),
         ),
         if (task.link != null) ...[
           const SizedBox(height: 12),
