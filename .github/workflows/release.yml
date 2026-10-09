@@ -87,7 +87,7 @@ jobs:
         --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
         --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Linux build tools
         if: matrix.name == 'Linux'
