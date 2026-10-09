@@ -64,7 +64,7 @@ void main() {
         find.byTooltip('Add task').evaluate().isNotEmpty ? find.byTooltip('Add task') : find.text('Add task'),
       );
       await TestApp.settle(tester);
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'Mark 3A essays');
+      await tester.enterText(titleField(), 'Mark 3A essays');
       await TestApp.settle(tester);
       await expectLater(find.byType(BamBoozledApp), matchesGoldenFile('../../../design/app-screenshots/$name.png'));
       await app.dispose(tester);

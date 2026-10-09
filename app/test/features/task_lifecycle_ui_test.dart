@@ -107,7 +107,7 @@ void main() {
       await app.pump(tester, size: const Size(1440, 1800));
       await tester.tap(find.text('Add task'));
       await TestApp.settle(tester);
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'Made with the form');
+      await tester.enterText(titleField(), 'Made with the form');
       await tester.tap(find.text('Save task'));
       await TestApp.settle(tester);
       expect(doNextTitles(tester), ['Made with the form']);
@@ -535,7 +535,7 @@ void main() {
 
       await tester.tap(find.text('Add task'));
       await TestApp.settle(tester);
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'A general task');
+      await tester.enterText(titleField(), 'A general task');
       await tester.tap(find.text('Save task'));
       await TestApp.settle(tester);
       expect(find.text('Task added — your filters are hiding it'), findsOneWidget);
@@ -555,7 +555,7 @@ void main() {
       await TestApp.settle(tester);
       await tester.tap(find.text('Add task'));
       await TestApp.settle(tester);
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'Matches');
+      await tester.enterText(titleField(), 'Matches');
       await tester.tap(find.text('Save task'));
       await TestApp.settle(tester);
       expect(find.text('Task added'), findsOneWidget);

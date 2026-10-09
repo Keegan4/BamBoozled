@@ -15,7 +15,6 @@ const tall = Size(1440, 1800);
 
 Finder inEditor(Finder f) => find.descendant(of: find.byType(TaskEditor), matching: f);
 Finder pill(String label) => inEditor(find.widgetWithText(InkWell, label)).first;
-Finder titleField() => find.widgetWithText(TextField, 'e.g. Mark 3A essays');
 
 /// The title box of an open form, whether or not it has text in it.
 Finder editorTitle() => inEditor(find.byType(TextField)).first;

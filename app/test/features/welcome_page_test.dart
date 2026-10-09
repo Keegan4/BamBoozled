@@ -66,7 +66,7 @@ void main() {
       await TestApp.settle(tester);
       expect(find.text('Give your task a short name'), findsOneWidget);
 
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'Call parents of Ali');
+      await tester.enterText(titleField(), 'Call parents of Ali');
       await tester.tap(find.widgetWithText(InkWell, 'Today').first);
       await tester.tap(find.bySemanticsLabel('Urgent priority').last);
       await tester.ensureVisible(find.text('Save task'));

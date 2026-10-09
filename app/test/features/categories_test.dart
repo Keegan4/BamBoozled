@@ -275,7 +275,7 @@ void main() {
       await tester.tap(find.byTooltip('Rose'));
       await tester.pump();
       await addCategoryThroughForm(tester, 'Rosy');
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'In my new category');
+      await tester.enterText(titleField(), 'In my new category');
       await tester.tap(find.text('Save task'));
       await TestApp.settle(tester);
       final task = (await tester.runAsync(() => app.repo.watchTasks().first))!.single;
@@ -507,7 +507,7 @@ void main() {
       await app.pump(tester, size: tall);
       await tester.tap(find.text('Add task'));
       await TestApp.settle(tester);
-      final title = find.widgetWithText(TextField, 'e.g. Mark 3A essays');
+      final title = titleField();
       await tester.enterText(title, 'Only once');
       final submit = tester.widget<TextField>(title).onSubmitted!;
       submit('Only once'); // a held Enter key fires this many times in a row
@@ -526,7 +526,7 @@ void main() {
       await app.pump(tester, size: tall);
       await tester.tap(find.text('Add task'));
       await TestApp.settle(tester);
-      await tester.enterText(find.widgetWithText(TextField, 'e.g. Mark 3A essays'), 'Only once');
+      await tester.enterText(titleField(), 'Only once');
       final save = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Save task')).onPressed!;
       for (var i = 0; i < 4; i++) {
         save();

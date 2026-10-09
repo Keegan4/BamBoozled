@@ -4,6 +4,7 @@ import 'package:bamboozled/data/providers.dart';
 import 'package:bamboozled/data/repositories/task_repository.dart';
 import 'package:bamboozled/data/sync/sync_service.dart';
 import 'package:bamboozled/domain/models/priority.dart';
+import 'package:bamboozled/features/tasks/task_editor.dart';
 import 'package:bamboozled/features/tasks/widgets/task_card.dart';
 import 'package:drift/drift.dart' show DatabaseConnection, driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -176,3 +177,6 @@ class SyncedOverrides {
   final SupabaseClient client;
   final List<Override> overrides;
 }
+
+/// The title box of the add/edit task form (the first text box in it), whatever its hint text says.
+Finder titleField() => find.descendant(of: find.byType(TaskEditor), matching: find.byType(TextField)).first;
