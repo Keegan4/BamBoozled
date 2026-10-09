@@ -98,7 +98,9 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settings → Secrets and variables → Actions) if the released apps should sync. Without them the apps work, but keep tasks on one device. The Android file is signed with Flutter's debug key: it installs by tapping the file on a phone, but it can't go on the Play Store until a release keystore is set up.
+Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settings → Secrets and variables → Actions → **New repository secret**) if the apps should sync. Use exactly those two names, with your project's URL and publishable key. Both the release and the normal CI builds then build the apps with your project built in, so people only need to sign in. Without the secrets the apps work, but keep tasks on one device.
+
+The publishable key is meant to be shipped inside the app (it only allows what the row-level security rules allow), so it isn't a password. Never put the **secret** / `service_role` key in the app or in these settings. The Android file is signed with Flutter's debug key: it installs by tapping the file on a phone, but it can't go on the Play Store until a release keystore is set up.
 
 ## Recommended framework
 

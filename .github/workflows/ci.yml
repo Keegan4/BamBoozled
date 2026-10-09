@@ -129,6 +129,13 @@ jobs:
     defaults:
       run:
         working-directory: app
+        shell: bash
+    env:
+      # With the two repository secrets set, the apps built here can sync. Without them (and on pull
+      # requests from forks, which never get secrets) they still build and keep tasks on one device.
+      DEFINES: >-
+        --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+        --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -153,7 +160,9 @@ jobs:
       - run: flutter pub get
 
       - name: Build
-        run: ${{ matrix.command }}
+        env:
+          BUILD_COMMAND: ${{ matrix.command }}
+        run: $BUILD_COMMAND $DEFINES
 
       - uses: actions/upload-artifact@v4
         with:
