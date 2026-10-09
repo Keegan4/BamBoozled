@@ -1,6 +1,6 @@
 # BamBoozled 🐼
 
-A friendly, panda-themed notetaking and task app for Android, iPhone and desktop. Tasks sync between your phone and your computer.
+A friendly, panda-themed notetaking and task app for Android, iPhone, desktop and the web. Tasks sync between your phone and your computer.
 
 BamBoozled is built for people who aren't technical. Everything works by tapping or clicking:
 - big buttons (at least 48px)
@@ -81,7 +81,7 @@ What happens:
 - Canvas's feed doesn't say whether you've submitted, so tick assignments off yourself. A refresh never un-ticks them.
 - **Disconnect** removes everything that came from Canvas. Nothing changes in Canvas itself.
 
-Treat the feed link like a password: anyone with it can read your Canvas calendar. It stays on the device where you paste it and is never uploaded. The assignments themselves sync to your other devices like any task, so connecting on one device is enough. Canvas only refreshes its feed every few hours, so a brand-new assignment can take a while to appear.
+Treat the feed link like a password: anyone with it can read your Canvas calendar. It stays on the device where you paste it and is never stored on the server (the web app passes it to your own Supabase function each time it reads the feed; see [Web app](#web-app-works-on-iphone-with-no-app-store)). The assignments themselves sync to your other devices like any task, so connecting on one device is enough. Canvas only refreshes its feed every few hours, so a brand-new assignment can take a while to appear.
 
 ### Developing
 
@@ -105,8 +105,8 @@ PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres supabase/tests/run.sh
 
 | Workflow | When | What it does |
 |---|---|---|
-| [CI](.github/workflows/ci.yml) | every push and pull request | checks formatting, runs the analyzer, all tests with a 95% coverage minimum, the SQL tests on PostgreSQL 16, then builds the Linux, Windows, macOS, Android and iOS apps |
-| [Release](.github/workflows/release.yml) | pushing a tag like `v1.0.0` | re-runs the checks, builds the five apps, and attaches them to a GitHub Release with generated notes |
+| [CI](.github/workflows/ci.yml) | every push and pull request | checks formatting, runs the analyzer, all tests with a 95% coverage minimum, the SQL tests on PostgreSQL 16, then builds the Linux, Windows, macOS, Android, iOS and web apps |
+| [Release](.github/workflows/release.yml) | pushing a tag like `v1.0.0` | re-runs the checks, builds the six apps, attaches them to a GitHub Release with generated notes, and publishes the web app to GitHub Pages |
 
 To publish a release:
 
@@ -118,6 +118,26 @@ git push origin v1.0.0
 Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settings → Secrets and variables → Actions → **New repository secret**) if the apps should sync. Use exactly those two names, with your project's URL and publishable key. Both the release and the normal CI builds then build the apps with your project built in, so people only need to sign in. Without the secrets the apps work, but keep tasks on one device.
 
 The publishable key is meant to be shipped inside the app (it only allows what the row-level security rules allow), so it isn't a password. Never put the **secret** / `service_role` key in the app or in these settings. The Android file is signed with Flutter's debug key: it installs by tapping the file on a phone, but it can't go on the Play Store until a release keystore is set up.
+
+### Web app (works on iPhone with no App Store)
+
+Every release also publishes BamBoozled as a website at **https://keegan4.github.io/BamBoozled/** (the address is `https://<github user>.github.io/<repo>/`). It is the same app with the same sync, and needs no App Store and no Apple account.
+
+- **On an iPhone or iPad:** open the link in **Safari**, tap **Share → Add to Home Screen**. It gets the panda icon and opens full-screen like an app.
+- **On Android:** open it in Chrome and choose **Install app** (or Add to Home screen).
+- **On a computer:** just bookmark it, or use Chrome/Edge's **Install** button in the address bar.
+
+Tasks are kept in the browser's own storage, so they survive closing the tab. Sign in (Settings) to sync them with your phone and computer. Clearing the browser's data for the site deletes the local copy, but anything synced is safe on the server.
+
+**One-time setup:** after the first release, go to the repository's **Settings → Pages**, choose **Deploy from a branch**, branch **gh-pages**, folder **/ (root)**, and save. Each release then updates the site by itself.
+
+**Canvas on the web:** browsers don't let a website read your Canvas feed directly, so the web app asks your Supabase project to fetch it, which needs you to be signed in. Deploy the small function in [supabase/functions/canvas-feed](supabase/functions/canvas-feed/index.ts) once:
+- with the Supabase CLI: `supabase login`, `supabase link`, then `supabase functions deploy canvas-feed`; or
+- in the dashboard: **Edge Functions → Deploy a new function → Via editor**, name it `canvas-feed`, paste the contents of `index.ts`, and deploy.
+
+The function only accepts Canvas calendar feed links from signed-in users, and doesn't store them. To limit it to your school's Canvas, add the secret `CANVAS_HOSTS=canvas.nus.edu.sg` (Edge Functions → Secrets). The phone and desktop apps don't need it.
+
+To build the web app yourself: `cd app && tool/build_web.sh` (add the same `--dart-define` flags for sync). The result is in `app/build/web`; any static web host can serve it.
 
 ### iPhone (iOS)
 
@@ -133,7 +153,7 @@ The bundle id is `sg.bamboozled.bamboozled`, the same as Android and macOS.
 
 | Layer | Choice | Why |
 |---|---|---|
-| UI / app | **Flutter (Dart)** | One codebase builds for Android, iOS, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
+| UI / app | **Flutter (Dart)** | One codebase builds for Android, iOS, Windows, macOS, Linux and the web. It handles a fully custom panda theme well, and works with both mouse and touch. |
 | State | **Riverpod** | Simple and testable. Works well with streams from the local database. |
 | Local storage | **Drift (SQLite)** | Offline-first: the app always reads and writes locally, so it works without internet. |
 | Sync / auth | **Supabase** (Postgres + Auth) | Email and password sign-in, with accounts added by you in the dashboard. Row-level security keeps each user's data private. |
@@ -159,12 +179,14 @@ BamBoozled/
 ├── supabase/
 │   ├── migrations/0001_tasks.sql   # tasks, categories + RLS policies
 │   ├── migrations/0002_task_link.sql  # task links (Canvas assignments)
+│   ├── functions/canvas-feed/      # fetches Canvas feeds for the web app
 │   └── tests/                      # SQL tests, run on a real PostgreSQL
 ├── .github/workflows/              # ci.yml, release.yml
 └── app/                            # Flutter project
     ├── pubspec.yaml
-    ├── android/ ios/ windows/ macos/ linux/
+    ├── android/ ios/ windows/ macos/ linux/ web/
     ├── tool/check_coverage.dart    # the coverage gate used by CI
+    ├── tool/build_web.sh           # builds the web app (with its browser database files)
     ├── lib/
     │   ├── main.dart               # start-up
     │   ├── app.dart                # routes, theme, keeps sync and repeats running

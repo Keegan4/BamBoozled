@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -85,8 +86,16 @@ final repeatSpawnerProvider = Provider<void>((ref) {
   Future.microtask(repo.spawnNextRepeats);
 });
 
+/// True in the web version, which has to fetch Canvas feeds through Supabase (see
+/// [fetchFeedViaSupabase]).
+final canvasNeedsProxyProvider = Provider<bool>((ref) => kIsWeb);
+
 /// How Canvas feeds are downloaded. Tests swap in sample feeds.
-final canvasFetcherProvider = Provider<FeedFetcher>((ref) => fetchFeedOverHttp);
+final canvasFetcherProvider = Provider<FeedFetcher>(
+  (ref) => ref.watch(canvasNeedsProxyProvider)
+      ? (uri) => fetchFeedViaSupabase(ref.read(supabaseClientProvider), uri)
+      : fetchFeedOverHttp,
+);
 
 final canvasServiceProvider = Provider<CanvasService>(
   (ref) => CanvasService(

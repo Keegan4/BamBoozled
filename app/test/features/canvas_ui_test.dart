@@ -172,6 +172,25 @@ void main() {
       await app.dispose(tester);
     });
 
+    testWidgets('in the web version it explains that sign-in is needed, and where the link goes', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await app.pump(
+        tester,
+        size: tall,
+        location: '/settings',
+        overrides: [canvasNeedsProxyProvider.overrideWithValue(true)],
+      );
+      await TestApp.settle(tester);
+      await tester.tap(inCard(find.text('Connect Canvas')));
+      await TestApp.settle(tester);
+      expect(inDialog(find.textContaining('It stays in this browser')), findsOneWidget);
+      await tester.enterText(inDialog(find.byType(TextField)), link);
+      await tester.tap(inDialog(find.widgetWithText(FilledButton, 'Connect')));
+      await TestApp.settle(tester);
+      expect(inDialog(find.textContaining('Sign in to sync first')), findsOneWidget);
+      await app.dispose(tester);
+    });
+
     testWidgets('when connected, the app reads the feed as it opens', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
       await tester.runAsync(() => app.db.setSetting('canvas', '{"url":"$link","count":0}'));

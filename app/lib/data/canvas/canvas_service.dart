@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../local/app_database.dart';
 import '../repositories/task_repository.dart';
@@ -26,6 +27,46 @@ Future<String> fetchFeedOverHttp(Uri uri) async {
     throw CanvasFeedException('Canvas didn’t answer properly (error ${response.statusCode}). Try again later.');
   }
   return utf8.decode(response.bodyBytes, allowMalformed: true);
+}
+
+/// Name of the Supabase Edge Function in supabase/functions that fetches feeds for the web app.
+const canvasFeedFunction = 'canvas-feed';
+
+/// The web version can't read the feed directly: browsers block a page from reading another site
+/// (Canvas) unless that site allows it, and Canvas doesn't. So the web app asks your own Supabase
+/// project to fetch it (supabase/functions/canvas-feed), which needs the user to be signed in.
+Future<String> fetchFeedViaSupabase(SupabaseClient? client, Uri uri) async {
+  if (client == null || client.auth.currentUser == null) {
+    throw const CanvasFeedException(
+      'In the web version, Canvas works once you’re signed in. Go to Settings → Sign in to sync first.',
+    );
+  }
+  try {
+    final response = await client.functions
+        .invoke(canvasFeedFunction, body: {'url': uri.toString()})
+        .timeout(const Duration(seconds: 40));
+    final data = response.data;
+    if (data is String) return data;
+    throw const CanvasFeedException('Canvas didn’t answer properly. Try again later.');
+  } on FunctionException catch (e) {
+    final details = e.details;
+    final reason = details is Map ? details['reason'] : null;
+    throw CanvasFeedException(switch (reason) {
+      'not_a_feed' =>
+        'That isn’t a Canvas Calendar Feed link. In Canvas, open Calendar, choose Calendar Feed, '
+            'and copy the link.',
+      'not_recognised' =>
+        'Canvas didn’t recognise that link. Copy the Calendar Feed link from Canvas again and paste it here.',
+      'unreachable' => 'We couldn’t reach Canvas. Try again later.',
+      _ when e.status == 404 =>
+        'The web version needs the canvas-feed function in your Supabase project. See “Canvas” in the README.',
+      _ => 'Canvas didn’t answer properly (error ${e.status}). Try again later.',
+    });
+  } on CanvasFeedException {
+    rethrow;
+  } catch (_) {
+    throw const CanvasFeedException('We couldn’t reach Canvas. Check your internet connection and try again.');
+  }
 }
 
 /// Where the Canvas connection stands. Kept on this device only: the feed link works like a

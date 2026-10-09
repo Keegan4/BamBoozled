@@ -3,7 +3,7 @@ name: CI
 # Runs on every push and pull request. Everything must pass before merging:
 #   * Flutter: formatting, static analysis, all tests, and a coverage minimum
 #   * Database: the Supabase SQL migration is run against a real PostgreSQL server and tested
-#   * Builds: the app compiles for Linux, Windows, macOS, Android and iOS
+#   * Builds: the app compiles for Linux, Windows, macOS, Android, iOS and the web
 
 on:
   push:
@@ -95,6 +95,13 @@ jobs:
       - name: Run migration and SQL tests
         run: ./supabase/tests/run.sh
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test the canvas-feed Edge Function
+        run: node --experimental-strip-types --test supabase/functions/canvas-feed/index.test.ts
+
   build:
     name: Build ${{ matrix.name }}
     needs: [test, database]
@@ -126,6 +133,11 @@ jobs:
             command: flutter build macos --release
             artifact: macos-app
             path: app/build/macos/Build/Products/Release/BamBoozled.app
+          - name: Web
+            os: ubuntu-latest
+            command: tool/build_web.sh
+            artifact: web-app
+            path: app/build/web
           - name: iOS
             os: macos-latest
             # Unsigned: checks the iPhone app compiles. Installing it on a phone needs signing (see README).

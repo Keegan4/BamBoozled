@@ -205,8 +205,11 @@ class _ConnectCanvasDialogState extends ConsumerState<ConnectCanvasDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Keep this link private: anyone who has it can see your Canvas calendar. '
-              'It stays on this device and is not synced.',
+              ref.watch(canvasNeedsProxyProvider)
+                  ? 'Keep this link private: anyone who has it can see your Canvas calendar. '
+                        'It stays in this browser; your own sync server uses it to fetch the calendar.'
+                  : 'Keep this link private: anyone who has it can see your Canvas calendar. '
+                        'It stays on this device and is not synced.',
               style: PandaText.caption.copyWith(color: PandaColors.muted),
             ),
             if (_error != null) ...[

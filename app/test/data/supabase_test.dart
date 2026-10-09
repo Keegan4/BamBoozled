@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:bamboozled/data/canvas/canvas_feed.dart';
+import 'package:bamboozled/data/canvas/canvas_service.dart';
 import 'package:bamboozled/data/remote/auth_service.dart';
 import 'package:bamboozled/data/remote/remote_store.dart';
 import 'package:bamboozled/data/remote/supabase_remote_store.dart';
@@ -72,6 +74,9 @@ class FakeSupabaseApi {
   final tasksResponse = <Map<String, dynamic>>[];
   final categoriesResponse = <Map<String, dynamic>>[];
   bool rejectLogin = false;
+
+  /// What the canvas-feed Edge Function answers: (status, content type, body).
+  (int, String, String) canvasFeed = (200, 'text/calendar; charset=utf-8', 'BEGIN:VCALENDAR\r\nEND:VCALENDAR');
   bool serverDown = false;
 
   String get url => 'http://${_server.address.host}:${_server.port}';
@@ -96,6 +101,14 @@ class FakeSupabaseApi {
     } else if (path.endsWith('/auth/v1/logout')) {
       status = 204;
       payload = null;
+    } else if (path.endsWith('/functions/v1/canvas-feed')) {
+      final (code, type, text) = canvasFeed;
+      req.response
+        ..statusCode = code
+        ..headers.set('content-type', type)
+        ..write(text);
+      await req.response.close();
+      return;
     } else if (path.endsWith('/rest/v1/tasks')) {
       payload = req.method == 'GET' ? tasksResponse : <dynamic>[];
     } else if (path.endsWith('/rest/v1/categories')) {
@@ -299,6 +312,72 @@ void main() {
       api.serverDown = true;
       await expectLater(SupabaseRemoteStore(client).fetchTasksSince(null), throwsA(anything));
       await expectLater(SupabaseRemoteStore(client).upsertTasks([task('a')]), throwsA(anything));
+    });
+  });
+
+  group('Canvas feeds through the canvas-feed function (web version)', () {
+    final feedUri = Uri.parse('https://canvas.nus.edu.sg/feeds/calendars/user_x.ics');
+
+    Future<String> message(Future<String> f) async {
+      try {
+        await f;
+      } on CanvasFeedException catch (e) {
+        return e.message;
+      }
+      fail('expected a CanvasFeedException');
+    }
+
+    test('needs a signed-in user, and does not call the server otherwise', () async {
+      expect(await message(fetchFeedViaSupabase(null, feedUri)), contains('signed in'));
+      expect(await message(fetchFeedViaSupabase(client, feedUri)), contains('Sign in to sync'));
+      expect(api.to('/functions/v1/canvas-feed'), isEmpty);
+    });
+
+    test('sends the link to the function and returns the calendar', () async {
+      await signIn();
+      expect(await fetchFeedViaSupabase(client, feedUri), contains('BEGIN:VCALENDAR'));
+      final req = api.to('/functions/v1/canvas-feed', 'POST').single;
+      expect(jsonDecode(req.body), {'url': feedUri.toString()});
+      expect(req.headers['authorization'], startsWith('Bearer '));
+    });
+
+    for (final (reason, expected) in [
+      ('not_a_feed', 'isn’t a Canvas Calendar Feed link'),
+      ('not_recognised', 'didn’t recognise'),
+      ('unreachable', 'couldn’t reach Canvas'),
+    ]) {
+      test('a "$reason" answer becomes a friendly message', () async {
+        await signIn();
+        api.canvasFeed = (502, 'application/json', jsonEncode({'reason': reason}));
+        expect(await message(fetchFeedViaSupabase(client, feedUri)), contains(expected));
+      });
+    }
+
+    test('a missing function says to set it up', () async {
+      await signIn();
+      api.canvasFeed = (404, 'application/json', jsonEncode({'code': 'NOT_FOUND', 'message': 'not found'}));
+      expect(await message(fetchFeedViaSupabase(client, feedUri)), contains('canvas-feed function'));
+    });
+
+    test('any other error gives its number', () async {
+      await signIn();
+      api.canvasFeed = (500, 'text/plain', 'boom');
+      expect(await message(fetchFeedViaSupabase(client, feedUri)), contains('error 500'));
+    });
+
+    test('an unexpected kind of answer is not mistaken for a calendar', () async {
+      await signIn();
+      api.canvasFeed = (200, 'application/json', '{"surprise": true}');
+      expect(await message(fetchFeedViaSupabase(client, feedUri)), contains('didn’t answer properly'));
+    });
+
+    test('a server that is down counts as unreachable', () async {
+      await signIn();
+      await api.close();
+      expect(
+        await message(fetchFeedViaSupabase(client, feedUri)),
+        anyOf(contains('couldn’t reach'), contains('error')),
+      );
     });
   });
 

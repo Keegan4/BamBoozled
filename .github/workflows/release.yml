@@ -4,7 +4,7 @@ name: Release
 #
 #   git tag v1.0.0 && git push origin v1.0.0
 #
-# Re-runs every check first, then builds Windows, macOS, Linux, Android and iOS apps and attaches them
+# Re-runs every check first, then builds Windows, macOS, Linux, Android, iOS and web apps and attaches them
 # to the release. To make the apps sync between devices, add two repository secrets
 # (Settings > Secrets and variables > Actions): SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.
 # Without them the apps still work, but keep tasks on one device.
@@ -73,6 +73,10 @@ jobs:
           - name: iOS
             os: macos-latest
             build: flutter build ios --release --no-codesign
+          - name: Web
+            os: ubuntu-latest
+            # Served from https://<owner>.github.io/<repo>/, so the app lives under /<repo>/.
+            build: tool/build_web.sh --base-href /${{ github.event.repository.name }}/
     defaults:
       run:
         working-directory: app
@@ -121,6 +125,7 @@ jobs:
             Linux)   tar -C build/linux/x64/release/bundle -czf "../dist/BamBoozled-$VERSION-linux-x64.tar.gz" . ;;
             Windows) (cd build/windows/x64/runner/Release && 7z a -tzip "$GITHUB_WORKSPACE/dist/BamBoozled-$VERSION-windows-x64.zip" .) ;;
             macOS)   ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/BamBoozled.app "../dist/BamBoozled-$VERSION-macos.zip" ;;
+            Web)     (cd build/web && zip -qr "$GITHUB_WORKSPACE/dist/BamBoozled-$VERSION-web.zip" .) ;;
             iOS)     mkdir -p Payload && cp -R build/ios/iphoneos/Runner.app Payload/ && zip -qry "../dist/BamBoozled-$VERSION-ios-unsigned.ipa" Payload ;;
           esac
           ls -la ../dist
@@ -151,3 +156,33 @@ jobs:
           name: BamBoozled ${{ needs.version.outputs.name }}
           generate_release_notes: true
           files: dist/*
+
+  pages:
+    name: Publish the web app to GitHub Pages
+    needs: [build, version]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-Web
+          path: dist
+
+      - name: Unpack
+        env:
+          VERSION: ${{ needs.version.outputs.name }}
+        run: |
+          mkdir site
+          unzip -q "dist/BamBoozled-$VERSION-web.zip" -d site
+
+      # Publishes to the gh-pages branch. Turn it on once in Settings > Pages: "Deploy from a branch",
+      # branch gh-pages, folder / (root).
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: Web app ${{ needs.version.outputs.name }}
