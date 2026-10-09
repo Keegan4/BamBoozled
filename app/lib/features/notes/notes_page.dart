@@ -21,7 +21,7 @@ class NotesPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'The panda is still sharpening its pencils.',
-            style: PandaText.body.copyWith(color: PandaColors.muted),
+            style: PandaText.body.copyWith(color: context.panda.muted),
             textAlign: TextAlign.center,
           ),
         ],

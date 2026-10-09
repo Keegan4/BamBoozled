@@ -32,9 +32,9 @@ class OptionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, border) = switch ((style, selected)) {
-      (OptionPillStyle.ink, true) => (PandaColors.ink, PandaColors.rice, PandaColors.ink),
-      (OptionPillStyle.tint, true) => (PandaColors.bambooTint, PandaColors.bambooDark, PandaColors.bambooDark),
-      _ => (PandaColors.surface, PandaColors.ink, PandaColors.line),
+      (OptionPillStyle.ink, true) => (context.panda.ink, context.panda.rice, context.panda.ink),
+      (OptionPillStyle.tint, true) => (context.panda.bambooTint, context.panda.bambooDark, context.panda.bambooDark),
+      _ => (context.panda.surface, context.panda.ink, context.panda.line),
     };
     return Semantics(
       button: true,
@@ -120,7 +120,7 @@ class DropdownPill<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MenuAnchor(
     style: MenuStyle(
-      backgroundColor: const WidgetStatePropertyAll(PandaColors.surface),
+      backgroundColor: WidgetStatePropertyAll(context.panda.surface),
       surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
       padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 8)),
@@ -134,7 +134,7 @@ class DropdownPill<T> extends StatelessWidget {
           leadingIcon: Icon(
             Icons.check_rounded,
             size: 18,
-            color: e.key == value ? PandaColors.bambooDark : Colors.transparent,
+            color: e.key == value ? context.panda.bambooDark : Colors.transparent,
           ),
           child: Text(e.value, style: PandaText.body),
         ),
@@ -144,11 +144,11 @@ class DropdownPill<T> extends StatelessWidget {
       child: Semantics(
         button: true,
         child: Material(
-          color: PandaColors.surface,
-          shape: const StadiumBorder(side: BorderSide(color: PandaColors.line, width: 1.5)),
+          color: context.panda.surface,
+          shape: StadiumBorder(side: BorderSide(color: context.panda.line, width: 1.5)),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            hoverColor: PandaColors.bambooTint,
+            hoverColor: context.panda.bambooTint,
             onTap: () => controller.isOpen ? controller.close() : controller.open(),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
@@ -182,9 +182,9 @@ class PandaCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: padding,
     decoration: BoxDecoration(
-      color: PandaColors.surface,
+      color: context.panda.surface,
       borderRadius: BorderRadius.circular(PandaSizes.cardRadius),
-      border: Border.all(color: PandaColors.line),
+      border: Border.all(color: context.panda.line),
     ),
     child: child,
   );

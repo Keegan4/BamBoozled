@@ -6,6 +6,9 @@ import '../theme/colors.dart';
 
 /// The BamBoozled panda, drawn in code so it stays crisp at any size.
 /// Matches the `PandaMascot` component in Figma.
+///
+/// The panda is the same in light and dark mode, so it uses the fixed [PandaColors] rather than
+/// the theme's palette.
 class PandaMascot extends StatelessWidget {
   const PandaMascot({super.key, this.size = 64, this.sleeping = false});
 

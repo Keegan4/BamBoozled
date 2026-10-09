@@ -44,8 +44,8 @@ class AdaptiveScaffold extends StatelessWidget {
             ? FloatingActionButton.large(
                 onPressed: () => showTaskEditor(context),
                 tooltip: 'Add task',
-                backgroundColor: PandaColors.bamboo,
-                foregroundColor: PandaColors.ink,
+                backgroundColor: context.panda.bamboo,
+                foregroundColor: context.panda.onBamboo,
                 shape: const CircleBorder(),
                 child: const Icon(Icons.add_rounded, size: 32),
               )
@@ -53,18 +53,18 @@ class AdaptiveScaffold extends StatelessWidget {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: (i) => context.go(destinations[i].path),
-          backgroundColor: PandaColors.surface,
-          indicatorColor: PandaColors.bambooTint,
+          backgroundColor: context.panda.surface,
+          indicatorColor: context.panda.bambooTint,
           labelTextStyle: WidgetStateProperty.resolveWith(
             (s) => PandaText.captionStrong.copyWith(
-              color: s.contains(WidgetState.selected) ? PandaColors.bambooDark : PandaColors.muted,
+              color: s.contains(WidgetState.selected) ? context.panda.bambooDark : context.panda.muted,
             ),
           ),
           destinations: [
             for (final d in destinations)
               NavigationDestination(
-                icon: Icon(d.icon, color: PandaColors.muted),
-                selectedIcon: Icon(d.selectedIcon, color: PandaColors.bambooDark),
+                icon: Icon(d.icon, color: context.panda.muted),
+                selectedIcon: Icon(d.selectedIcon, color: context.panda.bambooDark),
                 label: d.label,
               ),
           ],
@@ -89,9 +89,9 @@ class _Rail extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: 104,
-    decoration: const BoxDecoration(
-      color: PandaColors.surface,
-      border: Border(right: BorderSide(color: PandaColors.line)),
+    decoration: BoxDecoration(
+      color: context.panda.surface,
+      border: Border(right: BorderSide(color: context.panda.line)),
     ),
     child: SafeArea(
       right: false,
@@ -121,14 +121,14 @@ class _RailItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? PandaColors.bambooDark : PandaColors.muted;
+    final color = selected ? context.panda.bambooDark : context.panda.muted;
     return Semantics(
       selected: selected,
       button: true,
       label: destination.label,
       excludeSemantics: true,
       child: Material(
-        color: selected ? PandaColors.bambooTint : Colors.transparent,
+        color: selected ? context.panda.bambooTint : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),

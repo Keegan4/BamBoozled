@@ -19,6 +19,12 @@ The welcome page has:
 - **Canvas assignments:** connect a Canvas calendar feed in Settings and your assignments appear as tasks (see [Canvas](#canvas) below).
 - **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
+## Milestone 2 — Dark mode
+
+- **Dark mode:** the same layout, panda, emojis and category colours, on a warm near-black background with a lighter bamboo green so buttons still stand out. See the [dark mode mockup](design/exports/dark-mode-mockup.png).
+- **Settings → Appearance:** choose **Light**, **Dark**, **Match device** (follows the phone or computer's own setting) or **On a schedule**.
+- **On a schedule:** pick when it turns dark and when it turns light again (7:00 pm and 7:00 am to start with). The app switches by itself within a minute of each time, and the dark stretch can run past midnight.
+
 The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
 
 ## Running the app
@@ -218,6 +224,23 @@ BamBoozled/
 | Lavender | `#B9A7E0` | Category colour |
 | Mint | `#9ED9C3` | Category colour |
 | Overdue | `#E06666` | Overdue tasks |
+
+In dark mode the first group of colours swaps for its dark version (from the [mockup](design/exports/dark-mode-mockup.png)); category colours and the panda stay the same.
+
+| Token | Light | Dark |
+|---|---|---|
+| Rice (background) | `#FAF8F3` | `#121412` |
+| Surface (cards, nav) | `#FFFFFF` | `#1B1E1B` |
+| Ink (text) | `#1E1E1E` | `#EDEBE4` |
+| Line (borders) | `#E8E4DA` | `#2D312C` |
+| Muted (secondary text) | `#5F5F5F` | `#A2A69E` |
+| Bamboo (buttons) | `#7BAE7F` | `#8CC490` |
+| Bamboo dark (links, active) | `#3F6B45` | `#A9D8AC` |
+| Bamboo tint (fills) | `#E6F0E4` | `#223426` |
+| Overdue | `#E06666` | `#F28B8B` |
+| Overdue tint | `#FBE4E4` | `#3B2323` |
+
+In code, screens read these with `context.panda` (the `PandaPalette` theme extension in `lib/core/theme/colors.dart`), so they follow the current mode.
 
 - **Fonts:** Nunito, or Quicksand as an alternative. Body text is at least 16px.
 - **Colour is never the only signal:** every coloured element also has a text label or an icon, for colour-blind users.

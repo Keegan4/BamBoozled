@@ -110,7 +110,7 @@ class _Greeting extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
-        Text(subtitle, style: (compact ? PandaText.caption : PandaText.body).copyWith(color: PandaColors.muted)),
+        Text(subtitle, style: (compact ? PandaText.caption : PandaText.body).copyWith(color: context.panda.muted)),
       ],
     );
   }
@@ -148,8 +148,8 @@ class _PhoneWelcomeState extends ConsumerState<_PhoneWelcome> {
                 setState(() => _searching = !showSearch);
               },
               style: IconButton.styleFrom(
-                backgroundColor: PandaColors.surface,
-                side: const BorderSide(color: PandaColors.line, width: 1.5),
+                backgroundColor: context.panda.surface,
+                side: BorderSide(color: context.panda.line, width: 1.5),
                 minimumSize: const Size(48, 48),
               ),
               icon: Icon(showSearch ? Icons.close_rounded : Icons.search_rounded),

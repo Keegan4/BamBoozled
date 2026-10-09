@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/layout/breakpoints.dart';
+import '../../core/theme/appearance.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/panda_theme.dart';
 import '../../core/utils/dates.dart';
@@ -26,7 +27,15 @@ class SettingsPage extends ConsumerWidget {
           constraints: const BoxConstraints(maxWidth: 640),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [_NameCard(), SizedBox(height: 16), _SyncCard(), SizedBox(height: 16), CanvasCard()],
+            children: [
+              _NameCard(),
+              SizedBox(height: 16),
+              _AppearanceCard(),
+              SizedBox(height: 16),
+              _SyncCard(),
+              SizedBox(height: 16),
+              CanvasCard(),
+            ],
           ),
         ),
       ],
@@ -75,7 +84,7 @@ class _NameCardState extends ConsumerState<_NameCard> {
           const SizedBox(height: 4),
           Text(
             'Shown in the greeting, e.g. “Good morning, Ms Tan”.',
-            style: PandaText.caption.copyWith(color: PandaColors.muted),
+            style: PandaText.caption.copyWith(color: context.panda.muted),
           ),
           const SizedBox(height: 12),
           Row(
@@ -99,6 +108,93 @@ class _NameCardState extends ConsumerState<_NameCard> {
   }
 }
 
+class _AppearanceCard extends ConsumerWidget {
+  const _AppearanceCard();
+
+  static const _icons = {
+    AppearanceMode.light: Icons.light_mode_rounded,
+    AppearanceMode.dark: Icons.dark_mode_rounded,
+    AppearanceMode.device: Icons.brightness_auto_rounded,
+    AppearanceMode.scheduled: Icons.schedule_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appearance = ref.watch(appearanceProvider).value ?? const Appearance();
+    final now = ref.watch(clockProvider);
+
+    Future<void> save(Appearance a) => ref.read(databaseProvider).setSetting(Appearance.key, a.toSetting());
+
+    Future<void> pickTime({required bool dark}) async {
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: dark ? appearance.darkFrom : appearance.lightFrom,
+        helpText: dark ? 'Turn dark at' : 'Turn light at',
+      );
+      if (picked == null) return;
+      await save(dark ? appearance.copyWith(darkFrom: picked) : appearance.copyWith(lightFrom: picked));
+    }
+
+    String time(TimeOfDay t) => formatTime(DateTime(2000, 1, 1, t.hour, t.minute));
+
+    return PandaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Appearance', style: PandaText.title),
+          const SizedBox(height: 4),
+          Text(
+            'Dark mode keeps the same panda, emojis and category colours on a darker background.',
+            style: PandaText.caption.copyWith(color: context.panda.muted),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final mode in AppearanceMode.values)
+                OptionPill(
+                  label: mode.label,
+                  icon: _icons[mode],
+                  selected: appearance.mode == mode,
+                  onTap: () => save(appearance.copyWith(mode: mode)),
+                ),
+            ],
+          ),
+          if (appearance.mode == AppearanceMode.scheduled) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => pickTime(dark: true),
+                  icon: const Icon(Icons.dark_mode_rounded),
+                  label: Text('Dark from ${time(appearance.darkFrom)}'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => pickTime(dark: false),
+                  icon: const Icon(Icons.light_mode_rounded),
+                  label: Text('Light from ${time(appearance.lightFrom)}'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              appearance.scheduledDarkAt(now)
+                  ? 'Dark now, until ${time(appearance.lightFrom)}.'
+                  : appearance.darkFrom == appearance.lightFrom
+                  ? 'The two times are the same, so the app stays light.'
+                  : 'Light now, until ${time(appearance.darkFrom)}.',
+              style: PandaText.caption.copyWith(color: context.panda.muted),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _SyncCard extends ConsumerWidget {
   const _SyncCard();
 
@@ -116,14 +212,14 @@ class _SyncCard extends ConsumerWidget {
           'This copy of BamBoozled keeps your tasks on this device only. '
           'To use the same tasks on your phone and computer, the app needs to be built with a sync server '
           '(see the README).',
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
         ),
       ];
     } else if (user == null) {
       content = [
         Text(
           'Sign in with your email to see the same tasks on your phone and your computer.',
-          style: PandaText.body.copyWith(color: PandaColors.muted),
+          style: PandaText.body.copyWith(color: context.panda.muted),
         ),
         const SizedBox(height: 16),
         Align(
@@ -148,7 +244,7 @@ class _SyncCard extends ConsumerWidget {
         Text(
           line,
           style: PandaText.body.copyWith(
-            color: status?.phase == SyncPhase.error ? PandaColors.overdue : PandaColors.muted,
+            color: status?.phase == SyncPhase.error ? context.panda.overdue : context.panda.muted,
           ),
         ),
         const SizedBox(height: 16),

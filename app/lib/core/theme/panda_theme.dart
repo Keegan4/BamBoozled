@@ -27,22 +27,27 @@ abstract final class PandaSizes {
   static const pill = 999.0;
 }
 
-ThemeData buildPandaTheme() {
+/// The app theme. [brightness] picks the light or dark [PandaPalette]; layout, type and shapes are the same.
+ThemeData buildPandaTheme({Brightness brightness = Brightness.light}) {
+  final p = brightness == Brightness.dark ? PandaPalette.dark : PandaPalette.light;
   final scheme = ColorScheme.fromSeed(
     seedColor: PandaColors.bamboo,
-    primary: PandaColors.bamboo,
-    onPrimary: PandaColors.ink,
-    secondary: PandaColors.bambooDark,
-    surface: PandaColors.surface,
-    onSurface: PandaColors.ink,
-    error: PandaColors.overdue,
+    brightness: brightness,
+    primary: p.bamboo,
+    onPrimary: p.onBamboo,
+    secondary: p.bambooDark,
+    surface: p.surface,
+    onSurface: p.ink,
+    error: p.overdue,
   );
   const pillShape = StadiumBorder();
   return ThemeData(
     useMaterial3: true,
+    brightness: brightness,
     colorScheme: scheme,
+    extensions: [p],
     fontFamily: 'Nunito',
-    scaffoldBackgroundColor: PandaColors.rice,
+    scaffoldBackgroundColor: p.rice,
     materialTapTargetSize: MaterialTapTargetSize.padded,
     textTheme: const TextTheme(
       headlineMedium: PandaText.display,
@@ -52,12 +57,12 @@ ThemeData buildPandaTheme() {
       bodyMedium: PandaText.body,
       labelLarge: PandaText.bodyStrong,
       bodySmall: PandaText.caption,
-    ).apply(bodyColor: PandaColors.ink, displayColor: PandaColors.ink),
-    dividerColor: PandaColors.line,
+    ).apply(bodyColor: p.ink, displayColor: p.ink),
+    dividerColor: p.line,
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: PandaColors.bamboo,
-        foregroundColor: PandaColors.ink,
+        backgroundColor: p.bamboo,
+        foregroundColor: p.onBamboo,
         minimumSize: const Size(64, 52),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         shape: pillShape,
@@ -66,43 +71,43 @@ ThemeData buildPandaTheme() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: PandaColors.ink,
+        foregroundColor: p.ink,
         minimumSize: const Size(64, 52),
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        side: const BorderSide(color: PandaColors.ink, width: 1.5),
+        side: BorderSide(color: p.ink, width: 1.5),
         shape: pillShape,
         textStyle: PandaText.heading,
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: PandaColors.bambooDark,
+        foregroundColor: p.bambooDark,
         minimumSize: const Size(48, 48),
         textStyle: PandaText.bodyStrong,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: PandaColors.rice,
-      hintStyle: PandaText.body.copyWith(color: PandaColors.muted),
+      fillColor: p.rice,
+      hintStyle: PandaText.body.copyWith(color: p.muted),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: PandaColors.line, width: 1.5),
+        borderSide: BorderSide(color: p.line, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: PandaColors.line, width: 1.5),
+        borderSide: BorderSide(color: p.line, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: PandaColors.bambooDark, width: 2),
+        borderSide: BorderSide(color: p.bambooDark, width: 2),
       ),
     ),
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: PandaColors.ink,
-      contentTextStyle: TextStyle(fontFamily: 'Nunito', fontSize: 16, color: PandaColors.rice),
+      backgroundColor: p.ink,
+      contentTextStyle: TextStyle(fontFamily: 'Nunito', fontSize: 16, color: p.rice),
     ),
     tooltipTheme: const TooltipThemeData(waitDuration: Duration(milliseconds: 400)),
   );

@@ -92,7 +92,7 @@ class WeekStrip extends ConsumerWidget {
                 iconAlignment: IconAlignment.end,
                 icon: Icon(month ? Icons.expand_less_rounded : Icons.expand_more_rounded),
                 label: Text(month ? 'Week' : 'Month'),
-                style: TextButton.styleFrom(foregroundColor: PandaColors.ink, backgroundColor: PandaColors.rice),
+                style: TextButton.styleFrom(foregroundColor: context.panda.ink, backgroundColor: context.panda.rice),
               ),
             ],
           ),
@@ -119,11 +119,11 @@ class _FormatToggle extends StatelessWidget {
     showSelectedIcon: false,
     onSelectionChanged: (s) => onChanged(s.first),
     style: SegmentedButton.styleFrom(
-      backgroundColor: PandaColors.rice,
-      selectedBackgroundColor: PandaColors.ink,
-      selectedForegroundColor: PandaColors.rice,
-      foregroundColor: PandaColors.ink,
-      side: const BorderSide(color: PandaColors.line),
+      backgroundColor: context.panda.rice,
+      selectedBackgroundColor: context.panda.ink,
+      selectedForegroundColor: context.panda.rice,
+      foregroundColor: context.panda.ink,
+      side: BorderSide(color: context.panda.line),
       minimumSize: const Size(80, 44),
       textStyle: PandaText.bodyStrong,
     ),
@@ -181,7 +181,7 @@ class PandaCalendar extends ConsumerWidget {
       calendarBuilders: CalendarBuilders<Task>(
         prioritizedBuilder: day,
         dowBuilder: (context, d) => Center(
-          child: Text(DateFormat('EEE').format(d), style: PandaText.captionStrong.copyWith(color: PandaColors.muted)),
+          child: Text(DateFormat('EEE').format(d), style: PandaText.captionStrong.copyWith(color: context.panda.muted)),
         ),
       ),
     );
@@ -212,7 +212,7 @@ class _DayCell extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            color: selected ? PandaColors.bambooTint : null,
+            color: selected ? context.panda.bambooTint : null,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -224,11 +224,13 @@ class _DayCell extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: today ? PandaColors.bamboo : (selected ? PandaColors.ink : null),
+                  color: today ? context.panda.bamboo : (selected ? context.panda.ink : null),
                 ),
                 child: Text(
                   '${day.day}',
-                  style: PandaText.bodyStrong.copyWith(color: selected && !today ? PandaColors.rice : PandaColors.ink),
+                  style: PandaText.bodyStrong.copyWith(
+                    color: today ? context.panda.onBamboo : (selected ? context.panda.rice : context.panda.ink),
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -308,7 +310,7 @@ class _EmptyDay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(taskFilterProvider);
-    final style = PandaText.body.copyWith(color: PandaColors.muted);
+    final style = PandaText.body.copyWith(color: context.panda.muted);
     if (hidden == 0) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),

@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:bamboozled/app.dart';
+import 'package:bamboozled/core/theme/appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,6 +67,20 @@ void main() {
       await TestApp.settle(tester);
       await tester.enterText(titleField(), 'Mark 3A essays');
       await TestApp.settle(tester);
+      await expectLater(find.byType(BamBoozledApp), matchesGoldenFile('../../../design/app-screenshots/$name.png'));
+      await app.dispose(tester);
+    });
+  }
+
+  for (final (name, size) in [
+    ('desktop-welcome-dark', const Size(1440, 1000)),
+    ('android-welcome-dark', const Size(412, 915)),
+  ]) {
+    shot(name, (tester) async {
+      final app = await TestApp.create();
+      await app.db.setSetting(Appearance.key, 'dark;19:00;07:00');
+      await app.pump(tester, size: size);
+      await tester.pumpAndSettle();
       await expectLater(find.byType(BamBoozledApp), matchesGoldenFile('../../../design/app-screenshots/$name.png'));
       await app.dispose(tester);
     });
