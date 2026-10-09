@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BamBoozled dark mode mockup</title>
+<style>
+  @font-face { font-family: Nunito; font-weight: 400; src: url("../app/assets/fonts/Nunito-Regular.ttf"); }
+  @font-face { font-family: Nunito; font-weight: 600; src: url("../app/assets/fonts/Nunito-SemiBold.ttf"); }
+  @font-face { font-family: Nunito; font-weight: 700; src: url("../app/assets/fonts/Nunito-Bold.ttf"); }
+  @font-face { font-family: Nunito; font-weight: 800; src: url("../app/assets/fonts/Nunito-ExtraBold.ttf"); }
+
+  /* Dark palette: one value per PandaColors token in app/lib/core/theme/colors.dart */
+  :root {
+    --rice: #121412;          /* scaffold background (light: #FAF8F3) */
+    --surface: #1B1E1B;       /* cards, panels, nav (light: #FFFFFF) */
+    --ink: #EDEBE4;           /* primary text (light: #1E1E1E) */
+    --muted: #A2A69E;         /* secondary text (light: #5F5F5F) */
+    --line: #2D312C;          /* borders, dividers (light: #E8E4DA) */
+    --bamboo: #8CC490;        /* primary button, accents (light: #7BAE7F) */
+    --on-bamboo: #10200F;     /* text on bamboo */
+    --bamboo-dark: #A9D8AC;   /* links, active nav text (light: #3F6B45) */
+    --bamboo-tint: #223426;   /* selected / low-priority fills (light: #E6F0E4) */
+    --overdue: #F28B8B;       /* (light: #E06666) */
+    --overdue-tint: #3B2323;  /* (light: #FBE4E4) */
+    --blush: #F4A6A6; --sky: #9CC9E8; --honey: #F2C879; --lavender: #B9A7E0; --mint: #9ED9C3; --stone: #CFC8B8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 64px; background: #0A0B0A; color: #ddd; font-family: Nunito, system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; color: #EDEBE4; }
+  .lead { margin: 0 0 28px; color: #A2A69E; max-width: 70ch; }
+  .stage { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+  .label { font-size: 13px; color: #A2A69E; margin: 0 0 8px; }
+
+  .app { background: var(--rice); color: var(--ink); font-size: 14px; overflow: hidden; position: relative; border-radius: 14px; border: 1px solid #1f221f; }
+  .app svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- Desktop ---------- */
+  .desktop { width: 1000px; height: 700px; display: flex; }
+  .rail { width: 76px; background: var(--surface); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 14px; }
+  .panda { width: 38px; height: 38px; border-radius: 50%; background: #f4f2ec; margin-bottom: 14px; position: relative; }
+  .panda::before, .panda::after { content: ""; position: absolute; top: -2px; width: 12px; height: 12px; border-radius: 50%; background: #1b1b1b; }
+  .panda::before { left: 1px; } .panda::after { right: 1px; }
+  .panda i { position: absolute; top: 13px; width: 9px; height: 11px; border-radius: 50%; background: #1b1b1b; }
+  .panda i:nth-child(1) { left: 7px; } .panda i:nth-child(2) { right: 7px; }
+  .nav { width: 60px; padding: 8px 0; border-radius: 14px; text-align: center; font-size: 11px; color: var(--muted); }
+  .nav svg { display: block; margin: 0 auto 3px; }
+  .nav.on { background: var(--bamboo-tint); color: var(--bamboo-dark); font-weight: 700; }
+  .main { flex: 1; padding: 22px 26px; min-width: 0; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .top h2 { margin: 0; font-size: 24px; font-weight: 800; }
+  .top p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .search { width: 220px; height: 40px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); padding: 0 14px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .btn { height: 40px; padding: 0 18px; border-radius: 20px; background: var(--bamboo); color: var(--on-bamboo); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+  .chips { display: flex; gap: 6px; margin: 14px 0 14px; flex-wrap: nowrap; }
+  .chip { height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+  .chip.on { background: var(--ink); color: var(--rice); border-color: var(--ink); font-weight: 700; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .cols { display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; }
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cal-head b { font-size: 16px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: 12px; }
+  .seg span { padding: 5px 12px; color: var(--muted); }
+  .seg span.on { background: var(--ink); color: var(--rice); font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; row-gap: 2px; }
+  .grid .dow { color: var(--muted); font-size: 11px; padding: 2px 0 6px; }
+  .grid .d { height: 40px; font-size: 13px; position: relative; padding-top: 7px; border-radius: 12px; }
+  .grid .d.out { color: #5e625b; }
+  .grid .d.today { background: var(--bamboo-tint); }
+  .grid .d.today span { background: var(--bamboo); color: var(--on-bamboo); border-radius: 50%; width: 26px; height: 26px; display: inline-grid; place-items: center; font-weight: 800; margin-top: -3px; }
+  .grid .d i { position: absolute; bottom: 4px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; }
+  .today-row { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; }
+  .today-row a { color: var(--bamboo-dark); }
+
+  .task { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px 10px 18px; display: flex; align-items: center; gap: 10px; margin-top: 8px; overflow: hidden; }
+  .task::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c); }
+  .task.overdue { border-color: var(--overdue); }
+  .task .ring { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }
+  .task .t { flex: 1; min-width: 0; }
+  .task .t b { display: block; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task .t small { color: var(--muted); font-size: 12px; }
+  .task.overdue .t small { color: var(--overdue); }
+  .rank { width: 26px; height: 26px; border-radius: 50%; background: var(--bamboo-tint); color: var(--bamboo-dark); font-weight: 800; font-size: 12px; display: grid; place-items: center; flex: none; }
+  .rank.first { background: var(--ink); color: var(--rice); }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row .task { flex: 1; }
+  .pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: var(--bamboo-tint); color: var(--bamboo-dark); white-space: nowrap; }
+  .pill.urgent { background: var(--overdue-tint); color: var(--overdue); }
+  .sec-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .sec-title b { font-size: 16px; }
+  .sec-title small { color: var(--muted); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .stat { border-radius: 14px; padding: 10px 12px; font-size: 12px; background: var(--rice); color: var(--muted); }
+  .stat b { display: block; font-size: 22px; color: var(--ink); }
+  .stat.g { background: var(--bamboo-tint); color: var(--bamboo-dark); } .stat.g b { color: var(--bamboo-dark); }
+  .stat.r { background: var(--overdue-tint); color: var(--overdue); } .stat.r b { color: var(--overdue); }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); margin-top: 12px; overflow: hidden; }
+  .bar i { display: block; width: 25%; height: 100%; background: var(--bamboo); }
+  .right { display: flex; flex-direction: column; gap: 14px; }
+
+  /* ---------- Phone ---------- */
+  .phone { width: 360px; height: 700px; display: flex; flex-direction: column; }
+  .p-body { flex: 1; padding: 14px 14px 0; overflow: hidden; }
+  .p-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .p-top .panda { margin: 0; flex: none; }
+  .p-top h2 { margin: 0; font-size: 17px; font-weight: 800; }
+  .p-top p { margin: 0; color: var(--muted); font-size: 12px; }
+  .p-top .ic { margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+  .strip { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 10px 12px 12px; }
+  .strip .days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; row-gap: 4px; }
+  .strip .days b { color: var(--ink); font-weight: 600; font-size: 14px; display: block; height: 32px; line-height: 32px; position: relative; }
+  .strip .days b.today { background: var(--bamboo-tint); border-radius: 10px; }
+  .strip .days b.today span { background: var(--bamboo); color: var(--on-bamboo); border-radius: 50%; width: 26px; height: 26px; display: inline-grid; place-items: center; font-weight: 800; }
+  .p-chips { display: flex; gap: 6px; margin: 12px -14px 12px 0; overflow: hidden; }
+  .p-body .task { padding: 8px 10px 8px 16px; }
+  .p-nav { height: 62px; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: space-around; align-items: center; }
+  .p-nav .nav { width: 66px; padding: 6px 0; }
+  .fab { position: absolute; right: 16px; bottom: 78px; width: 58px; height: 58px; border-radius: 50%; background: var(--bamboo); color: var(--on-bamboo); display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+  .fab svg { width: 26px; height: 26px; }
+
+  /* ---------- Palette table ---------- */
+  .pal { margin-top: 36px; max-width: 1000px; }
+  .pal h2 { font-size: 16px; color: #EDEBE4; margin: 0 0 10px; }
+  .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .sw div { border-radius: 12px; padding: 10px 12px; font-size: 12px; border: 1px solid #2D312C; }
+  .sw b { display: block; font-size: 13px; }
+  .sw s { display: block; opacity: .7; text-decoration: none; }
+</style>
+</head>
+<body>
+<h1>BamBoozled — dark mode mockup</h1>
+<p class="lead">Same layout, same components, same category colours. Only the palette changes: warm near-black instead of rice-white, and a lighter bamboo green so buttons and accents still pop.</p>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+    <symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    <symbol id="note" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></symbol>
+    <symbol id="set" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="leaf" viewBox="0 0 24 24"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15zM5 19l8-8"/></symbol>
+  </defs>
+</svg>
+
+<div class="stage">
+  <div>
+    <p class="label">Desktop</p>
+    <div class="app desktop">
+      <div class="rail">
+        <div class="panda"><i></i><i></i></div>
+        <div class="nav on"><svg><use href="#home"/></svg>Home</div>
+        <div class="nav"><svg><use href="#cal"/></svg>Calendar</div>
+        <div class="nav"><svg><use href="#note"/></svg>Notes</div>
+        <div class="nav"><svg><use href="#set"/></svg>Settings</div>
+      </div>
+      <div class="main">
+        <div class="top">
+          <div><h2>Good morning, Ms Tan</h2><p>Thursday, 8 October · 4 tasks this week, 1 overdue</p></div>
+          <div class="row"><div class="search"><svg><use href="#search"/></svg>Search tasks or notes…</div><div class="btn"><svg><use href="#plus"/></svg>Add task</div></div>
+        </div>
+        <div class="chips">
+          <span class="chip on">All</span>
+          <span class="chip"><i class="dot" style="background:var(--stone)"></i>General</span>
+          <span class="chip"><i class="dot" style="background:var(--sky)"></i>Teaching</span>
+          <span class="chip"><i class="dot" style="background:var(--honey)"></i>Admin</span>
+          <span class="chip"><i class="dot" style="background:var(--blush)"></i>Meetings</span>
+          <span class="chip"><i class="dot" style="background:var(--lavender)"></i>CCA</span>
+          <span class="chip"><i class="dot" style="background:var(--mint)"></i>Personal</span>
+        </div>
+        <div class="cols">
+          <div class="card">
+            <div class="cal-head"><b>‹ &nbsp;October 2026 &nbsp;›</b><div class="seg"><span>Week</span><span class="on">Month</span></div></div>
+            <div class="grid">
+              <div class="dow">Mon</div><div class="dow">Tue</div><div class="dow">Wed</div><div class="dow">Thu</div><div class="dow">Fri</div><div class="dow">Sat</div><div class="dow">Sun</div>
+              <div class="d out">28</div><div class="d out">29</div><div class="d out">30</div><div class="d">1</div><div class="d">2</div><div class="d">3</div><div class="d">4</div>
+              <div class="d">5</div><div class="d">6</div><div class="d">7<i style="background:var(--honey)"></i></div><div class="d today"><span>8</span><i style="background:var(--honey)"></i></div><div class="d">9<i style="background:var(--sky)"></i></div><div class="d">10</div><div class="d">11</div>
+              <div class="d">12<i style="background:var(--sky)"></i></div><div class="d">13</div><div class="d">14<i style="background:var(--blush)"></i></div><div class="d">15<i style="background:var(--lavender)"></i></div><div class="d">16<i style="background:var(--mint)"></i></div><div class="d">17</div><div class="d">18</div>
+              <div class="d">19</div><div class="d">20</div><div class="d">21</div><div class="d">22</div><div class="d">23</div><div class="d">24</div><div class="d">25</div>
+            </div>
+            <div class="today-row"><span>Today</span><a>+ Add</a></div>
+            <div class="task" style="--c:var(--honey)"><span class="ring"></span><div class="t"><b>Reply to parent emails</b><small>Due today, 6:00 pm · Admin</small></div><span class="pill">Low</span></div>
+          </div>
+          <div class="right">
+            <div class="card">
+              <div class="sec-title"><b>🌿 Do next</b><small>By deadline + priority</small></div>
+              <div class="row"><span class="rank first">1</span><div class="task overdue" style="--c:var(--honey)"><span class="ring"></span><div class="t"><b>Submit term report</b><small>Overdue by 1 day · Admin</small></div><span class="pill">Medium</span></div></div>
+              <div class="row"><span class="rank">2</span><div class="task" style="--c:var(--sky)"><span class="ring"></span><div class="t"><b>Mark 3A essays</b><small>Due tomorrow, 5:00 pm</small></div><span class="pill">High</span></div></div>
+              <div class="row"><span class="rank">3</span><div class="task" style="--c:var(--honey)"><span class="ring"></span><div class="t"><b>Reply to parent emails</b><small>Due today, 6:00 pm</small></div><span class="pill">Low</span></div></div>
+              <div class="row"><span class="rank">4</span><div class="task" style="--c:var(--lavender)"><span class="ring"></span><div class="t"><b>Plan CCA trip</b><small>Due Thu 15 Oct · CCA</small></div><span class="pill urgent">Urgent</span></div></div>
+            </div>
+            <div class="card">
+              <b style="font-size:16px">This week</b>
+              <div class="stats"><div class="stat g"><b>4</b>due this week</div><div class="stat"><b>1</b>done</div><div class="stat r"><b>1</b>overdue</div></div>
+              <div class="bar"><i></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="label">Android</p>
+    <div class="app phone">
+      <div class="p-body">
+        <div class="p-top"><div class="panda"><i></i><i></i></div><div><h2>Good morning, Ms Tan</h2><p>Thu 8 Oct · 1 overdue</p></div><div class="ic"><svg><use href="#search"/></svg></div></div>
+        <div class="strip">
+          <div class="row" style="justify-content:space-between"><b>October 2026</b><div class="seg"><span class="on">Month ▾</span></div></div>
+          <div class="days">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            <b>5</b><b>6</b><b>7</b><b class="today"><span>8</span></b><b>9</b><b>10</b><b>11</b>
+          </div>
+        </div>
+        <div class="p-chips"><span class="chip">Filter</span><span class="chip on">All</span><span class="chip"><i class="dot" style="background:var(--stone)"></i>General</span><span class="chip"><i class="dot" style="background:var(--sky)"></i>Teaching</span></div>
+        <div class="sec-title"><b>🌿 Do next</b></div>
+        <div class="row"><span class="rank first">1</span><div class="task overdue" style="--c:var(--honey)"><span class="ring"></span><div class="t"><b>Submit term report</b><small>Overdue by 1 day · Admin</small></div><span class="pill">●●</span></div></div>
+        <div class="row"><span class="rank">2</span><div class="task" style="--c:var(--sky)"><span class="ring"></span><div class="t"><b>Mark 3A essays</b><small>Due tomorrow, 5:00 pm</small></div><span class="pill">●●●</span></div></div>
+        <div class="row"><span class="rank">3</span><div class="task" style="--c:var(--honey)"><span class="ring"></span><div class="t"><b>Reply to parent emails</b><small>Due today, 6:00 pm</small></div><span class="pill">●</span></div></div>
+        <div class="row"><span class="rank">4</span><div class="task" style="--c:var(--lavender)"><span class="ring"></span><div class="t"><b>Plan CCA trip</b><small>Due Thu 15 Oct · CCA</small></div><span class="pill urgent">●●●●</span></div></div>
+      </div>
+      <div class="fab"><svg><use href="#plus"/></svg></div>
+      <div class="p-nav">
+        <div class="nav on"><svg><use href="#home"/></svg>Home</div>
+        <div class="nav"><svg><use href="#cal"/></svg>Calendar</div>
+        <div class="nav"><svg><use href="#note"/></svg>Notes</div>
+        <div class="nav"><svg><use href="#set"/></svg>Settings</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pal">
+  <h2>Dark palette (maps 1:1 onto PandaColors)</h2>
+  <div class="sw">
+    <div style="background:#121412;color:#EDEBE4"><b>rice → #121412</b><s>background (was #FAF8F3)</s></div>
+    <div style="background:#1B1E1B;color:#EDEBE4"><b>surface → #1B1E1B</b><s>cards, nav (was #FFFFFF)</s></div>
+    <div style="background:#EDEBE4;color:#121412"><b>ink → #EDEBE4</b><s>text (was #1E1E1E)</s></div>
+    <div style="background:#2D312C;color:#EDEBE4"><b>line → #2D312C</b><s>borders (was #E8E4DA)</s></div>
+    <div style="background:#A2A69E;color:#121412"><b>muted → #A2A69E</b><s>secondary text (was #5F5F5F)</s></div>
+    <div style="background:#8CC490;color:#10200F"><b>bamboo → #8CC490</b><s>buttons (was #7BAE7F)</s></div>
+    <div style="background:#A9D8AC;color:#10200F"><b>bambooDark → #A9D8AC</b><s>links, active (was #3F6B45)</s></div>
+    <div style="background:#223426;color:#A9D8AC"><b>bambooTint → #223426</b><s>fills (was #E6F0E4)</s></div>
+    <div style="background:#F28B8B;color:#2a0f0f"><b>overdue → #F28B8B</b><s>(was #E06666)</s></div>
+    <div style="background:#3B2323;color:#F28B8B"><b>overdueTint → #3B2323</b><s>(was #FBE4E4)</s></div>
+  </div>
+  <p class="lead" style="margin-top:14px">Category colours (blush, sky, honey, lavender, mint, stone) are already pastel and stay unchanged.</p>
+</div>
+</body>
+</html>
