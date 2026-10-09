@@ -122,26 +122,41 @@ class FilterBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(taskFilterProvider);
     final notifier = ref.read(taskFilterProvider.notifier);
-    return Row(
-      children: [
-        const Expanded(child: CategoryChips()),
-        const SizedBox(width: 8),
-        const Icon(Icons.filter_alt_outlined, color: PandaColors.muted, size: 20),
-        const SizedBox(width: 8),
-        DropdownPill<Priority?>(
-          label: 'Priority',
-          value: filter.priority,
-          items: _priorityItems,
-          onSelected: notifier.setPriority,
-        ),
-        const SizedBox(width: 8),
-        DropdownPill<StatusFilter>(
-          label: 'Status',
-          value: filter.status,
-          items: {for (final s in StatusFilter.values) s: s.label},
-          onSelected: notifier.setStatus,
-        ),
-      ],
+    final menus = [
+      const Icon(Icons.filter_alt_outlined, color: PandaColors.muted, size: 20),
+      DropdownPill<Priority?>(
+        label: 'Priority',
+        value: filter.priority,
+        items: _priorityItems,
+        onSelected: notifier.setPriority,
+      ),
+      DropdownPill<StatusFilter>(
+        label: 'Status',
+        value: filter.status,
+        items: {for (final s in StatusFilter.values) s: s.label},
+        onSelected: notifier.setStatus,
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Chips and menus share one line when there's room; otherwise the menus go underneath.
+        if (constraints.maxWidth < 1000) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const CategoryChips(),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: menus),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            const Expanded(child: CategoryChips()),
+            for (final m in menus) Padding(padding: const EdgeInsets.only(left: 8), child: m),
+          ],
+        );
+      },
     );
   }
 }

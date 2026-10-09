@@ -27,23 +27,36 @@ class CalendarPanel extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          // Wraps onto a second line in narrow windows instead of overflowing.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 8,
             children: [
-              IconButton(
-                tooltip: cal.format == CalendarFormat.month ? 'Previous month' : 'Previous week',
-                onPressed: () => notifier.page(-1),
-                icon: const Icon(Icons.chevron_left_rounded),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: cal.format == CalendarFormat.month ? 'Previous month' : 'Previous week',
+                    onPressed: () => notifier.page(-1),
+                    icon: const Icon(Icons.chevron_left_rounded),
+                  ),
+                  Text(DateFormat('MMMM y').format(cal.focusedDay), style: PandaText.title),
+                  IconButton(
+                    tooltip: cal.format == CalendarFormat.month ? 'Next month' : 'Next week',
+                    onPressed: () => notifier.page(1),
+                    icon: const Icon(Icons.chevron_right_rounded),
+                  ),
+                ],
               ),
-              Text(DateFormat('MMMM y').format(cal.focusedDay), style: PandaText.title),
-              IconButton(
-                tooltip: cal.format == CalendarFormat.month ? 'Next month' : 'Next week',
-                onPressed: () => notifier.page(1),
-                icon: const Icon(Icons.chevron_right_rounded),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(onPressed: notifier.goToToday, child: const Text('Today')),
+                  const SizedBox(width: 8),
+                  _FormatToggle(format: cal.format, onChanged: notifier.setFormat),
+                ],
               ),
-              const Spacer(),
-              TextButton(onPressed: notifier.goToToday, child: const Text('Today')),
-              const SizedBox(width: 8),
-              _FormatToggle(format: cal.format, onChanged: notifier.setFormat),
             ],
           ),
           const SizedBox(height: 12),
@@ -150,8 +163,8 @@ class PandaCalendar extends ConsumerWidget {
     }
 
     return TableCalendar<Task>(
-      firstDay: DateTime(2000),
-      lastDay: DateTime(2100),
+      firstDay: DateTime(now.year - 3),
+      lastDay: DateTime(now.year + 4, 12, 31),
       focusedDay: cal.focusedDay,
       currentDay: now,
       calendarFormat: cal.format,

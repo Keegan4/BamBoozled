@@ -11,6 +11,7 @@ List<String> doNextTitles(WidgetTester tester) => tester
     .toList();
 
 void main() {
+  fractionalWidthTests();
   group('desktop', () {
     testWidgets('greets the user and ranks tasks by deadline + priority', (tester) async {
       final app = await TestApp.create();
@@ -153,4 +154,23 @@ void main() {
       await app.dispose(tester);
     });
   });
+}
+
+// Windows display scaling gives windows fractional widths. table_calendar pages
+// are one calendar-width wide, so with ~5,000 weeks the page extent loses
+// precision and Flutter's debug assertion fires.
+void fractionalWidthTests() {
+  for (final width in [1100.0, 1437.3333333333333, 1203.7777777777778, 1000.0 / 1.5, 1999 / 3.0]) {
+    testWidgets('week and month calendar lay out at fractional width $width', (tester) async {
+      final app = await TestApp.create();
+      await app.pump(tester, size: Size(width, 900));
+      await tester.tap(find.text('Week'));
+      await TestApp.settle(tester);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Month'));
+      await TestApp.settle(tester);
+      expect(tester.takeException(), isNull);
+      await app.dispose(tester);
+    });
+  }
 }

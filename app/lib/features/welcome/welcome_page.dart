@@ -30,11 +30,11 @@ class WelcomePage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Wide windows keep search beside the greeting; narrower ones put it underneath.
           Row(
             children: [
               const Expanded(child: _Greeting()),
-              const SizedBox(width: 16),
-              const SizedBox(width: 340, child: TaskSearchField()),
+              if (desktop) ...[const SizedBox(width: 16), const SizedBox(width: 340, child: TaskSearchField())],
               const SizedBox(width: 12),
               FilledButton.icon(
                 onPressed: () => showTaskEditor(context),
@@ -44,6 +44,7 @@ class WelcomePage extends ConsumerWidget {
               const SyncIndicator(),
             ],
           ),
+          if (!desktop) ...[const SizedBox(height: 16), const TaskSearchField()],
           const SizedBox(height: 24),
           const FilterBar(),
           const SizedBox(height: 24),
