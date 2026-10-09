@@ -71,7 +71,7 @@ class FakeSupabaseApi {
   final requests = <RecordedRequest>[];
   final tasksResponse = <Map<String, dynamic>>[];
   final categoriesResponse = <Map<String, dynamic>>[];
-  bool rejectCode = false;
+  bool rejectLogin = false;
   bool serverDown = false;
 
   String get url => 'http://${_server.address.host}:${_server.port}';
@@ -89,14 +89,10 @@ class FakeSupabaseApi {
     final path = req.uri.path;
     if (serverDown) {
       (status, payload) = (503, {'message': 'down'});
-    } else if (path.endsWith('/auth/v1/otp')) {
-      payload = {};
-    } else if (path.endsWith('/auth/v1/verify')) {
-      (status, payload) = rejectCode
-          ? (403, {'error_code': 'otp_expired', 'msg': 'Token has expired'})
-          : (200, _session());
     } else if (path.endsWith('/auth/v1/token')) {
-      payload = _session();
+      (status, payload) = rejectLogin
+          ? (400, {'error_code': 'invalid_credentials', 'msg': 'Invalid login credentials'})
+          : (200, _session());
     } else if (path.endsWith('/auth/v1/logout')) {
       status = 204;
       payload = null;
@@ -173,28 +169,28 @@ void main() {
   );
 
   group('AuthService', () {
-    test('sendCode asks the server to email a code and allows new accounts', () async {
-      await AuthService(client).sendCode('  ms.tan@school.edu.sg ');
-      final req = api.to('/auth/v1/otp', 'POST').single;
-      final body = jsonDecode(req.body) as Map<String, dynamic>;
-      expect(body['email'], 'ms.tan@school.edu.sg');
-      expect(body['create_user'], isTrue);
-    });
-
-    test('verifyCode signs the user in', () async {
+    test('signIn sends the trimmed email and the password, and signs the user in', () async {
       final auth = AuthService(client);
       expect(auth.currentUser, isNull);
-      await auth.verifyCode(' ms.tan@school.edu.sg', ' 123456 ');
-      final body = jsonDecode(api.to('/auth/v1/verify', 'POST').single.body) as Map<String, dynamic>;
-      expect(body['token'], '123456');
-      expect(body['type'], 'email');
+      await auth.signIn(' ms.tan@school.edu.sg ', 'bamboo-123');
+      final req = api.to('/auth/v1/token', 'POST').single;
+      expect(req.query['grant_type'], 'password');
+      final body = jsonDecode(req.body) as Map<String, dynamic>;
+      expect(body['email'], 'ms.tan@school.edu.sg');
+      expect(body['password'], 'bamboo-123');
       expect(auth.currentUser?.email, 'ms.tan@school.edu.sg');
     });
 
-    test('a wrong or expired code throws and leaves the user signed out', () async {
-      api.rejectCode = true;
+    test('signIn never asks the server to create an account or send an email', () async {
+      await AuthService(client).signIn('ms.tan@school.edu.sg', 'bamboo-123');
+      expect(api.to('/auth/v1/otp'), isEmpty);
+      expect(api.to('/auth/v1/signup'), isEmpty);
+    });
+
+    test('a wrong email or password throws and leaves the user signed out', () async {
+      api.rejectLogin = true;
       final auth = AuthService(client);
-      await expectLater(auth.verifyCode('ms.tan@school.edu.sg', '000000'), throwsA(isA<AuthException>()));
+      await expectLater(auth.signIn('ms.tan@school.edu.sg', 'wrong'), throwsA(isA<AuthException>()));
       expect(auth.currentUser, isNull);
     });
 
@@ -203,7 +199,7 @@ void main() {
       final seen = <String?>[];
       final sub = auth.userChanges().listen((u) => seen.add(u?.email));
       await Future<void>.delayed(const Duration(milliseconds: 20));
-      await auth.verifyCode('ms.tan@school.edu.sg', '123456');
+      await auth.signIn('ms.tan@school.edu.sg', 'bamboo-123');
       await Future<void>.delayed(const Duration(milliseconds: 20));
       await auth.signOut();
       await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -215,7 +211,7 @@ void main() {
 
     test('network failures surface as errors the UI can catch', () async {
       api.serverDown = true;
-      await expectLater(AuthService(client).sendCode('ms.tan@school.edu.sg'), throwsA(anything));
+      await expectLater(AuthService(client).signIn('ms.tan@school.edu.sg', 'bamboo-123'), throwsA(anything));
     });
   });
 

@@ -88,10 +88,9 @@ class FakeAuthService implements AuthService {
 
   User? _user;
   final _controller = StreamController<User?>.broadcast();
-  final sentCodes = <String>[];
-  final verified = <(String, String)>[];
-  bool failSend = false;
-  bool failVerify = false;
+  final signIns = <(String, String)>[];
+  bool failOffline = false;
+  bool failCredentials = false;
   int signOuts = 0;
 
   @override
@@ -107,15 +106,10 @@ class FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> sendCode(String email) async {
-    if (failSend) throw Exception('offline');
-    sentCodes.add(email.trim());
-  }
-
-  @override
-  Future<void> verifyCode(String email, String code) async {
-    if (failVerify) throw Exception('bad code');
-    verified.add((email.trim(), code.trim()));
+  Future<void> signIn(String email, String password) async {
+    if (failOffline) throw Exception('offline');
+    if (failCredentials) throw const AuthException('Invalid login credentials');
+    signIns.add((email.trim(), password));
     _user = fakeUser(email: email.trim());
     _controller.add(_user);
   }

@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Email sign-in with a 6-digit code. Works the same on phone and desktop,
-/// and nobody has to remember a password.
+/// Email and password sign-in. Accounts are created by the project owner in the Supabase dashboard
+/// (Authentication → Users), so the app never signs anyone up and sends no emails.
 class AuthService {
   AuthService(this.client);
 
@@ -14,11 +14,10 @@ class AuthService {
     yield* client.auth.onAuthStateChange.map((s) => s.session?.user);
   }
 
-  /// Emails a sign-in code. Creates the account on first use.
-  Future<void> sendCode(String email) => client.auth.signInWithOtp(email: email.trim(), shouldCreateUser: true);
-
-  Future<void> verifyCode(String email, String code) async {
-    await client.auth.verifyOTP(email: email.trim(), token: code.trim(), type: OtpType.email);
+  /// Signs in with an account made in the Supabase dashboard. Throws [AuthException] when the email or
+  /// password is wrong.
+  Future<void> signIn(String email, String password) async {
+    await client.auth.signInWithPassword(email: email.trim(), password: password);
   }
 
   Future<void> signOut() => client.auth.signOut();

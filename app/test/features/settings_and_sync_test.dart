@@ -155,17 +155,21 @@ void main() {
       return (app, s);
     }
 
-    Future<void> sendCodeTo(WidgetTester tester, String email) async {
-      await tester.enterText(find.byType(TextField).last, email);
-      await tester.tap(find.text('Email me a code'));
+    final dialogFields = find.descendant(of: find.byType(SignInDialog), matching: find.byType(TextField));
+
+    Future<void> signInWith(WidgetTester tester, String email, [String password = 'bamboo-123']) async {
+      await tester.enterText(dialogFields.first, email);
+      await tester.enterText(dialogFields.last, password);
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await TestApp.settle(tester);
     }
 
-    testWidgets('starts by asking for an email address', (tester) async {
+    testWidgets('asks for an email and a password, with no emailed code', (tester) async {
       final (app, _) = await openDialog(tester);
       expect(find.text('Sign in to sync'), findsWidgets);
-      expect(find.text('We’ll email you a 6-digit code. No password needed.'), findsOneWidget);
-      expect(find.text('Email me a code'), findsOneWidget);
+      expect(find.text('Use the email and password you were given.'), findsOneWidget);
+      expect(dialogFields, findsNWidgets(2));
+      expect(find.textContaining('code'), findsNothing);
       expect(find.text('Cancel'), findsOneWidget);
       await app.dispose(tester);
     });
@@ -175,91 +179,82 @@ void main() {
       await tester.tap(find.text('Cancel'));
       await TestApp.settle(tester);
       expect(find.byType(SignInDialog), findsNothing);
-      expect(s.auth.sentCodes, isEmpty);
+      expect(s.auth.signIns, isEmpty);
       await app.dispose(tester);
     });
 
     for (final bad in ['', 'ms.tan', 'ms.tan@', 'ms.tan@school', '@school.edu', 'ms tan@school.edu']) {
       testWidgets('rejects "$bad" without contacting the server', (tester) async {
         final (app, s) = await openDialog(tester);
-        await sendCodeTo(tester, bad);
+        await signInWith(tester, bad);
         expect(find.text('Please enter a valid email address'), findsOneWidget);
-        expect(s.auth.sentCodes, isEmpty);
+        expect(s.auth.signIns, isEmpty);
         await app.dispose(tester);
       });
     }
 
-    testWidgets('a valid email moves on to the code, trimming spaces', (tester) async {
+    testWidgets('an empty password is rejected without contacting the server', (tester) async {
       final (app, s) = await openDialog(tester);
-      await sendCodeTo(tester, '  ms.tan@school.edu.sg ');
-      expect(s.auth.sentCodes, ['ms.tan@school.edu.sg']);
-      expect(find.text('Check your email'), findsOneWidget);
-      expect(find.text('We sent a 6-digit code to ms.tan@school.edu.sg. Type it below.'), findsOneWidget);
-      expect(find.text('Sign in'), findsOneWidget);
+      await signInWith(tester, 'ms.tan@school.edu.sg', '');
+      expect(find.text('Please enter your password'), findsOneWidget);
+      expect(s.auth.signIns, isEmpty);
       await app.dispose(tester);
     });
 
-    testWidgets('the code box takes digits only, at most six', (tester) async {
+    testWidgets('the password is hidden until Show is tapped', (tester) async {
       final (app, _) = await openDialog(tester);
-      await sendCodeTo(tester, 'ms.tan@school.edu.sg');
-      await tester.enterText(find.byType(TextField).last, '12ab34-56789');
-      expect(tester.widget<TextField>(find.byType(TextField).last).controller!.text, '123456');
+      TextField password() => tester.widget<TextField>(dialogFields.last);
+      expect(password().obscureText, isTrue);
+      await tester.tap(find.byTooltip('Show password'));
+      await tester.pump();
+      expect(password().obscureText, isFalse);
+      await tester.tap(find.byTooltip('Hide password'));
+      await tester.pump();
+      expect(password().obscureText, isTrue);
       await app.dispose(tester);
     });
 
-    testWidgets('a correct code signs in, closes the dialog and updates Settings', (tester) async {
+    testWidgets('correct details sign in (email trimmed), close the dialog and update Settings', (tester) async {
       final (app, s) = await openDialog(tester);
-      await sendCodeTo(tester, 'ms.tan@school.edu.sg');
-      await tester.enterText(find.byType(TextField).last, '123456');
-      await tester.tap(find.text('Sign in'));
-      await TestApp.settle(tester);
-      expect(s.auth.verified, [('ms.tan@school.edu.sg', '123456')]);
+      await signInWith(tester, '  ms.tan@school.edu.sg ');
+      expect(s.auth.signIns, [('ms.tan@school.edu.sg', 'bamboo-123')]);
       expect(find.byType(SignInDialog), findsNothing);
       expect(find.text('Signed in — your tasks will now sync.'), findsOneWidget);
       expect(find.text('Signed in as ms.tan@school.edu.sg'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('a wrong code explains and lets you try again', (tester) async {
+    testWidgets('pressing Enter in the password box signs in', (tester) async {
       final (app, s) = await openDialog(tester);
-      await sendCodeTo(tester, 'ms.tan@school.edu.sg');
-      s.auth.failVerify = true;
-      await tester.enterText(find.byType(TextField).last, '000000');
-      await tester.tap(find.text('Sign in'));
+      await tester.enterText(dialogFields.first, 'ms.tan@school.edu.sg');
+      await tester.enterText(dialogFields.last, 'bamboo-123');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
       await TestApp.settle(tester);
-      expect(find.text('That code didn’t work. Check it, or ask for a new one.'), findsOneWidget);
+      expect(s.auth.signIns, hasLength(1));
+      await app.dispose(tester);
+    });
+
+    testWidgets('wrong details explain and let you try again', (tester) async {
+      final (app, s) = await openDialog(tester);
+      s.auth.failCredentials = true;
+      await signInWith(tester, 'ms.tan@school.edu.sg', 'wrong');
+      expect(find.textContaining('That email or password didn’t work'), findsOneWidget);
       expect(find.byType(SignInDialog), findsOneWidget);
 
-      s.auth.failVerify = false;
-      await tester.enterText(find.byType(TextField).last, '123456');
-      await tester.tap(find.text('Sign in'));
+      s.auth.failCredentials = false;
+      await tester.enterText(dialogFields.last, 'bamboo-123');
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await TestApp.settle(tester);
       expect(find.byType(SignInDialog), findsNothing);
       await app.dispose(tester);
     });
 
-    testWidgets('if the email cannot be sent it says so and stays on the first step', (tester) async {
+    testWidgets('with no connection it says so, not that the password is wrong', (tester) async {
       final (app, s) = await openDialog(tester);
-      s.auth.failSend = true;
-      await sendCodeTo(tester, 'ms.tan@school.edu.sg');
-      expect(find.textContaining('We couldn’t send the email'), findsOneWidget);
-      expect(find.text('Email me a code'), findsOneWidget);
-
-      s.auth.failSend = false;
-      await tester.tap(find.text('Email me a code'));
-      await TestApp.settle(tester);
-      expect(find.text('Check your email'), findsOneWidget);
-      expect(find.textContaining('We couldn’t send the email'), findsNothing);
-      await app.dispose(tester);
-    });
-
-    testWidgets('"Use a different email" goes back a step', (tester) async {
-      final (app, _) = await openDialog(tester);
-      await sendCodeTo(tester, 'ms.tan@school.edu.sg');
-      await tester.tap(find.text('Use a different email'));
-      await TestApp.settle(tester);
-      expect(find.text('Email me a code'), findsOneWidget);
-      expect(find.text('Check your email'), findsNothing);
+      s.auth.failOffline = true;
+      await signInWith(tester, 'ms.tan@school.edu.sg');
+      expect(find.textContaining('We couldn’t reach the server'), findsOneWidget);
+      expect(find.textContaining('email or password'), findsNothing);
       await app.dispose(tester);
     });
 
@@ -269,7 +264,7 @@ void main() {
       await TestApp.settle(tester);
       expect(find.byType(SignInDialog), findsOneWidget);
       expect(tester.takeException(), isNull);
-      expect(s.auth.sentCodes, isEmpty);
+      expect(s.auth.signIns, isEmpty);
       await app.dispose(tester);
     });
   });
@@ -327,7 +322,7 @@ void main() {
     final (app, s) = await syncedApp(tester, location: '/');
     expect(app.db, isNotNull);
     expect(s.auth.currentUser, isNull);
-    await tester.runAsync(() => s.auth.verifyCode('ms.tan@school.edu.sg', '123456'));
+    await tester.runAsync(() => s.auth.signIn('ms.tan@school.edu.sg', 'bamboo-123'));
     await TestApp.settle(tester);
     expect(indicatorIcon(tester).icon, Icons.cloud_done_rounded);
     await tester.runAsync(s.auth.signOut);

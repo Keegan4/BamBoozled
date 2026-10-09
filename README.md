@@ -13,7 +13,10 @@ The welcome page has:
 - **Calendar:** see this week's and this month's tasks, switching between a Week and a Month view.
 - **Add task:** a guided form. See [docs/task-format.md](docs/task-format.md).
 - **Do next 🎋:** a recommended order to do tasks in, scored from each task's deadline and its priority. See [docs/priority-algorithm.md](docs/priority-algorithm.md).
-- **Filter, search and colour coding:** each category has its own colour, and priority is shown with leaf badges.
+- **Filter, search and colour coding:** each category has its own colour, and priority is shown with leaf badges. When filters hide tasks, a "Showing only: …" banner says so, with a Clear filters button.
+- **This week:** the *due*, *done* and *overdue* boxes are buttons. Click one to see those tasks.
+- **Finished tasks stay visible:** a "Recently done" section sits under "Do next", and the Status filter has a Done view.
+- **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
 The UI mockup is described in [design/README.md](design/README.md). Screenshots of the working app are in [design/app-screenshots/](design/app-screenshots/).
 
@@ -38,12 +41,30 @@ flutter build windows --release --dart-define=... # Windows
 
 ### Setting up sync (one time)
 
+Sync uses [Supabase](https://supabase.com). **You** create each person's account in the Supabase dashboard. The app has no sign-up screen and sends no emails, so you don't need to set up email or a mail server.
+
 1. Create a free project at [supabase.com](https://supabase.com).
 2. In the project's **SQL Editor**, paste and run [supabase/migrations/0001_tasks.sql](supabase/migrations/0001_tasks.sql). Or, with the Supabase CLI: `supabase link` then `supabase db push`.
-3. In the Supabase dashboard (menu names may differ slightly), under **Authentication → Sign In / Providers**, make sure **Email** is on. Under **Authentication → Emails**, edit the *Magic Link* template so it includes `{{ .Token }}`. That puts the 6-digit sign-in code in the email.
+3. In the dashboard (menu names may differ slightly), go to **Authentication → Sign In / Providers**:
+   - Make sure **Email** is on.
+   - Turn **off** "Allow new users to sign up", so only the accounts you add can sign in.
+   - Turn **off** "Confirm email". Accounts you add yourself don't need a confirmation email.
 4. Copy the **Project URL** and **publishable key** from **Project Settings → API Keys**, and use them in the `--dart-define` flags above.
 
-In the app, people go to **Settings → Sign in to sync**, type their email, then type the code they receive. Tasks they added before signing in are uploaded automatically.
+#### Adding a user
+
+1. In the dashboard, open **Authentication → Users → Add user → Create new user**.
+2. Type their **email** and a **password**.
+3. Tick **Auto Confirm User**, so they can sign in straight away without an email.
+4. Give them the email and password. They can use them on the phone and the computer.
+
+To remove someone, or to change their password, open the same **Users** list and use the menu next to their name. Each person only ever sees their own tasks: row-level security in the migration enforces this.
+
+#### Signing in
+
+In the app, go to **Settings → Sign in to sync**, type the email and password, and press **Sign in**. Tasks added before signing in are uploaded automatically. Use the same account on every device and the tasks stay in step. You can sign out from the same Settings page.
+
+If sign-in fails, the app says whether the email or password was wrong, or whether it couldn't reach the server.
 
 ### Developing
 
@@ -86,14 +107,14 @@ Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settin
 | UI / app | **Flutter (Dart)** | One codebase builds for Android, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
 | State | **Riverpod** | Simple and testable. Works well with streams from the local database. |
 | Local storage | **Drift (SQLite)** | Offline-first: the app always reads and writes locally, so it works without internet. |
-| Sync / auth | **Supabase** (Postgres + Auth + Realtime) | Sign-in by email magic link or Google. Row-level security keeps each user's data private. |
+| Sync / auth | **Supabase** (Postgres + Auth) | Email and password sign-in, with accounts added by you in the dashboard. Row-level security keeps each user's data private. |
 | Calendar | `table_calendar` | Week and month views, restyled with the panda theme. |
 | Routing | `go_router` | Bottom navigation bar on phone, side rail on desktop. |
 
 ### How sync works
 1. The UI only ever talks to the local Drift database, so it stays fast and works offline.
 2. `SyncService` pushes rows that changed locally to Supabase. It compares `updated_at` timestamps, and the most recent change wins.
-3. `SyncService` pulls remote changes through Supabase Realtime, plus a full catch-up when the app starts.
+3. `SyncService` pulls remote changes regularly in the background, and catches up fully when the app starts and after signing in.
 4. Deleted tasks are not removed straight away. They are marked with `deleted_at` (a soft delete), so the deletion syncs to the other device.
 5. The server ignores a write that is older than the copy it already has, and stamps every row with its own `server_updated_at`, so devices with wrong clocks still pull every change.
 
@@ -105,40 +126,30 @@ BamBoozled/
 ├── docs/
 │   ├── task-format.md              # recommended task format
 │   └── priority-algorithm.md       # "Do next" scoring
-├── design/                         # Figma link + exported frames
+├── design/                         # Figma link, exported frames, app screenshots
 ├── supabase/
 │   ├── migrations/0001_tasks.sql   # tasks, categories + RLS policies
-│   └── config.toml
+│   └── tests/                      # SQL tests, run on a real PostgreSQL
+├── .github/workflows/              # ci.yml, release.yml
 └── app/                            # Flutter project
     ├── pubspec.yaml
     ├── android/ windows/ macos/ linux/
-    ├── assets/  (fonts/, illustrations/ panda SVGs, icons/)
+    ├── tool/check_coverage.dart    # the coverage gate used by CI
     ├── lib/
-    │   ├── main.dart
-    │   ├── app.dart                         # MaterialApp.router, theme
-    │   ├── core/
-    │   │   ├── theme/  (colors.dart, typography.dart, panda_theme.dart)
-    │   │   ├── layout/adaptive_scaffold.dart  # phone vs desktop breakpoints
-    │   │   └── utils/dates.dart
+    │   ├── main.dart               # start-up
+    │   ├── app.dart                # routes, theme, keeps sync and repeats running
+    │   ├── core/                   # theme, layout breakpoints, shared widgets, date helpers
     │   ├── data/
-    │   │   ├── local/  (app_database.dart, tables.dart)   # Drift
-    │   │   ├── remote/supabase_client.dart
+    │   │   ├── local/              # Drift tables and database (SQLite)
+    │   │   ├── remote/             # Supabase: sign-in (auth_service) and task upload/download
     │   │   ├── sync/sync_service.dart
-    │   │   └── repositories/task_repository.dart
-    │   ├── domain/
-    │   │   ├── models/  (task.dart, category.dart, priority.dart)
-    │   │   └── services/priority_scorer.dart   # pure Dart, unit-tested
+    │   │   ├── repositories/task_repository.dart   # the only code that changes tasks
+    │   │   └── providers.dart      # Riverpod wiring
+    │   ├── domain/                 # Task, Category, Priority, Repeat, PriorityScorer (pure Dart)
     │   └── features/
-    │       ├── welcome/
-    │       │   ├── welcome_page.dart
-    │       │   ├── welcome_controller.dart
-    │       │   └── widgets/  (greeting_header, calendar_panel, week_strip,
-    │       │                  do_next_list, task_card, filter_bar, search_field)
-    │       ├── tasks/   (add_edit_task_sheet.dart, widgets/ category_picker,
-    │       │             priority_picker, date_chips)
-    │       ├── auth/
-    │       └── notes/                       # later milestones
-    └── test/  (priority_scorer_test.dart, task_repository_test.dart, widget tests)
+    │       ├── welcome/            # Welcome page, filters, calendar panel, Do next, This week
+    │       ├── calendar/  tasks/  settings/  auth/  notes/
+    └── test/                       # unit, sync, widget and screenshot tests
 ```
 
 ## Visual language
