@@ -4,7 +4,7 @@ name: Release
 #
 #   git tag v1.0.0 && git push origin v1.0.0
 #
-# Re-runs every check first, then builds Windows, macOS, Linux and Android apps and attaches them
+# Re-runs every check first, then builds Windows, macOS, Linux, Android and iOS apps and attaches them
 # to the release. To make the apps sync between devices, add two repository secrets
 # (Settings > Secrets and variables > Actions): SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.
 # Without them the apps still work, but keep tasks on one device.
@@ -70,6 +70,9 @@ jobs:
           - name: macOS
             os: macos-latest
             build: flutter build macos --release
+          - name: iOS
+            os: macos-latest
+            build: flutter build ios --release --no-codesign
     defaults:
       run:
         working-directory: app
@@ -118,6 +121,7 @@ jobs:
             Linux)   tar -C build/linux/x64/release/bundle -czf "../dist/BamBoozled-$VERSION-linux-x64.tar.gz" . ;;
             Windows) (cd build/windows/x64/runner/Release && 7z a -tzip "$GITHUB_WORKSPACE/dist/BamBoozled-$VERSION-windows-x64.zip" .) ;;
             macOS)   ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/BamBoozled.app "../dist/BamBoozled-$VERSION-macos.zip" ;;
+            iOS)     mkdir -p Payload && cp -R build/ios/iphoneos/Runner.app Payload/ && zip -qry "../dist/BamBoozled-$VERSION-ios-unsigned.ipa" Payload ;;
           esac
           ls -la ../dist
 

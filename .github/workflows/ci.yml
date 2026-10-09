@@ -3,7 +3,7 @@ name: CI
 # Runs on every push and pull request. Everything must pass before merging:
 #   * Flutter: formatting, static analysis, all tests, and a coverage minimum
 #   * Database: the Supabase SQL migration is run against a real PostgreSQL server and tested
-#   * Builds: the app compiles for Linux, Windows and Android
+#   * Builds: the app compiles for Linux, Windows, macOS, Android and iOS
 
 on:
   push:
@@ -126,6 +126,12 @@ jobs:
             command: flutter build macos --release
             artifact: macos-app
             path: app/build/macos/Build/Products/Release/BamBoozled.app
+          - name: iOS
+            os: macos-latest
+            # Unsigned: checks the iPhone app compiles. Installing it on a phone needs signing (see README).
+            command: flutter build ios --release --no-codesign
+            artifact: ios-app
+            path: app/build/ios/iphoneos/Runner.app
     defaults:
       run:
         working-directory: app

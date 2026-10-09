@@ -1,6 +1,6 @@
 # BamBoozled 🐼
 
-A friendly, panda-themed notetaking and task app for Android and desktop. Tasks sync between your phone and your computer.
+A friendly, panda-themed notetaking and task app for Android, iPhone and desktop. Tasks sync between your phone and your computer.
 
 BamBoozled is built for people who aren't technical. Everything works by tapping or clicking:
 - big buttons (at least 48px)
@@ -28,7 +28,7 @@ You need the [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.47 o
 ```bash
 cd app
 flutter pub get
-flutter run -d windows      # or macos, linux, or an Android phone/emulator
+flutter run -d windows      # or macos, linux, an Android phone/emulator, or an iPhone (on a Mac)
 ```
 
 Without any extra settings, the app keeps tasks on the device it runs on. To sync between phone and computer, set up Supabase (below) and pass its details when you run or build:
@@ -105,8 +105,8 @@ PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres supabase/tests/run.sh
 
 | Workflow | When | What it does |
 |---|---|---|
-| [CI](.github/workflows/ci.yml) | every push and pull request | checks formatting, runs the analyzer, all tests with a 95% coverage minimum, the SQL tests on PostgreSQL 16, then builds the Linux, Windows, macOS and Android apps |
-| [Release](.github/workflows/release.yml) | pushing a tag like `v1.0.0` | re-runs the checks, builds the four apps, and attaches them to a GitHub Release with generated notes |
+| [CI](.github/workflows/ci.yml) | every push and pull request | checks formatting, runs the analyzer, all tests with a 95% coverage minimum, the SQL tests on PostgreSQL 16, then builds the Linux, Windows, macOS, Android and iOS apps |
+| [Release](.github/workflows/release.yml) | pushing a tag like `v1.0.0` | re-runs the checks, builds the five apps, and attaches them to a GitHub Release with generated notes |
 
 To publish a release:
 
@@ -119,11 +119,21 @@ Add the repository secrets `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (Settin
 
 The publishable key is meant to be shipped inside the app (it only allows what the row-level security rules allow), so it isn't a password. Never put the **secret** / `service_role` key in the app or in these settings. The Android file is signed with Flutter's debug key: it installs by tapping the file on a phone, but it can't go on the Play Store until a release keystore is set up.
 
+### iPhone (iOS)
+
+The iOS app is built on every push (to prove it compiles) and attached to each release as `BamBoozled-<version>-ios-unsigned.ipa`. Apple only lets **signed** apps run on an iPhone, so that file can't be installed by tapping it. Ways to get it onto a phone:
+
+- **Your own iPhone, free:** on a Mac with Xcode, plug in the phone and run `cd app && flutter run --release -d <your iPhone>` (with the `--dart-define` flags above for sync). Sign in to Xcode with your Apple ID and pick it as the team under *Runner → Signing & Capabilities* the first time. Free signing lasts 7 days, then run it again.
+- **Sideloading the release file:** tools such as Sideloadly or AltStore can sign the unsigned `.ipa` with your Apple ID and install it (same 7-day limit).
+- **For other people (TestFlight / App Store):** needs an Apple Developer account (US$99 a year), a distribution certificate and a provisioning profile. Once you have those, the release workflow can be extended to sign the app and upload it to TestFlight.
+
+The bundle id is `sg.bamboozled.bamboozled`, the same as Android and macOS.
+
 ## Recommended framework
 
 | Layer | Choice | Why |
 |---|---|---|
-| UI / app | **Flutter (Dart)** | One codebase builds for Android, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
+| UI / app | **Flutter (Dart)** | One codebase builds for Android, iOS, Windows, macOS and Linux (and web later). It handles a fully custom panda theme well, and works with both mouse and touch. |
 | State | **Riverpod** | Simple and testable. Works well with streams from the local database. |
 | Local storage | **Drift (SQLite)** | Offline-first: the app always reads and writes locally, so it works without internet. |
 | Sync / auth | **Supabase** (Postgres + Auth) | Email and password sign-in, with accounts added by you in the dashboard. Row-level security keeps each user's data private. |
@@ -153,7 +163,7 @@ BamBoozled/
 ├── .github/workflows/              # ci.yml, release.yml
 └── app/                            # Flutter project
     ├── pubspec.yaml
-    ├── android/ windows/ macos/ linux/
+    ├── android/ ios/ windows/ macos/ linux/
     ├── tool/check_coverage.dart    # the coverage gate used by CI
     ├── lib/
     │   ├── main.dart               # start-up
