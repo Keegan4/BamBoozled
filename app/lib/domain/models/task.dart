@@ -36,6 +36,19 @@ class Task {
   bool get isDeleted => deletedAt != null;
   bool isOverdue(DateTime now) => !isDone && dueAt.isBefore(now);
 
+  /// The first day a repeating task can be ticked off: one repeat before its due date. Ticking
+  /// further ahead than that would just push the task weeks into the future. Null for one-off tasks.
+  DateTime? get earliestTick {
+    if (repeat == Repeat.none) return null;
+    final d = repeat.previous(dueAt);
+    return DateTime(d.year, d.month, d.day);
+  }
+
+  bool isTooEarlyToTick(DateTime now) {
+    final first = earliestTick;
+    return !isDone && first != null && now.isBefore(first);
+  }
+
   Task copyWith({
     String? title,
     DateTime? dueAt,

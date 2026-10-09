@@ -62,11 +62,14 @@ void main() {
     expect(dirty.single.deletedAt, now);
   });
 
-  test('completing a repeating task schedules the next one, once', () async {
+  test('completing a repeating task schedules the next one the day after, once', () async {
     final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
     await repo.setDone(t.id, true);
     await repo.setDone(t.id, false);
     await repo.setDone(t.id, true);
+    expect(await repo.watchTasks().first, hasLength(1), reason: 'not on the same day');
+    now = DateTime(2026, 10, 10, 8);
+    await repo.spawnNextRepeats();
     final tasks = await repo.watchTasks().first;
     expect(tasks, hasLength(2));
     expect(tasks.first.isDone, isTrue);

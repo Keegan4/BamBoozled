@@ -29,7 +29,7 @@ Finder chip(String label) =>
 Future<void> choose(WidgetTester tester, String menu, String option) async {
   await tester.tap(find.byTooltip('Change $menu'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text(option).last);
+  await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text(option)));
   await TestApp.settle(tester);
 }
 

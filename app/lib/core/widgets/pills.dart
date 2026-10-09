@@ -100,6 +100,9 @@ enum OptionPillStyle {
 }
 
 /// A pill that opens a menu, e.g. "Priority: Any ▾". [T] may be nullable (null = "Any").
+///
+/// The pill is its own Material, clipped to its rounded shape, so the hover and press highlight
+/// follows the curve of the pill instead of showing as a box around it.
 class DropdownPill<T> extends StatelessWidget {
   const DropdownPill({
     super.key,
@@ -115,52 +118,57 @@ class DropdownPill<T> extends StatelessWidget {
   final ValueChanged<T> onSelected;
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton<_Choice<T>>(
-    tooltip: 'Change $label',
-    initialValue: _Choice(value),
-    // Values are wrapped because PopupMenuButton never reports a null value, which would
-    // make a "null = Any" choice silently do nothing.
-    onSelected: (choice) => onSelected(choice.value),
-    position: PopupMenuPosition.under,
-    // Shapes the hover and press highlight to the pill instead of a box around it.
-    borderRadius: BorderRadius.circular(PandaSizes.pill),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    itemBuilder: (_) => [
+  Widget build(BuildContext context) => MenuAnchor(
+    style: MenuStyle(
+      backgroundColor: const WidgetStatePropertyAll(PandaColors.surface),
+      surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 8)),
+    ),
+    alignmentOffset: const Offset(0, 4),
+    menuChildren: [
       for (final e in items.entries)
-        PopupMenuItem(
-          value: _Choice(e.key),
-          height: 48,
+        MenuItemButton(
+          onPressed: () => onSelected(e.key),
+          style: const ButtonStyle(minimumSize: WidgetStatePropertyAll(Size(160, 48))),
+          leadingIcon: Icon(
+            Icons.check_rounded,
+            size: 18,
+            color: e.key == value ? PandaColors.bambooDark : Colors.transparent,
+          ),
           child: Text(e.value, style: PandaText.body),
         ),
     ],
-    child: Container(
-      constraints: const BoxConstraints(minHeight: 44),
-      padding: const EdgeInsets.only(left: 16, right: 10),
-      decoration: ShapeDecoration(
-        color: PandaColors.surface,
-        shape: StadiumBorder(side: BorderSide(color: PandaColors.line, width: 1.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('$label: ${items[value]}', style: PandaText.bodyStrong),
-          const SizedBox(width: 4),
-          const Icon(Icons.expand_more_rounded, size: 20),
-        ],
+    builder: (context, controller, _) => Tooltip(
+      message: 'Change $label',
+      child: Semantics(
+        button: true,
+        child: Material(
+          color: PandaColors.surface,
+          shape: const StadiumBorder(side: BorderSide(color: PandaColors.line, width: 1.5)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            hoverColor: PandaColors.bambooTint,
+            onTap: () => controller.isOpen ? controller.close() : controller.open(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, right: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$label: ${items[value]}', style: PandaText.bodyStrong),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.expand_more_rounded, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     ),
   );
-}
-
-class _Choice<T> {
-  const _Choice(this.value);
-  final T value;
-
-  @override
-  bool operator ==(Object other) => other is _Choice<T> && other.value == value;
-
-  @override
-  int get hashCode => value.hashCode;
 }
 
 /// White rounded card used for the main panels.

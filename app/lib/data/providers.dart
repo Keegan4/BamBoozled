@@ -75,6 +75,15 @@ class ClockNotifier extends Notifier<DateTime> {
   }
 }
 
+/// Brings back each repeating task the day after it was finished. Watch it once, near the top of
+/// the app: it re-checks whenever the tasks or the day change.
+final repeatSpawnerProvider = Provider<void>((ref) {
+  ref.watch(tasksProvider);
+  ref.watch(clockProvider.select((d) => DateTime(d.year, d.month, d.day)));
+  final repo = ref.watch(taskRepositoryProvider);
+  Future.microtask(repo.spawnNextRepeats);
+});
+
 final tasksProvider = StreamProvider<List<Task>>((ref) => ref.watch(taskRepositoryProvider).watchTasks());
 
 final categoriesProvider = StreamProvider<List<Category>>((ref) => ref.watch(taskRepositoryProvider).watchCategories());

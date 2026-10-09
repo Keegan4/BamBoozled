@@ -5,6 +5,7 @@ import '../../../core/theme/panda_theme.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/widgets/priority_badge.dart';
 import '../../../domain/models/category.dart';
+import '../../../domain/models/priority.dart';
 import '../../../domain/models/task.dart';
 
 /// One task row: category stripe, tick box, title, due label and priority.
@@ -80,7 +81,11 @@ class TaskCard extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
-                                    category == null ? due : '$due · ${category!.name}',
+                                    [
+                                      due,
+                                      ?category?.name,
+                                      if (task.repeat != Repeat.none) '↻ ${task.repeat.label}',
+                                    ].join(' · '),
                                     maxLines: compact ? 2 : 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: PandaText.caption.copyWith(color: metaColor),

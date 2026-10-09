@@ -217,7 +217,7 @@ void main() {
       final before = dots(tester, CalendarPanel).length;
       await tester.tap(find.byTooltip('Change Status'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('All').last);
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text('All')));
       await TestApp.settle(tester);
       expect(dots(tester, CalendarPanel).length, before + 1, reason: 'the finished worksheet on the 6th appears');
       await app.dispose(tester);

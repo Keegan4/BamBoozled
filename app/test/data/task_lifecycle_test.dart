@@ -404,13 +404,19 @@ void main() {
   });
 
   group('repeating tasks', () {
+    /// Moves the clock on to the next morning and lets finished repeating tasks come back.
+    Future<int> nextDay() {
+      now = DateTime(now.year, now.month, now.day + 1, 8);
+      return repo.spawnNextRepeats();
+    }
+
     for (final (repeat, next) in <(Repeat, DateTime)>[
       (Repeat.daily, DateTime(2026, 10, 10, 17)),
       (Repeat.weekly, DateTime(2026, 10, 16, 17)),
       (Repeat.monthly, DateTime(2026, 11, 9, 17)),
     ]) {
       test(
-        'finishing a ${repeat.label.toLowerCase()} task schedules the next one for ${next.day}/${next.month}',
+        'a ${repeat.label.toLowerCase()} task comes back the day after it is finished, due ${next.day}/${next.month}',
         () async {
           final t = await repo.addTask(
             draft(
@@ -423,6 +429,9 @@ void main() {
             ),
           );
           await repo.setDone(t.id, true);
+          expect(await all(), hasLength(1), reason: 'nothing new appears on the day it is ticked');
+          expect(await repo.spawnNextRepeats(), 0, reason: 'not even if the app re-checks the same day');
+          expect(await nextDay(), 1);
           final tasks = await all();
           expect(tasks, hasLength(2));
           final copy = tasks.singleWhere((x) => x.id != t.id);
@@ -436,16 +445,44 @@ void main() {
       );
     }
 
+    test('checking again does not make a second copy', () async {
+      final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      await repo.setDone(t.id, true);
+      expect(await nextDay(), 1);
+      expect(await repo.spawnNextRepeats(), 0);
+      expect(await repo.spawnNextRepeats(), 0);
+      expect(await all(), hasLength(2));
+    });
+
     test('a task that does not repeat never spawns a copy', () async {
       final t = await repo.addTask(draft('One-off'));
       await repo.setDone(t.id, true);
+      expect(await nextDay(), 0);
       expect(await all(), hasLength(1));
     });
 
-    test('un-ticking removes the copy again, so there is no duplicate left behind', () async {
+    test('a repeating task that is not finished does not spawn anything', () async {
+      await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      expect(await nextDay(), 0);
+      expect(await all(), hasLength(1));
+    });
+
+    test('un-ticking on the same day leaves no copy behind', () async {
       final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
       later();
       await repo.setDone(t.id, true);
+      later();
+      await repo.setDone(t.id, false);
+      expect(await nextDay(), 0, reason: 'it is not finished any more');
+      final listed = await all();
+      expect(listed.single.id, t.id);
+      expect(listed.single.isDone, isFalse);
+    });
+
+    test('un-ticking after the copy has appeared takes it away, so there is no duplicate', () async {
+      final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      await repo.setDone(t.id, true);
+      await nextDay();
       expect(await all(), hasLength(2));
       later();
       await repo.setDone(t.id, false);
@@ -453,6 +490,7 @@ void main() {
       expect(listed, hasLength(1), reason: 'the auto-created copy is taken away');
       expect(listed.single.id, t.id);
       expect(listed.single.isDone, isFalse);
+      expect(await repo.spawnNextRepeats(), 0);
     });
 
     test('tick, untick, tick again: exactly one next copy, never two', () async {
@@ -465,15 +503,41 @@ void main() {
       }
       later();
       await repo.setDone(t.id, true);
+      await nextDay();
       final listed = await all();
       expect(listed, hasLength(2));
       expect(listed.where((x) => !x.isDone).single.dueAt, DateTime(2026, 10, 16, 17));
     });
 
-    test('a copy the user has edited is theirs: un-ticking leaves it alone', () async {
+    test('ticking again after an Undo that came after the copy appeared brings the same copy back', () async {
       final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      await repo.setDone(t.id, true);
+      await nextDay();
+      later();
+      await repo.setDone(t.id, false);
+      expect(await all(), hasLength(1));
       later();
       await repo.setDone(t.id, true);
+      expect(await all(), hasLength(2), reason: 'restored, not duplicated');
+      expect(await repo.spawnNextRepeats(), 0);
+      expect(await all(), hasLength(2));
+    });
+
+    test('a next occurrence the user deleted does not come back', () async {
+      final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      await repo.setDone(t.id, true);
+      await nextDay();
+      final copy = (await all()).singleWhere((x) => x.id != t.id);
+      later();
+      await repo.deleteTask(copy.id);
+      expect(await repo.spawnNextRepeats(), 0);
+      expect(await all(), hasLength(1));
+    });
+
+    test('a copy the user has edited is theirs: un-ticking leaves it alone', () async {
+      final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
+      await repo.setDone(t.id, true);
+      await nextDay();
       final copy = (await all()).singleWhere((x) => x.id != t.id);
       later();
       await repo.updateTask(copy.copyWith(priority: Priority.urgent));
@@ -485,9 +549,10 @@ void main() {
     test('a copy that has itself been finished is left alone', () async {
       final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
       await repo.setDone(t.id, true);
+      await nextDay();
       final copy = (await all()).singleWhere((x) => x.id != t.id);
       later();
-      await repo.setDone(copy.id, true); // creates a third
+      await repo.setDone(copy.id, true);
       later();
       await repo.setDone(t.id, false);
       final listed = await all();
@@ -495,20 +560,22 @@ void main() {
       expect((await stored(copy.id)).isDone, isTrue);
     });
 
-    test('finishing is not blocked when two identical tasks already exist for the next date', () async {
+    test('an identical task already on the next date is not copied again, even twice over', () async {
       final t = await repo.addTask(draft('Weekly report', repeat: Repeat.weekly));
-      await repo.addTask(draft('Weekly report', due: DateTime(2026, 10, 16, 17)));
-      await repo.addTask(draft('Weekly report', due: DateTime(2026, 10, 16, 17)));
+      await repo.addTask(draft('Weekly report', due: DateTime(2026, 10, 16, 17), repeat: Repeat.weekly));
+      await repo.addTask(draft('Weekly report', due: DateTime(2026, 10, 16, 17), repeat: Repeat.weekly));
       await repo.setDone(t.id, true); // used to throw "too many elements"
       expect((await stored(t.id)).isDone, isTrue);
+      expect(await nextDay(), 0);
       expect(await all(), hasLength(3), reason: 'a next one already exists, so none is added');
     });
 
-    test('the chain continues: finishing each copy schedules the next week', () async {
+    test('the chain continues: each finished copy brings back the next week', () async {
       var current = (await repo.addTask(draft('Weekly', repeat: Repeat.weekly, due: DateTime(2026, 10, 9, 17))));
       final dues = [current.dueAt];
       for (var i = 0; i < 4; i++) {
         await repo.setDone(current.id, true);
+        await nextDay();
         current = (await all()).singleWhere((x) => !x.isDone);
         dues.add(current.dueAt);
       }
@@ -518,7 +585,53 @@ void main() {
     test('a monthly task on the 31st lands on the last day of shorter months', () async {
       final t = await repo.addTask(draft('Month end', repeat: Repeat.monthly, due: DateTime(2026, 1, 31, 12)));
       await repo.setDone(t.id, true);
+      await nextDay();
       expect((await all()).singleWhere((x) => !x.isDone).dueAt, DateTime(2026, 2, 28, 12));
+    });
+
+    test('Repeat.previous undoes Repeat.next', () {
+      final d = DateTime(2026, 3, 15, 9);
+      for (final r in [Repeat.daily, Repeat.weekly, Repeat.monthly]) {
+        expect(r.previous(r.next(d)), d, reason: r.label);
+      }
+      expect(Repeat.none.previous(d), d);
+      expect(Repeat.monthly.previous(DateTime(2026, 3, 31, 9)), DateTime(2026, 2, 28, 9));
+      expect(Repeat.monthly.previous(DateTime(2026, 1, 15)), DateTime(2025, 12, 15));
+    });
+
+    group('ticking too early', () {
+      Task weekly(DateTime due) => Task(
+        id: 'w',
+        title: 'Weekly',
+        dueAt: due,
+        categoryId: 'general',
+        repeat: Repeat.weekly,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      test('is only blocked more than one repeat before the due date', () {
+        final due = DateTime(2026, 10, 17, 17);
+        expect(weekly(due).earliestTick, DateTime(2026, 10, 10));
+        expect(weekly(due).isTooEarlyToTick(DateTime(2026, 10, 9, 23)), isTrue);
+        expect(weekly(due).isTooEarlyToTick(DateTime(2026, 10, 10, 0, 1)), isFalse);
+        expect(weekly(due).isTooEarlyToTick(DateTime(2026, 10, 17, 18)), isFalse, reason: 'late is fine');
+      });
+
+      test('never applies to one-off tasks or to ones already ticked', () {
+        final oneOff = Task(
+          id: 'o',
+          title: 'One-off',
+          dueAt: DateTime(2027, 1, 1),
+          categoryId: 'general',
+          createdAt: now,
+          updatedAt: now,
+        );
+        expect(oneOff.earliestTick, isNull);
+        expect(oneOff.isTooEarlyToTick(now), isFalse);
+        final done = weekly(DateTime(2027, 1, 1)).copyWith(completedAt: () => now);
+        expect(done.isTooEarlyToTick(now), isFalse, reason: 'un-ticking is always allowed');
+      });
     });
   });
 
@@ -684,12 +797,15 @@ void main() {
       later();
       await phone.repo.setDone(t.id, true);
       await laptop.repo.setDone(t.id, true);
+      now = DateTime(2026, 10, 10, 8);
+      await phone.repo.spawnNextRepeats();
+      await laptop.repo.spawnNextRepeats();
       await syncBoth();
       await syncBoth();
       final onPhone = await phone.tasks();
       final onLaptop = await laptop.tasks();
       expect(onPhone.length, onLaptop.length, reason: 'devices agree on what exists');
-      expect(onPhone.where((x) => !x.isDone && x.dueAt == DateTime(2026, 10, 16, 17)).length, lessThanOrEqualTo(2));
+      expect(onPhone.where((x) => !x.isDone && x.dueAt == DateTime(2026, 10, 16, 17)), hasLength(1));
     });
   });
 }

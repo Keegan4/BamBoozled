@@ -1,5 +1,4 @@
 import 'package:bamboozled/core/theme/colors.dart';
-import 'package:bamboozled/core/theme/panda_theme.dart';
 import 'package:bamboozled/data/repositories/task_repository.dart';
 import 'package:bamboozled/domain/models/category.dart';
 import 'package:bamboozled/features/tasks/task_editor.dart';
@@ -21,9 +20,8 @@ class FailingCategoryRepository extends TaskRepository {
   Future<Category> addCategory(String name, Color color) => Future.error(StateError('disk full'));
 }
 
-/// The menu button (not just its tooltip) for "Change Priority" / "Change Status".
-Finder menuButton(String tooltip) =>
-    find.ancestor(of: find.byTooltip(tooltip), matching: find.byWidgetPredicate((w) => w is PopupMenuButton));
+/// The pill's own highlight (the InkWell inside the "Change Priority" / "Change Status" pill).
+Finder pillInk(String tooltip) => find.descendant(of: find.byTooltip(tooltip), matching: find.byType(InkWell));
 
 Finder inEditor(Finder f) => find.descendant(of: find.byType(TaskEditor), matching: f);
 Finder nameBox() => find.widgetWithText(TextField, 'e.g. Exams');
@@ -437,15 +435,16 @@ void main() {
   });
 
   group('the priority and status menus', () {
-    testWidgets('the hover and press highlight is the shape of the pill, not a box around it', (tester) async {
+    testWidgets('the pill clips its highlight to its own rounded shape', (tester) async {
       final app = await TestApp.create();
       await app.pump(tester);
-      final menu = tester.widget<PopupMenuButton<dynamic>>(menuButton('Change Priority'));
-      expect(menu.borderRadius, BorderRadius.circular(PandaSizes.pill));
-      final ink = tester.widget<InkWell>(
-        find.descendant(of: menuButton('Change Priority'), matching: find.byType(InkWell)),
-      );
-      expect(ink.borderRadius, BorderRadius.circular(PandaSizes.pill));
+      for (final label in ['Change Priority', 'Change Status']) {
+        final material = tester.widget<Material>(
+          find.ancestor(of: pillInk(label), matching: find.byType(Material)).first,
+        );
+        expect(material.shape, isA<StadiumBorder>(), reason: label);
+        expect(material.clipBehavior, Clip.antiAlias, reason: label);
+      }
       await app.dispose(tester);
     });
 
@@ -458,23 +457,10 @@ void main() {
       await mouse.addPointer(location: Offset.zero);
       await mouse.moveTo(tester.getCenter(pill));
       await tester.pump(const Duration(milliseconds: 200));
-      final ink = tester.getRect(find.descendant(of: pill, matching: find.byType(InkWell)));
+      final ink = tester.getRect(pillInk('Change Priority'));
       expect(ink.width, closeTo(pillRect.width, 1));
       expect(ink.height, closeTo(pillRect.height, 1));
       await mouse.removePointer();
-      await app.dispose(tester);
-    });
-
-    testWidgets('both menus have the shaped highlight', (tester) async {
-      final app = await TestApp.create();
-      await app.pump(tester);
-      for (final label in ['Change Priority', 'Change Status']) {
-        expect(
-          tester.widget<PopupMenuButton<dynamic>>(menuButton(label)).borderRadius,
-          BorderRadius.circular(PandaSizes.pill),
-          reason: label,
-        );
-      }
       await app.dispose(tester);
     });
   });

@@ -40,9 +40,12 @@ Future<void> addDirect(
   Priority priority = Priority.medium,
   String category = 'general',
   bool done = false,
+  Repeat repeat = Repeat.none,
 }) async {
   await tester.runAsync(() async {
-    final t = await app.repo.addTask(TaskDraft(title: title, dueAt: due, priority: priority, categoryId: category));
+    final t = await app.repo.addTask(
+      TaskDraft(title: title, dueAt: due, priority: priority, categoryId: category, repeat: repeat),
+    );
     if (done) await app.repo.setDone(t.id, true);
   });
 }
@@ -326,7 +329,7 @@ void main() {
     Future<void> setStatus(WidgetTester tester, String option) async {
       await tester.tap(find.byTooltip('Change Status'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(option).last);
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text(option)));
       await TestApp.settle(tester);
     }
 
@@ -429,7 +432,7 @@ void main() {
       await TestApp.settle(tester);
       await tester.tap(find.byTooltip('Change Status'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Done').last);
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text('Done')));
       await TestApp.settle(tester);
       return app;
     }
@@ -505,7 +508,7 @@ void main() {
       await TestApp.settle(tester);
       await tester.tap(find.byTooltip('Change Priority'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('High').last);
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text('High')));
       await TestApp.settle(tester);
       expect(find.text('Showing only: Teaching or Admin · High priority'), findsOneWidget);
       await app.dispose(tester);
@@ -749,6 +752,104 @@ void main() {
           )
           .first;
       expect(tester.widget<Material>(box).color, PandaColors.overdueTint);
+      await app.dispose(tester);
+    });
+  });
+
+  group('repeating tasks', () {
+    testWidgets('a repeating task is marked on its card', (tester) async {
+      final app = await TestApp.create();
+      await addDirect(tester, app, 'Water plants', DateTime(2026, 10, 9, 17), repeat: Repeat.weekly);
+      await app.pump(tester, size: tall);
+      expect(find.descendant(of: cardFor('Water plants'), matching: find.textContaining('↻ Weekly')), findsOneWidget);
+      expect(find.descendant(of: cardFor('Mark 3A essays'), matching: find.textContaining('↻')), findsNothing);
+      await app.dispose(tester);
+    });
+
+    testWidgets('ticking says when it comes back, and Undo puts it back', (tester) async {
+      final app = await TestApp.create();
+      await addDirect(tester, app, 'Water plants', DateTime(2026, 10, 9, 17), repeat: Repeat.weekly);
+      await app.pump(tester, size: tall);
+      await tick(tester, 'Water plants');
+      expect(find.textContaining('It comes back tomorrow, due Fri 16 Oct'), findsOneWidget);
+      expect(recentlyDone(tester), contains('Water plants'));
+      await tester.tap(find.text('Undo'));
+      await TestApp.settle(tester);
+      expect(doNextTitles(tester), contains('Water plants'));
+      await app.dispose(tester);
+    });
+
+    testWidgets('one finished on an earlier day is back in the list when the app opens', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await addDirect(tester, app, 'Water plants', DateTime(2026, 10, 6, 17), repeat: Repeat.weekly, done: true);
+      await tester.runAsync(
+        () => (app.db.update(app.db.tasks)).write(TasksCompanion(completedAt: Value(DateTime(2026, 10, 6, 18)))),
+      );
+      await app.pump(tester, size: tall);
+      await TestApp.settle(tester);
+      expect(doNextTitles(tester), ['Water plants']);
+      expect(find.descendant(of: cardFor('Water plants'), matching: find.textContaining('Tue 13 Oct')), findsOneWidget);
+      await app.dispose(tester);
+    });
+
+    testWidgets('ticking does not add a new task straight away', (tester) async {
+      final app = await TestApp.create();
+      await addDirect(tester, app, 'Water plants', DateTime(2026, 10, 9, 17), repeat: Repeat.weekly);
+      await app.pump(tester, size: tall);
+      await tick(tester, 'Water plants');
+      expect(find.widgetWithText(TaskCard, 'Water plants'), findsOneWidget, reason: 'one card, not two');
+      await app.dispose(tester);
+    });
+
+    testWidgets('one that is not due for weeks cannot be ticked: it explains instead', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await addDirect(tester, app, 'Water plants', DateTime(2027, 1, 23, 17), repeat: Repeat.weekly);
+      await app.pump(tester, size: tall);
+      await tick(tester, 'Water plants');
+      expect(find.textContaining('isn’t due until Sat 23 Jan 2027'), findsOneWidget);
+      expect(find.textContaining('tick it off from Sat 16 Jan 2027'), findsOneWidget);
+      expect(find.textContaining('Nice work'), findsNothing);
+      expect(isStruckThrough(tester, 'Water plants'), isFalse);
+      await app.dispose(tester);
+    });
+
+    testWidgets('ticking a one-off task far ahead is still allowed', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await addDirect(tester, app, 'Book flights', DateTime(2027, 1, 23, 17));
+      await app.pump(tester, size: tall);
+      await tick(tester, 'Book flights');
+      expect(find.textContaining('Nice work!'), findsOneWidget);
+      await app.dispose(tester);
+    });
+  });
+
+  group('the "This week" boxes look clickable', () {
+    testWidgets('each has an arrow, and a hint says to tap them', (tester) async {
+      final app = await TestApp.create();
+      await app.pump(tester, size: tall);
+      expect(find.text('Tap a box to see the tasks'), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(WeekSummaryCard), matching: find.byIcon(Icons.chevron_right_rounded)),
+        findsNWidgets(3),
+      );
+      await app.dispose(tester);
+    });
+
+    testWidgets('"done" opens the Done tab and "overdue" the Overdue tab', (tester) async {
+      final app = await TestApp.create();
+      await app.pump(tester, size: tall);
+      await tester.tap(find.text('done').first);
+      await TestApp.settle(tester);
+      expect(find.byType(WeekTasksSheet), findsOneWidget);
+      expect(find.descendant(of: find.byType(WeekTasksSheet), matching: find.text('Print worksheets')), findsOneWidget);
+      await tester.tap(find.byTooltip('Close'));
+      await TestApp.settle(tester);
+      await tester.tap(find.text('overdue').first);
+      await TestApp.settle(tester);
+      expect(
+        find.descendant(of: find.byType(WeekTasksSheet), matching: find.text('Submit term report')),
+        findsOneWidget,
+      );
       await app.dispose(tester);
     });
   });

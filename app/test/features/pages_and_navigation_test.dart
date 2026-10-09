@@ -171,7 +171,7 @@ void main() {
       await app.pump(tester, location: '/tasks');
       await tester.tap(find.byTooltip('Change Status'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('All').last);
+      await tester.tap(find.descendant(of: find.byType(MenuItemButton), matching: find.text('All')));
       await TestApp.settle(tester);
       expect(find.text('Done'), findsOneWidget);
       expect(allTaskTitles(tester).last, 'Print worksheets');

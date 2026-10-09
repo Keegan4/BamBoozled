@@ -139,7 +139,8 @@ class TaskRepository {
     _changed();
   }
 
-  /// Ticks a task off (or back on). Finishing a repeating task schedules the next one.
+  /// Ticks a task off (or back on). A repeating task's next occurrence is not created here: it
+  /// appears the day after, from [spawnNextRepeats].
   Future<void> setDone(String id, bool done) async {
     final task = await getTask(id);
     if (task == null || task.isDone == done) return;
@@ -152,51 +153,29 @@ class TaskRepository {
           );
       if (task.repeat == Repeat.none) return;
       final nextDue = task.repeat.next(task.dueAt);
+      final copies =
+          await (db.select(db.tasks)..where(
+                (t) =>
+                    t.title.equals(task.title) &
+                    t.dueAt.equals(nextDue) &
+                    t.categoryId.equals(task.categoryId) &
+                    t.repeat.equals(task.repeat.index) &
+                    t.completedAt.isNull(),
+              ))
+              .get();
       if (done) {
-        // Ticking off a repeating task schedules the next one, unless it is already there.
-        final existing = await (db.select(
-          db.tasks,
-        )..where((t) => t.title.equals(task.title) & t.dueAt.equals(nextDue) & t.deletedAt.isNull())).get();
-        if (existing.isEmpty) {
-          await db
-              .into(db.tasks)
-              .insert(
-                _taskToCompanion(
-                  Task(
-                    id: _newId(),
-                    title: task.title,
-                    dueAt: nextDue,
-                    priority: task.priority,
-                    categoryId: task.categoryId,
-                    estimateMinutes: task.estimateMinutes,
-                    notes: task.notes,
-                    repeat: task.repeat,
-                    createdAt: now,
-                    updatedAt: now,
-                  ),
-                  dirty: true,
-                ),
-              );
+        // Ticking again after an Undo brings back the copy the Undo took away.
+        for (final copy in copies.where((c) => c.deletedAt != null)) {
+          await (db.update(db.tasks)..where((t) => t.id.equals(copy.id))).write(
+            TasksCompanion(deletedAt: const Value(null), updatedAt: Value(now), dirty: const Value(true)),
+          );
         }
       } else {
-        // Un-ticking takes that next copy away again, so the task is back exactly as it was. A copy
-        // the user has since edited or finished (updatedAt moved on) is theirs, and is left alone.
-        final untouched =
-            await (db.select(db.tasks)
-                  ..where(
-                    (t) =>
-                        t.title.equals(task.title) &
-                        t.dueAt.equals(nextDue) &
-                        t.categoryId.equals(task.categoryId) &
-                        t.repeat.equals(task.repeat.index) &
-                        t.deletedAt.isNull() &
-                        t.completedAt.isNull() &
-                        t.createdAt.equalsExp(t.updatedAt),
-                  )
-                  ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-                  ..limit(1))
-                .get();
-        for (final copy in untouched) {
+        // Un-ticking takes the next copy away again (if it has appeared by now), so the task is
+        // back exactly as it was. A copy the user has since edited (updatedAt moved on) is theirs.
+        final untouched = copies.where((c) => c.deletedAt == null && c.createdAt == c.updatedAt).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        for (final copy in untouched.take(1)) {
           await (db.update(db.tasks)..where((t) => t.id.equals(copy.id))).write(
             TasksCompanion(deletedAt: Value(now), updatedAt: Value(now), dirty: const Value(true)),
           );
@@ -204,6 +183,66 @@ class TaskRepository {
       }
     });
     _changed();
+  }
+
+  /// Creates the next occurrence of every repeating task that was finished before today and has
+  /// none yet, so a weekly task finished on Saturday is back on Sunday. Safe to call at any time.
+  /// Returns how many were created.
+  Future<int> spawnNextRepeats() async {
+    final now = _clock();
+    final today = DateTime(now.year, now.month, now.day);
+    var created = 0;
+    await db.transaction(() async {
+      final finished =
+          await (db.select(db.tasks)..where(
+                (t) =>
+                    t.deletedAt.isNull() &
+                    t.completedAt.isNotNull() &
+                    t.completedAt.isSmallerThanValue(today) &
+                    t.repeat.equals(Repeat.none.index).not(),
+              ))
+              .get();
+      for (final row in finished) {
+        final task = _taskFromRow(row);
+        final nextDue = task.repeat.next(task.dueAt);
+        // Deleted copies count too: a next occurrence the user deleted stays deleted.
+        final nextId = '${task.id}-next';
+        final existing =
+            await (db.select(db.tasks)..where(
+                  (t) =>
+                      t.id.equals(nextId) |
+                      (t.title.equals(task.title) &
+                          t.dueAt.equals(nextDue) &
+                          t.categoryId.equals(task.categoryId) &
+                          t.repeat.equals(task.repeat.index)),
+                ))
+                .get();
+        if (existing.isNotEmpty) continue;
+        await db
+            .into(db.tasks)
+            .insert(
+              _taskToCompanion(
+                Task(
+                  // A fixed id, so two devices that both create it end up with one row, not two.
+                  id: nextId,
+                  title: task.title,
+                  dueAt: nextDue,
+                  priority: task.priority,
+                  categoryId: task.categoryId,
+                  estimateMinutes: task.estimateMinutes,
+                  notes: task.notes,
+                  repeat: task.repeat,
+                  createdAt: now,
+                  updatedAt: now,
+                ),
+                dirty: true,
+              ),
+            );
+        created++;
+      }
+    });
+    if (created > 0) _changed();
+    return created;
   }
 
   Future<void> deleteTask(String id) async {

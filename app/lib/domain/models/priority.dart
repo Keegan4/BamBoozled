@@ -32,6 +32,21 @@ enum Repeat {
     Repeat.monthly => _addMonth(from),
   };
 
+  /// The due date one step before [from] (the reverse of [next]).
+  DateTime previous(DateTime from) => switch (this) {
+    Repeat.none => from,
+    Repeat.daily => from.subtract(const Duration(days: 1)),
+    Repeat.weekly => from.subtract(const Duration(days: 7)),
+    Repeat.monthly => _subtractMonth(from),
+  };
+
+  static DateTime _subtractMonth(DateTime d) {
+    final year = d.month == 1 ? d.year - 1 : d.year;
+    final month = d.month == 1 ? 12 : d.month - 1;
+    final lastDay = DateTime(year, month + 1, 0).day;
+    return DateTime(year, month, d.day > lastDay ? lastDay : d.day, d.hour, d.minute);
+  }
+
   static DateTime _addMonth(DateTime d) {
     final year = d.month == 12 ? d.year + 1 : d.year;
     final month = d.month == 12 ? 1 : d.month + 1;

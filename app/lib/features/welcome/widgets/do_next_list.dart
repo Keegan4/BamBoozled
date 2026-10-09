@@ -300,6 +300,7 @@ class WeekSummaryCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
+              hoverColor: fg.withValues(alpha: 0.08),
               onTap: () => showWeekTasks(context, view),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -307,7 +308,15 @@ class WeekSummaryCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('$n', style: PandaText.display.copyWith(color: fg)),
-                    Text(label, style: PandaText.captionStrong.copyWith(color: fg)),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(label, style: PandaText.captionStrong.copyWith(color: fg)),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(Icons.chevron_right_rounded, size: 18, color: fg),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -321,7 +330,13 @@ class WeekSummaryCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('This week', style: PandaText.title),
+          Row(
+            children: [
+              const Text('This week', style: PandaText.title),
+              const Spacer(),
+              Text('Tap a box to see the tasks', style: PandaText.caption.copyWith(color: PandaColors.muted)),
+            ],
+          ),
           const SizedBox(height: 14),
           IntrinsicHeight(
             child: Row(
