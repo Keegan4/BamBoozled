@@ -1,6 +1,6 @@
 # Bamboo Trivia (Play tab)
 
-One run a day. Everyone gets the same questions in the same order, with the answers in the same order, without anything being synced.
+Two tries a day, each with its own questions. Everyone gets the same questions for the same try, in the same order, with the answers in the same order, without anything being synced. The day's score is the better of the two tries.
 
 ## Rules
 
@@ -8,22 +8,23 @@ All of these are in `TriviaRules` (`app/lib/domain/trivia/daily_trivia.dart`), s
 
 | Rule | Value |
 |---|---|
-| Lives | start with 2, never more than 2 |
+| Tries | 2 a day, with different questions; the better score is the day's score |
+| Lives | start with 3, never more than 3 |
 | Reading time (question shown alone) | 1.2 s + 0.03 s per character, between 1.5 s and 3.5 s |
 | Time to answer question *n* | 15 s − 0.8 s × (*n* − 1), never under 5 s |
 | Difficulty | questions 1–5 easy, 6–12 medium, 13 onwards hard |
 | Wrong answer or out of time | lose a life; the right answer is shown |
 | Right answer | +1 score |
-| Right answer within 1 s of the answers appearing | +1 score and +1 life (up to 2) |
+| Right answer within 1 s of the answers appearing | +1 score and +1 life (up to 3) |
 | After each answer | the result shows for 1.2 s (or tap **Next**) |
 
-The score is the number of questions answered correctly.
+A try's score is the number of questions answered correctly. The day's score is the better try. **Best** is the best day so far. The **streak** counts days in a row with at least one try.
 
 **Fairness:**
 - Each answer is saved straight away, so a run can be left and continued later the same day.
 - If you leave while the answers are showing, that question counts as missed when you come back, so leaving can't be used to skip a question.
-- A finished run can't be replayed until the next day.
-- Runs are kept on the device, in the settings table under `trivia_runs`, for 400 days.
+- A finished try can't be replayed. Once both tries are used, the next ones come the next day.
+- Tries are kept on the device for 400 days, in the settings table under `trivia_runs`, as a JSON list of runs. Each run records its day, its try number (`attempt`, 1 or 2) and its answers.
 
 ## Choosing the day's questions
 
@@ -31,9 +32,10 @@ Implemented as `DailyTrivia` in `app/lib/domain/trivia/daily_trivia.dart`.
 
 - The day number counts days since 1 January 2026 (local date).
 - Each difficulty is a separate pool, sorted, then shuffled with `StableRandom`. That is the same small generator the Notes cards use, and it gives identical results on phones, computers and in the browser.
-- Day *d* reads its easy questions from position *d* × 5 of the easy pool, medium from *d* × 7, and hard from *d* × 8. That's roughly a full run's worth a day, so the questions people actually reach change daily, and a pool is reshuffled only once all its questions have been used.
+- Every try gets its own slot: *s* = *d* × 2 + (try − 1) for day *d*. Slot *s* reads its easy questions from position *s* × 5 of the easy pool, medium from *s* × 7, and hard from *s* × 8.
+- That's roughly a full run's worth per try. The two tries of a day never share questions, each day carries on from the last, and a pool is reshuffled only once all its questions have been used. With the current ~3,900 questions, that's about three months.
 - If a difficulty has no questions, the nearest easier pool is used, then the nearest harder one.
-- The four answers are shuffled with a seed made from the day and the question number.
+- The four answers are shuffled with a seed made from the day, the try and the question number.
 
 ## The question bank
 

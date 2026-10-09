@@ -202,14 +202,14 @@ final triviaBankProvider = FutureProvider<List<TriviaQuestion>>(
 
 final triviaStoreProvider = Provider<TriviaStore>((ref) => TriviaStore(ref.watch(databaseProvider)));
 
-/// Every run kept on this device, by day.
-final triviaRunsProvider = StreamProvider<Map<int, TriviaRun>>((ref) => ref.watch(triviaStoreProvider).watch());
+/// Every try kept on this device, grouped by day.
+final triviaRunsProvider = StreamProvider<Map<int, TriviaDay>>((ref) => ref.watch(triviaStoreProvider).watch());
 
 /// Today's day number (see [DailyTrivia.dayFor]).
 final triviaDayProvider = Provider<int>((ref) => ref.watch(clockProvider.select(DailyTrivia.dayFor)));
 
-/// Today's questions.
-final todayTriviaProvider = Provider<AsyncValue<DailyTrivia>>((ref) {
+/// The question bank and today's day number; the page picks the try with [DailyTrivia.new].
+final todayTriviaProvider = Provider<AsyncValue<(int, List<TriviaQuestion>)>>((ref) {
   final day = ref.watch(triviaDayProvider);
-  return ref.watch(triviaBankProvider).whenData((bank) => DailyTrivia(day, bank));
+  return ref.watch(triviaBankProvider).whenData((bank) => (day, bank));
 });
