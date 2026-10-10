@@ -10,6 +10,7 @@ import '../../data/providers.dart';
 import '../../domain/models/cards.dart';
 import 'widgets/card_detail.dart';
 import 'widgets/collectible_card.dart';
+import 'widgets/theme_story.dart';
 
 enum BinderFilter {
   all('All'),
@@ -38,7 +39,9 @@ class BinderPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = context.panda;
     final phone = Breakpoints.isPhone(context);
-    final cards = ref.watch(cardLibraryProvider).value?.cards ?? const <CardDef>[];
+    final library = ref.watch(cardLibraryProvider).value;
+    final cards = library?.cards ?? const <CardDef>[];
+    final themes = library?.themes ?? const <StoryTheme>[];
     final state = ref.watch(collectionProvider).value ?? const CollectionState();
     final filter = ref.watch(binderFilterProvider);
     final owned = cards.where((c) => state.copiesOf(c.id) > 0).length;
@@ -82,7 +85,18 @@ class BinderPage extends ConsumerWidget {
             backgroundColor: p.line,
           ),
         ),
-        const SizedBox(height: 18),
+        if (themes.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          const Text('Themes', style: PandaText.heading),
+          Text('Collect every card in a theme to unlock its story.', style: PandaText.caption.copyWith(color: p.muted)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [for (final t in themes) _ThemeTile(theme: t, cards: library!.cardsIn(t.id), state: state)],
+          ),
+        ],
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -100,9 +114,7 @@ class BinderPage extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 40),
             child: Text(
-              filter == BinderFilter.missing
-                  ? 'You have every card. Well done!'
-                  : 'No cards here yet. Open today’s pack!',
+              filter == BinderFilter.missing ? 'You have every card. Well done!' : 'No cards here yet. Open a pack!',
               textAlign: TextAlign.center,
               style: PandaText.body.copyWith(color: p.muted),
             ),
@@ -174,12 +186,7 @@ class _Slot extends StatelessWidget {
           excludeSemantics: true,
           child: GestureDetector(
             key: ValueKey('slot-${card.id}'),
-            onTap: () => showCardDetail(
-              context,
-              card,
-              finishes: finishes,
-              copies: {for (final f in finishes) f: state.copiesIn(card.id, f)},
-            ),
+            onTap: () => showCardDetail(context, card),
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: Column(
@@ -240,4 +247,78 @@ class _Slot extends StatelessWidget {
     FinishKind.layout => PandaColors.honey,
     FinishKind.shiny => PandaColors.lavender,
   };
+}
+
+/// A theme in the binder: its name, how many of its cards are collected, and whether its story is
+/// unlocked. Tapping it opens the theme.
+class _ThemeTile extends StatelessWidget {
+  const _ThemeTile({required this.theme, required this.cards, required this.state});
+
+  final StoryTheme theme;
+  final List<CardDef> cards;
+  final CollectionState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.panda;
+    final owned = state.ownedAmong(cards);
+    final done = state.ownsAll(cards);
+    return SizedBox(
+      width: 300,
+      child: Material(
+        color: p.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
+          side: BorderSide(color: done ? PandaColors.honey : p.line, width: done ? 2 : 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: ValueKey('theme-${theme.id}'),
+          onTap: () => showThemeStory(context, theme, cards, state),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(theme.name, style: PandaText.bodyStrong)),
+                    Icon(
+                      done ? Icons.auto_stories_rounded : Icons.lock_rounded,
+                      size: 18,
+                      color: done ? p.bambooDark : p.muted,
+                    ),
+                  ],
+                ),
+                Text(
+                  done ? 'Story unlocked. Tap to read it.' : (theme.blurb ?? '$owned of ${cards.length} cards'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: PandaText.caption.copyWith(color: p.muted),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(PandaSizes.pill),
+                        child: LinearProgressIndicator(
+                          value: cards.isEmpty ? 0 : owned / cards.length,
+                          minHeight: 6,
+                          color: done ? PandaColors.honey : p.bamboo,
+                          backgroundColor: p.line,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text('$owned / ${cards.length}', style: PandaText.captionStrong.copyWith(color: p.muted)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

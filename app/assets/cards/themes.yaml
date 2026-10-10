@@ -1,0 +1,52 @@
+# Themes group cards together. Collecting every card in a theme unlocks its story in the binder.
+# See docs/card-packs.md for the full guide.
+#
+# Each theme:
+#   id     unique, lowercase-with-dashes. Cards join a theme with `themes: [this-id]` in cards.yaml.
+#   name   shown in the binder (up to 40 characters)
+#   blurb  optional: one line shown while the story is still locked
+#   story  the story unlocked when every card in the theme is collected (up to 1500 characters)
+#
+# A theme with no cards yet is simply not shown.
+
+- id: school-day
+  name: A Day at School
+  blurb: From the first bell to the last email.
+  story: |
+    The panda arrived before the sun, as always, and stood for a moment in the empty corridor
+    listening to the building wake up: a fan clicking on, a door somewhere, the far-off rumble of
+    the canteen shutters.
+
+    By ten the hardest task was done. By recess it was raining, of course, and forty pairs of shoes
+    squeaked their way into one classroom. There was tea, eventually. It went cold, eventually.
+
+    And in the last lesson, someone at the back put up their hand and asked a question the panda
+    hadn't planned for, a good one, and the whole room leaned in. That was the part worth keeping.
+
+- id: garden-seasons
+  name: Seasons in the Garden
+  blurb: The garden behind the school, all year round.
+  story: |
+    Nobody remembers who planted the bamboo behind the school. It was simply there, the way the
+    koi pond was there, the way the old cherry tree was there, waiting each year to surprise
+    everyone for exactly one week.
+
+    The panda walked through it in every season. In spring, petals in the pond. In summer, shade.
+    In autumn, the temple roof down the hill turned gold in the late light, and it seemed, for a
+    moment, that the whole year had been leading up to it.
+
+    Gardens are patient. They don't mind if you only visit on your lunch break.
+
+- id: after-hours
+  name: After Hours
+  blurb: What happens once the marking is done.
+  story: |
+    There is a particular kind of quiet that only exists after the last task is ticked off. The
+    lanterns come on along the street. The laptop, at last, is closed.
+
+    Somewhere a calendar has a whole day blocked out in green, just marked "off". The mountain the
+    panda has been meaning to climb is still there, still big, but it looks smaller broken into
+    three steps.
+
+    Tonight, though, there is only one plan: lie back, count the stars, and fall asleep before
+    reaching twenty. Tomorrow can wait until tomorrow.

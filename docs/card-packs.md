@@ -1,6 +1,9 @@
-# Daily packs (the Notes tab)
+# Card packs (the Notes tab)
 
-Every day the Notes tab has a free **Bamboo Booster** with **7 cards**.
+The Notes tab gives free **Bamboo Boosters** of **7 cards**: **a new pack every 2 hours**, and up to
+**2 packs** can wait to be opened (a new collection starts with 2). While 2 are waiting the timer
+pauses; it starts again when one is opened. The page shows how many are ready and when the next
+one arrives. The **?** next to the title explains the rarities and finishes.
 
 1. **Tear it open** by sliding a finger or the mouse across the top of the pack. A glowing cut
    follows you; let go past about 70% (or flick quickly) and the top tears off. Let go earlier and
@@ -13,8 +16,8 @@ Every day the Notes tab has a free **Bamboo Booster** with **7 cards**.
    **New finish** on a card you had, but not in this finish. Tap one for a closer look, or go to the
    binder.
 
-Once opened, the page shows today's cards (tap to see the overview again) and counts down to the
-next pack at **midnight**.
+Afterwards, **See your last pack** shows that overview again. With no packs left, the page shows
+the last pack's cards and counts down to the next pack.
 
 The **binder** (Notes → Binder) lists every card in the set by number: the ones you have in their
 showiest finish, with a ×count for duplicates and a dot per finish owned, and the rest as numbered
@@ -55,9 +58,48 @@ About **30%** of cards get a finish; the 7th card's chances are doubled.
 | Ghost | 0.3% | Pale, silvery and see-through |
 | Misprint | 0.1% | Shifted colours and a crooked banner, like a printing error |
 
-Packs are **the same for the same person on every device** for a given day (they're shuffled from
-the signed-in account, or from an id made for the device when not signed in). The collection itself
-is kept on each device.
+Packs are numbered, and a person's first pack, second pack and so on are **the same on every
+device** (they're shuffled from the signed-in account, or from an id made for the device when not
+signed in). The collection and the pack timer are kept on each device.
+
+## Epic and Legendary pulls
+
+When an Epic or Legendary card comes off the stack, it pops in with sparkles round it and
+**EPIC!** or **LEGENDARY!** flashing above it (they stand still when the device asks for reduced
+motion).
+
+## Finishes in the binder
+
+A card's detail lists **every finish it can come in**: the ones you own can be picked to show the
+card in that finish, and the rest are greyed out with a lock until you collect them.
+
+## Themes and stories
+
+Cards can belong to **themes**. Collecting every card in a theme unlocks its **story**, a short
+piece of writing shown in the binder. The binder lists each theme with its progress (e.g. 3 / 4);
+tap one to see its cards and, once complete, read the story. A card's detail links to its theme,
+and when a pack completes a theme the pack overview says so.
+
+Themes live in `app/assets/cards/themes.yaml`:
+
+```yaml
+- id: school-day             # unique, lowercase-with-dashes
+  name: A Day at School      # shown in the binder (up to 40 characters)
+  blurb: From the first bell to the last email.   # optional, shown while it's locked
+  story: |                   # unlocked when every card in the theme is collected (up to 1500 characters)
+    The panda arrived before the sun, as always...
+```
+
+To put a card in a theme, tag it in `cards.yaml` with the theme's id:
+
+```yaml
+- id: tea-break
+  ...
+  themes: [school-day]       # one or more theme ids
+```
+
+A card can be in several themes. A theme with no cards yet isn't shown, and a tag that isn't in
+`themes.yaml` is reported by the tests.
 
 ## Adding a card
 
@@ -73,6 +115,7 @@ is kept on each device.
   flavour: '"I''ll just reply to one email first," said the tea, now cold.'   # optional, up to 300
   artist: Mr Lim             # optional: credited in the binder, signed on Signed cards
   exclude: [misprint]        # optional: finishes this card never gets
+  themes: [school-day]       # optional: themes from themes.yaml (see above)
 ```
 
 3. Commit, push, and make a release (see the README). New cards reach people with the next release.
@@ -91,7 +134,8 @@ The tests read the real folder on every push, so CI goes red instead of the app 
 |---|---|
 | Every `id` is unique, lowercase-with-dashes, and **never changed** once released | Collections are saved by id |
 | `name`, `photo` and `text` are present and short enough | They have to fit on a small card on a phone |
-| `rarity` and `exclude` use known names | Typos would otherwise be silently ignored |
+| `rarity`, `exclude` and `themes` use known names | Typos would otherwise be silently ignored |
+| Every theme has an id, a name and a story | So there's something to unlock |
 | `photo` names a file in the same folder | Otherwise there'd be nothing to show |
 | Every photo is under **1 MB** and used by a card | The web version downloads them; catches typos and forgotten files |
 | There is at least one card of each rarity, and at least 7 cards | So packs have something to roll |
@@ -107,5 +151,5 @@ The tests read the real folder on every push, so CI goes red instead of the app 
 
 - Removing a card from `cards.yaml` removes it from everyone's binder (copies are kept, so it comes
   back if the card is restored with the same id).
-- Opening packs is per device for now: the same person can open today's pack on their phone and on
-  their computer, and gets the same 7 cards on both.
+- Packs and the timer are per device for now: the same person has separate packs on their phone and
+  their computer (the n-th pack has the same cards on both).

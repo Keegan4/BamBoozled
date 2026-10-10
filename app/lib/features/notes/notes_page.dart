@@ -13,9 +13,11 @@ import '../../data/providers.dart';
 import '../../domain/models/cards.dart';
 import 'widgets/booster_pack.dart';
 import 'widgets/collectible_card.dart';
+import 'widgets/pack_help.dart';
 import 'widgets/pack_opening.dart';
 
-/// The Notes tab: a free pack of 7 cards a day, opened by tearing off the top, and the binder.
+/// The Notes tab: free packs of 7 cards (a new one every 2 hours), opened by tearing off the top,
+/// and the binder.
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
 
@@ -24,23 +26,22 @@ class NotesPage extends ConsumerWidget {
     final p = context.panda;
     final phone = Breakpoints.isPhone(context);
     final now = ref.watch(clockProvider);
-    final today = DateTime(now.year, now.month, now.day);
     final library = ref.watch(cardLibraryProvider);
     final collection = ref.watch(collectionProvider);
     final cards = library.value?.cards ?? const <CardDef>[];
     final state = collection.value ?? const CollectionState();
-    final available = state.dailyAvailable(today);
-    final todays = state.last != null && state.last!.date == dateKey(today) && library.value != null
-        ? state.last!.resolve(library.value!)
-        : const <Pull>[];
+    final packs = state.packsAt(now);
+    final next = state.nextPackAt(now);
+    final lastPack = state.last != null && library.value != null ? state.last!.resolve(library.value!) : const <Pull>[];
 
     void seeBinder() => context.go('/notes/binder');
+    void seeLast() => showPackOpening(context, lastPack, overview: true, onSeeBinder: seeBinder);
 
     Future<void> open() async {
       final lib = library.value;
       if (lib == null) return;
       final seed = await ref.read(packSeedProvider.future);
-      final pulls = await ref.read(collectionStoreProvider).openDaily(lib, seed, today);
+      final pulls = await ref.read(collectionStoreProvider).openPack(lib, seed, ref.read(clockProvider));
       if (pulls.isEmpty || !context.mounted) return;
       await showPackOpening(context, pulls, onSeeBinder: seeBinder);
     }
@@ -48,35 +49,89 @@ class NotesPage extends ConsumerWidget {
     final loading = !library.hasValue || !collection.hasValue;
     final owned = cards.where((c) => state.copiesOf(c.id) > 0).length;
     final packWidth = math.min(260.0, MediaQuery.sizeOf(context).width - 96);
+    final wait = next == null ? '' : _until(next, now);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(phone ? 16 : 40, phone ? 20 : 32, phone ? 16 : 40, 40),
       children: [
-        Text('Daily pack', style: phone ? PandaText.title : PandaText.display),
-        const SizedBox(height: 4),
+        Row(
+          children: [
+            Flexible(child: Text('Card packs', style: phone ? PandaText.title : PandaText.display)),
+            const SizedBox(width: 4),
+            IconButton(
+              tooltip: 'About packs',
+              onPressed: () => showPackHelp(context, sample: cards.firstOrNull),
+              icon: Icon(Icons.help_outline_rounded, color: p.muted),
+            ),
+          ],
+        ),
         Text(
           loading || cards.isEmpty
               ? ''
-              : available
-              ? 'Slide across the top of the pack to tear it open.'
-              : 'Today’s pack is open. A new one ${_untilMidnight(now)}.',
+              : switch ((packs, next)) {
+                  (0, _) => 'No packs ready. The next one arrives $wait.',
+                  (_, null) => '$packs packs ready. Slide across the top to tear one open.',
+                  _ => '$packs pack ready, another $wait. Slide across the top to tear it open.',
+                },
           key: const ValueKey('pack-hint'),
           style: PandaText.body.copyWith(color: p.muted),
+        ),
+        Text(
+          'A new pack every ${PackTimer.every.inHours} hours. Up to ${PackTimer.max} wait for you.',
+          style: PandaText.caption.copyWith(color: p.muted),
         ),
         const SizedBox(height: 24),
         if (loading)
           const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()))
         else if (cards.isEmpty)
           const _NoCards()
-        else if (available)
-          Center(
-            child: BoosterPack(key: const ValueKey('daily-pack'), width: packWidth, onOpened: open),
+        else if (packs > 0)
+          Column(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // A second waiting pack peeks out behind.
+                  if (packs > 1)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: ExcludeSemantics(
+                          child: Transform.translate(
+                            offset: const Offset(18, 6),
+                            child: Transform.rotate(
+                              angle: 0.07,
+                              child: Opacity(
+                                key: const ValueKey('spare-pack'),
+                                opacity: 0.85,
+                                child: BoosterPack(width: packWidth, onOpened: () {}),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Keyed by number, so the next pack starts sealed.
+                  BoosterPack(key: ValueKey('pack-${state.opened + 1}'), width: packWidth, onOpened: open),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '$packs of ${PackTimer.max} packs ready',
+                key: const ValueKey('pack-count'),
+                style: PandaText.captionStrong.copyWith(color: p.muted),
+              ),
+              if (lastPack.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                TextButton.icon(
+                  onPressed: seeLast,
+                  icon: const Icon(Icons.style_rounded),
+                  label: const Text('See your last pack'),
+                ),
+              ],
+            ],
           )
         else
-          _OpenedToday(
-            pulls: todays,
-            onSee: () => showPackOpening(context, todays, overview: true, onSeeBinder: seeBinder),
-          ),
+          _LastPack(pulls: lastPack, onSee: seeLast),
         if (!loading && cards.isNotEmpty) ...[
           const SizedBox(height: 36),
           _BinderSummary(owned: owned, total: cards.length, onOpen: seeBinder),
@@ -85,18 +140,19 @@ class NotesPage extends ConsumerWidget {
     );
   }
 
-  static String _untilMidnight(DateTime now) {
-    final left = DateTime(now.year, now.month, now.day + 1).difference(now);
+  /// "in 1 h 45 min", "in 20 min", "in a minute".
+  static String _until(DateTime at, DateTime now) {
+    final left = at.difference(now);
     final h = left.inHours;
-    final m = left.inMinutes % 60;
+    final m = (left.inSeconds / 60).ceil() % 60;
     if (h == 0) return m <= 1 ? 'in a minute' : 'in $m min';
     return m == 0 ? 'in $h h' : 'in $h h $m min';
   }
 }
 
-/// Today's cards, fanned out small, with a button to look through them again.
-class _OpenedToday extends StatelessWidget {
-  const _OpenedToday({required this.pulls, required this.onSee});
+/// The last pack's cards, fanned out small, with a button to look through them again.
+class _LastPack extends StatelessWidget {
+  const _LastPack({required this.pulls, required this.onSee});
 
   final List<Pull> pulls;
   final VoidCallback onSee;
@@ -104,19 +160,21 @@ class _OpenedToday extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const w = 84.0;
-    final shown = pulls.take(7).toList();
+    final shown = pulls;
+    // Two packs' worth fans out flatter.
+    final spread = 7 / math.max(7, shown.length);
     final fanWidth = math.min(MediaQuery.sizeOf(context).width - 64, w + (shown.length - 1) * 36.0);
     final step = shown.length < 2 ? 0.0 : (fanWidth - w) / (shown.length - 1);
     return Column(
       children: [
         if (shown.isNotEmpty)
           Semantics(
-            label: 'Today’s cards: ${shown.map((x) => x.card.name).join(', ')}',
+            label: 'Your last pack: ${shown.map((x) => x.card.name).join(', ')}',
             excludeSemantics: true,
             child: GestureDetector(
               onTap: onSee,
               child: SizedBox(
-                key: const ValueKey('todays-fan'),
+                key: const ValueKey('last-fan'),
                 width: fanWidth,
                 height: w * CollectibleCard.aspect + 16,
                 child: Stack(
@@ -124,9 +182,9 @@ class _OpenedToday extends StatelessWidget {
                     for (final (i, pull) in shown.indexed)
                       Positioned(
                         left: i * step,
-                        top: 8 + ((i - (shown.length - 1) / 2).abs() * 2),
+                        top: 8 + ((i - (shown.length - 1) / 2).abs() * 2 * spread),
                         child: Transform.rotate(
-                          angle: (i - (shown.length - 1) / 2) * 0.05,
+                          angle: (i - (shown.length - 1) / 2) * 0.05 * spread,
                           child: CollectibleCard(card: pull.card, finish: pull.finish, width: w),
                         ),
                       ),
@@ -140,7 +198,7 @@ class _OpenedToday extends StatelessWidget {
           FilledButton.icon(
             onPressed: onSee,
             icon: const Icon(Icons.style_rounded),
-            label: const Text('See today’s cards'),
+            label: const Text('See your last pack'),
           ),
       ],
     );

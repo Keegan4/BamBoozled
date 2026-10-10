@@ -106,11 +106,110 @@ void main() {
     });
   });
 
+  group('themes', () {
+    test('parseThemes reads themes and reports bad ones', () {
+      final (themes, problems) = parseThemes('''
+- id: school-day
+  name: A Day at School
+  blurb: First bell to last email.
+  story: Once upon a time.
+- just text
+- {id: Bad Id, name: X, story: s}
+- {id: school-day, name: Again, story: s}
+- {id: no-story, name: N}
+- {id: long, name: L, story: "${'x' * 1501}"}
+''');
+      expect(themes.single.id, 'school-day');
+      expect(themes.single.name, 'A Day at School');
+      expect(themes.single.blurb, 'First bell to last email.');
+      expect(themes.single.story, 'Once upon a time.');
+      expect(problems, hasLength(5));
+      expect(parseThemes('a: 1').$2.single, contains('should be a list'));
+      expect(parseThemes('- [x').$2.single, contains('could not be read'));
+      expect(parseThemes('').$1, isEmpty);
+    });
+
+    test('story lines are joined into paragraphs', () {
+      final (themes, _) = parseThemes('''
+- id: t
+  name: T
+  story: |
+    One line
+    and the next.
+
+    A second
+    paragraph.
+''');
+      expect(themes.single.story, 'One line and the next.\n\nA second paragraph.');
+    });
+
+    test('cards join themes by tag; unknown tags are reported and themes with no cards are hidden', () {
+      final lib = buildLibrary(
+        '''
+- {id: a, name: A, photo: a.jpg, text: t, themes: [one, nope]}
+- {id: b, name: B, photo: a.jpg, text: t, theme: One}
+- {id: c, name: C, photo: a.jpg, text: t}
+''',
+        '''
+- {id: one, name: One, story: s}
+- {id: empty, name: Empty, story: s}
+''',
+        assetExists: (_) => true,
+      );
+      expect(lib.themes.map((t) => t.id), ['one']);
+      expect(lib.cardsIn('one').map((c) => c.id), ['a', 'b']);
+      expect(lib.byId('a')!.themes, ['one']);
+      expect(lib.byId('c')!.themes, isEmpty);
+      expect(lib.problems.single, contains('"nope" is not in themes.yaml'));
+      expect(lib.themeById('one')!.name, 'One');
+      expect(lib.themeById('empty'), isNull);
+      // Without a themes file, tags aren't checked, but no themes are shown either.
+      expect(
+        buildLibrary('- {id: a, name: A, photo: a.jpg, text: t, theme: x}', null, assetExists: (_) => true).themes,
+        isEmpty,
+      );
+    });
+
+    test('the bundled themes are valid and every one has cards', () async {
+      final lib = await loadCards(DiskAssetBundle());
+      expect(lib.problems, isEmpty);
+      expect(lib.themes, isNotEmpty);
+      for (final t in lib.themes) {
+        expect(lib.cardsIn(t.id), isNotEmpty, reason: t.id);
+      }
+    });
+
+    test('collections know when a theme is complete', () {
+      const a = CardDef(id: 'a', number: 1, name: 'A', rarity: Rarity.common, photo: 'p', text: 't');
+      const b = CardDef(id: 'b', number: 2, name: 'B', rarity: Rarity.common, photo: 'p', text: 't');
+      const state = CollectionState(copies: {'a|holo': 1, 'b|none': 0});
+      expect(state.ownedAmong([a, b]), 1);
+      expect(state.ownsAll([a, b]), isFalse);
+      expect(state.ownsAll([a]), isTrue);
+      expect(state.ownsAll(const []), isFalse);
+    });
+
+    test('possible finishes leave out excluded ones', () {
+      const c = CardDef(
+        id: 'a',
+        number: 1,
+        name: 'A',
+        rarity: Rarity.common,
+        photo: 'p',
+        text: 't',
+        excluded: {Finish.gold},
+      );
+      expect(c.possibleFinishes, hasLength(Finish.values.length - 1));
+      expect(c.possibleFinishes, isNot(contains(Finish.gold)));
+    });
+  });
+
   group('CollectionStore', () {
     late AppDatabase db;
     late CollectionStore store;
     late CardLibrary lib;
-    final today = DateTime(2026, 10, 8);
+    final now = DateTime(2026, 10, 8, 9);
+    DateTime later(int minutes) => now.add(Duration(minutes: minutes));
 
     setUp(() {
       driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -120,26 +219,62 @@ void main() {
     });
     tearDown(() => db.close());
 
-    test('opens one pack a day, the same for the same seed', () async {
-      final first = await store.openDaily(lib, 'seed', today);
+    test('starts with 2 packs; each pack is the same for the same seed and number', () async {
+      expect((await store.read()).packsAt(now), 2);
+      final first = await store.openPack(lib, 'seed', now);
+      final second = await store.openPack(lib, 'seed', now);
       expect(first, hasLength(7));
-      expect(await store.openDaily(lib, 'seed', today), isEmpty);
+      expect(second, hasLength(7));
+      expect(second.map((p) => p.key), isNot(first.map((p) => p.key)));
+      expect(await store.openPack(lib, 'seed', now), isEmpty, reason: 'none left');
       final state = await store.read();
-      expect(state.dailyAvailable(today), isFalse);
-      expect(state.dailyAvailable(today.add(const Duration(days: 1))), isTrue);
-      expect(state.copies.values.fold<int>(0, (a, b) => a + b), 7);
-      expect(state.last!.resolve(lib).map((p) => p.key), first.map((p) => p.key));
+      expect(state.opened, 2);
+      expect(state.copies.values.fold<int>(0, (a, b) => a + b), 14);
+      expect(state.last!.resolve(lib).map((p) => p.key), second.map((p) => p.key));
 
       final other = CollectionStore(
         AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true)),
       );
-      final again = await other.openDaily(lib, 'seed', today);
+      final again = await other.openPack(lib, 'seed', later(500));
       expect(again.map((p) => p.key), first.map((p) => p.key));
       await other.db.close();
     });
 
+    test('a pack refills every 2 hours, and at most 2 wait', () async {
+      await store.openPack(lib, 's', now); // was full: the timer starts now
+      var state = await store.read();
+      expect(state.packsAt(now), 1);
+      expect(state.nextPackAt(now), later(120));
+      expect(state.packsAt(later(119)), 1);
+      expect(state.packsAt(later(120)), 2);
+      expect(state.nextPackAt(later(120)), isNull, reason: 'full');
+      expect(state.packsAt(later(60 * 24)), 2, reason: 'never more than 2');
+
+      // Opening while one is filling keeps the time already spent on it.
+      await store.openPack(lib, 's', later(90));
+      state = await store.read();
+      expect(state.packsAt(later(90)), 0);
+      expect(state.nextPackAt(later(90)), later(120));
+      expect(await store.openPack(lib, 's', later(100)), isEmpty);
+      expect((await store.read()).packsAt(later(240)), 2);
+
+      // Three intervals later with one spare: the leftover time carries on.
+      await store.openPack(lib, 's', later(250));
+      state = await store.read();
+      expect(state.packsAt(later(250)), 1);
+      expect(state.nextPackAt(later(250)), later(370), reason: 'full again at 240, so the timer restarted at 250');
+    });
+
+    test('a clock set backwards gives nothing extra', () async {
+      await store.openPack(lib, 's', now);
+      await store.openPack(lib, 's', later(30));
+      final state = await store.read();
+      expect(state.packsAt(now.subtract(const Duration(days: 1))), 0);
+      expect(state.nextPackAt(now.subtract(const Duration(days: 1))), later(120));
+    });
+
     test('marks new cards and new finishes, once each', () async {
-      final pulls = await store.openDaily(lib, 'marks', today);
+      final pulls = await store.openPack(lib, 'marks', now);
       final seen = <String>{};
       final seenKeys = <String>{};
       for (final p in pulls) {
@@ -151,25 +286,25 @@ void main() {
     });
 
     test('no cards, no pack', () async {
-      expect(await store.openDaily(const CardLibrary([]), 's', today), isEmpty);
-      expect((await store.read()).dailyAvailable(today), isTrue);
+      expect(await store.openPack(const CardLibrary([]), 's', now), isEmpty);
+      expect((await store.read()).packsAt(now), 2);
     });
 
     test('counts packs since a Legendary and guarantees one after 10', () async {
-      var day = today;
+      var at = now;
       for (var i = 0; i < 30; i++) {
-        final pulls = await store.openDaily(lib, 'pity', day);
+        final pulls = await store.openPack(lib, 'pity', at);
         final state = await store.read();
         final legendary = pulls.any((p) => p.card.rarity == Rarity.legendary);
         expect(state.packsSinceLegendary, legendary ? 0 : greaterThan(0));
         expect(state.packsSinceLegendary, lessThan(PackRoller.pityAfter));
-        day = day.add(const Duration(days: 1));
+        at = at.add(const Duration(hours: 2));
       }
     });
 
     test('watch follows changes', () async {
       final states = store.watch().take(2).toList();
-      await store.openDaily(lib, 'w', today);
+      await store.openPack(lib, 'w', now);
       final got = await states;
       expect(got.first.copies, isEmpty);
       expect(got.last.copies, isNotEmpty);
@@ -188,13 +323,17 @@ void main() {
     test('round-trips through the setting', () {
       final s = CollectionState(
         copies: const {'a|none': 2, 'a|holo': 1, 'b|full-art': 1},
-        dailyOpenedOn: '2026-10-08',
+        stored: 1,
+        refillFrom: DateTime(2026, 10, 8, 9, 30),
+        opened: 5,
         packsSinceLegendary: 3,
         last: OpenedPack(PackType.bamboo, '2026-10-08', const [('a|holo', true, false), ('b|full-art', false, true)]),
       );
       final back = CollectionState.fromSetting(s.toSetting());
       expect(back.copies, s.copies);
-      expect(back.dailyOpenedOn, '2026-10-08');
+      expect(back.stored, 1);
+      expect(back.refillFrom, DateTime(2026, 10, 8, 9, 30));
+      expect(back.opened, 5);
       expect(back.packsSinceLegendary, 3);
       expect(back.last!.pulls, s.last!.pulls);
       expect(back.copiesOf('a'), 3);
@@ -206,6 +345,7 @@ void main() {
       expect(CollectionState.fromSetting(null).copies, isEmpty);
       expect(CollectionState.fromSetting('not json').copies, isEmpty);
       expect(CollectionState.fromSetting('{}').last, isNull);
+      expect(CollectionState.fromSetting('{}').packsAt(DateTime(2026)), 2, reason: 'starts full');
     });
 
     test('resolve skips cards and finishes that no longer exist', () {
@@ -220,7 +360,5 @@ void main() {
       ]);
       expect(pack.resolve(lib).map((p) => p.key), ['a|holo']);
     });
-
-    test('dateKey pads', () => expect(dateKey(DateTime(2026, 1, 5)), '2026-01-05'));
   });
 }

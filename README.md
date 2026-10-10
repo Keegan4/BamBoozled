@@ -17,7 +17,7 @@ The welcome page has:
 - **This week:** the *due*, *done* and *overdue* boxes are buttons. Click one to see those tasks.
 - **Finished tasks stay visible:** a "Recently done" section sits under "Do next", and the Status filter has a Done view.
 - **Canvas assignments:** connect a Canvas calendar feed in Settings and your assignments appear as tasks (see [Canvas](#canvas) below).
-- **Notes: a daily pack:** a free pack of 7 collectible cards a day. Tear it open by sliding across the top, swipe through the cards, and collect them in a binder. Cards have rarities and rare finishes (holo, gold, cosmos and more). Add your own photos: see [docs/card-packs.md](docs/card-packs.md).
+- **Notes: card packs:** free packs of collectible cards and a binder (see [Notes: card packs](#notes-card-packs) below).
 - **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
 ## Milestone 2 — Dark mode
@@ -38,6 +38,40 @@ A short daily trivia run in the **Play** tab, the same questions for everyone ea
 - Your **score** is how many you answer correctly. The second try has different questions, and **the better of your two tries** is the day's score. The tab shows your streak and best day, and **Copy result** gives a line to paste into a chat.
 
 Questions come from [Open Trivia DB](https://opentdb.com) (CC BY-SA 4.0) and are built into the app, so it works offline. Details and how to refresh the questions: [docs/trivia.md](docs/trivia.md).
+
+## Notes: card packs
+
+The **Notes** tab is a small card-collecting game.
+
+- **A free pack every 2 hours.** Up to **2 packs** can wait to be opened; while 2 are waiting the timer pauses. The page shows how many are ready and when the next one arrives.
+- **Tear a pack open** by sliding a finger or the mouse across its top (Enter or Space also work).
+- The **7 cards** come out face up in a stack. Tap or swipe the top card to slide it aside. After the last card, an overview shows all 7, marking cards that are **New** (or a **New finish** of a card you already had).
+- Every card goes into the **binder** (Notes → Binder), which shows what you've collected, duplicates (×2) and the gaps still to find. Tap a card to see it large with its story.
+- Each card has a **rarity** (Common, Rare, Epic, Legendary) and may get a **finish** (Holo, Gold, Cosmos, Misprint and others). The **?** next to the title explains the odds. If 9 packs in a row have no Legendary, the next one is guaranteed one. Epic and Legendary cards burst out with sparkles and a flashing **EPIC!** or **LEGENDARY!** above them.
+- A card's detail shows **every finish** it can come in, with the ones you haven't collected greyed out.
+- **Themes:** cards can be tagged with a theme. Collect every card in a theme to **unlock its story** in the binder.
+
+### Changing the pictures and text
+
+Everything lives in **`app/assets/cards/`**:
+
+- **Pictures:** the photo files (JPG, PNG or WebP, portrait 4:5, about 1080 × 1350 px, under 500 KB).
+- **Card text:** **`cards.yaml`**, one entry per card:
+
+```yaml
+- id: tea-break              # unique, lowercase-with-dashes; never change it once released
+  name: Tea Break            # the name on the card (up to 24 characters)
+  rarity: common             # common, rare, epic or legendary
+  photo: tea-break.jpg       # a file in app/assets/cards/
+  text: Step away for five minutes.             # the card's message (up to 90 characters)
+  flavour: The tea, now cold, disagrees.        # optional: the story shown in the binder
+  artist: Mr Lim             # optional: credited in the binder
+  themes: [school-day]       # optional: the themes it belongs to
+```
+
+- **Themes and their stories:** **`themes.yaml`**, one entry per theme (`id`, `name`, an optional one-line `blurb`, and the `story` it unlocks). Tag cards with the theme's `id` to put them in it.
+
+To change a picture, replace the file (keeping its name) or point `photo:` at a new one. To change the words, edit `name`, `text` or `flavour`. To add a card, put its photo in the folder and add an entry at the **end** of `cards.yaml` (cards are numbered in file order). Both can be done on GitHub's website (**Add file → Upload files**, and the pencil icon to edit). The tests check the file on every push, and the changes reach people with the next release. The full guide, including all the rules, is [docs/card-packs.md](docs/card-packs.md).
 
 ## Running the app
 
@@ -194,7 +228,7 @@ BamBoozled/
 ├── README.md
 ├── docs/
 │   ├── task-format.md              # recommended task format
-│   ├── card-packs.md               # the Notes tab's daily packs, and adding cards
+│   ├── card-packs.md               # the Notes tab's card packs, and adding cards
 │   ├── ideas/daily-packs.md        # the pack idea in full, including the exchange (not built)
 │   ├── trivia.md                   # the Play tab's trivia rules and question bank
 │   └── priority-algorithm.md       # "Do next" scoring

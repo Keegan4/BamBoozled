@@ -2,17 +2,21 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/panda_theme.dart';
 import '../../../domain/models/cards.dart';
 import 'blurred_overlay.dart';
+import '../../../data/providers.dart';
 import 'card_detail.dart';
 import 'collectible_card.dart';
+import 'rarity_fanfare.dart';
+import 'theme_story.dart';
 
 /// Shows a freshly opened pack over the blurred app: the cards in a face-up stack, each tap or
 /// swipe sliding the top one away, then an overview of all of them with the new ones marked.
-/// With [overview], it goes straight to the overview (for looking at today's cards again).
+/// With [overview], it goes straight to the overview (for looking at the last pack again).
 Future<void> showPackOpening(
   BuildContext context,
   List<Pull> pulls, {
@@ -155,12 +159,16 @@ class _PackOpeningState extends State<PackOpening> with SingleTickerProviderStat
                               ),
                           ],
                         ),
-                        child: CollectibleCard(
-                          key: ValueKey('pull-$_top'),
-                          card: pull.card,
-                          finish: pull.finish,
-                          width: w,
-                          interactive: true,
+                        child: _withFanfare(
+                          pull,
+                          w,
+                          CollectibleCard(
+                            key: ValueKey('pull-$_top'),
+                            card: pull.card,
+                            finish: pull.finish,
+                            width: w,
+                            interactive: true,
+                          ),
                         ),
                       ),
                     ),
@@ -185,6 +193,11 @@ class _PackOpeningState extends State<PackOpening> with SingleTickerProviderStat
     );
   }
 
+  /// Epic and Legendary cards get sparkles and a banner; keyed by position so each one pops anew.
+  Widget _withFanfare(Pull pull, double w, Widget card) => hasFanfare(pull.card.rarity)
+      ? RarityFanfare(key: ValueKey('fanfare-$_top'), rarity: pull.card.rarity, width: w, child: card)
+      : card;
+
   Widget _overview(BuildContext context) {
     final p = context.panda;
     final size = MediaQuery.sizeOf(context);
@@ -205,7 +218,7 @@ class _PackOpeningState extends State<PackOpening> with SingleTickerProviderStat
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Today’s pack', style: PandaText.display.copyWith(color: Colors.white)),
+              Text('Your pack', style: PandaText.display.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
               Text(
                 summary.isEmpty
@@ -214,6 +227,7 @@ class _PackOpeningState extends State<PackOpening> with SingleTickerProviderStat
                 textAlign: TextAlign.center,
                 style: PandaText.body.copyWith(color: Colors.white.withValues(alpha: 0.85)),
               ),
+              _CompletedThemes(pulls: widget.pulls),
               const SizedBox(height: 24),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -277,7 +291,7 @@ class _OverviewCard extends StatelessWidget {
       ].join(', '),
       excludeSemantics: true,
       child: GestureDetector(
-        onTap: () => showCardDetail(context, pull.card, finishes: [pull.finish]),
+        onTap: () => showCardDetail(context, pull.card, finish: pull.finish),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: Stack(
@@ -303,6 +317,62 @@ class _OverviewCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Themes this pack completed (one of its new cards was the last one missing), each with a way
+/// to read the story it unlocked.
+class _CompletedThemes extends ConsumerWidget {
+  const _CompletedThemes({required this.pulls});
+
+  final List<Pull> pulls;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final library = ref.watch(cardLibraryProvider).value;
+    final state = ref.watch(collectionProvider).value;
+    if (library == null || state == null) return const SizedBox.shrink();
+    final newIds = {for (final p in pulls.where((p) => p.newCard)) p.card.id};
+    final done = [
+      for (final t in library.themes)
+        if (library.cardsIn(t.id) case final cards when state.ownsAll(cards) && cards.any((c) => newIds.contains(c.id)))
+          (t, cards),
+    ];
+    if (done.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (final (t, cards) in done)
+            Material(
+              key: ValueKey('completed-${t.id}'),
+              color: PandaColors.honey,
+              shape: const StadiumBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => showThemeStory(context, t, cards, state),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_stories_rounded, size: 18, color: PandaColors.ink),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Theme complete: ${t.name}. Read the story',
+                        style: PandaText.captionStrong.copyWith(color: PandaColors.ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
