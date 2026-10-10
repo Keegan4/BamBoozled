@@ -14,110 +14,596 @@
 #
 # Cards are numbered in the order they appear here, so add new cards at the end.
 
-- id: bamboo-grove
-  name: Bamboo Grove
+- id: ackshually
+  name: Ackshually
   rarity: common
-  photo: bamboo-grove.jpg
-  text: Take a proper lunch break today.
-  flavour: Pandas spend up to 14 hours a day eating. Nobody has ever told them to hurry.
-  artist: Ms Tan
-  themes: [garden-seasons]
+  photo: Ackshually.png
+  text: No clue why you are fat and pointing up.
+  flavour: If youre seeing this, this is ackshually the first card I created. I made this at 11pm so I hope youre loving this present. Love you *90000
 
-- id: early-start
-  name: Early Start
+- id: ackshually-keegan
+  name: Ackshually Keegan
   rarity: common
-  photo: early-start.jpg
-  text: Do the hardest task before 10 am.
-  flavour: The sun is up. The coffee is up. The marking pile is also, unfortunately, up.
-  artist: Ms Tan
-  themes: [school-day]
+  photo: AckshuallyKeegan.jpg
+  text: I am clearly the sharpest tool in the shed
+  flavour: I remember this was one of your favourites for a time.
 
-- id: tea-break
-  name: Tea Break
-  rarity: common
-  photo: tea-break.jpg
-  text: Step away for five minutes.
-  flavour: '"I''ll just reply to one email first," said the tea, now cold.'
-  artist: Mr Lim
-  themes: [school-day]
-
-- id: rainy-recess
-  name: Rainy Recess
-  rarity: common
-  photo: rainy-recess.jpg
-  text: Plan one indoor activity for wet weather.
-  flavour: Forty students. One classroom. Zero dry shoes.
-  artist: Mr Lim
-  themes: [school-day]
-
-- id: long-climb
-  name: Long Climb
-  rarity: common
-  photo: long-climb.jpg
-  text: Break a big task into three steps.
-  flavour: Every summit is just a lot of small steps that refused to stop.
-  artist: Ms Tan
-  themes: [after-hours]
-
-- id: panda-professor
-  name: Panda Professor
-  rarity: rare
-  photo: panda-professor.jpg
-  text: Prepare tomorrow's lesson today.
-  flavour: 'Tenure track: eat bamboo, grade essays, repeat.'
-  artist: Mr Lim
-  themes: [school-day]
-
-- id: koi-pond
-  name: Koi Pond
-  rarity: rare
-  photo: koi-pond.jpg
-  text: Tidy one corner of your desk.
-  flavour: The koi have never once had an overdue task. Suspicious.
-  artist: Mdm Wong
-  themes: [garden-seasons]
-
-- id: holiday-mode
-  name: Holiday Mode
-  rarity: rare
-  photo: holiday-mode.jpg
-  text: Book a day off on the calendar.
-  flavour: Out of office. Out of bamboo. Out of worries.
-  artist: Mdm Wong
-  themes: [after-hours]
-
-- id: sakura-season
-  name: Sakura Season
+- id: angel-fattie
+  name: Angel Fattie
   rarity: epic
-  photo: sakura-season.jpg
-  text: Thank a colleague today.
-  flavour: The petals only fall for a week. So do the good moods after exams.
-  artist: Ms Tan
-  themes: [garden-seasons]
+  photo: AngelFattie.jpg
+  text: OMG youre so CUTEEEE
+  flavour: Its so ironic that youre angel but youre a free thinker. You should wear this dress more
 
-- id: lantern-night
-  name: Lantern Night
+- id: both-bugis-sleepy
+  name: Both Bugis Sleepy
+  rarity: rare
+  photo: BothBugisSleepy.jpg
+  text: My mouth is like the size of your face
+  flavour: Youre head like fits so nicely into my neck. I guess youre made for me
+  themes: [both, sleepy]
+
+- id: both-bus
+  name: Both Bus
+  rarity: common
+  photo: BothBus.jpeg
+  text: I'm being covered by youuu
+  flavour: Me when im trying to take a nice photo then a fattie occupies half my screen
+  themes: [both]
+
+- id: both-call-fatties
+  name: Both Call Fatties
   rarity: epic
-  photo: lantern-night.jpg
-  text: Finish every task due today.
-  flavour: One lantern for every ticked box. The sky is getting crowded.
-  artist: Mr Lim
-  themes: [after-hours]
+  photo: BothCallFatties.jpg
+  text: We have the exact same face but youre cut off
+  flavour: For this flavour text, I look like a giant fat tomato.
+  themes: [both]
 
-- id: starry-snooze
-  name: Starry Snooze
-  rarity: legendary
-  photo: starry-snooze.jpg
-  text: Close the laptop on time tonight.
-  flavour: Once upon a time... ok how about we just skip to the end? The panda sleeps.
-  artist: Mdm Wong
-  themes: [after-hours]
+- id: both-cool-guys
+  name: Both Cool Guys
+  rarity: common
+  photo: BothCoolGuys.jpg
+  text: We are movie stars
+  flavour: There is a cool guy and theres my fattie. Also i always wear that one shirt
+  themes: [both]
 
-- id: golden-temple
-  name: Golden Temple
+- id: both-covered
+  name: Both Covered
+  rarity: rare
+  photo: BothCovered.jpeg
+  text: OMG its a edgy girl
+  flavour: This was quite early on in the relationship also, at this early stage, you were already megafat.
+  themes: [both]
+
+- id: both-crying
+  name: Both Crying
+  rarity: epic
+  photo: BothCrying.jpg
+  text: Why are you crying 
+  flavour: You look like youve been crying for like an hour. This was way before I ever saw you cry for real though, cheers to many more moments, whether they are happy or sad.
+  themes: [both]
+
+- id: both-elevator
+  name: Both Elevator
+  rarity: common
+  photo: BothElevator.jpeg
+  text: You look so contented with what youre seeing
+  flavour: Idk why you seem so tall in this photo. Also youre smiling and looking at yourself in the photo, what a fattie.
+  themes: [both]
+
+- id: both-fat
+  name: Both Fat
+  rarity: common
+  photo: BothFat.jpeg
+  text: Your face is red like you just slept on your keyboard
+  flavour: My lips are so dry, also a rare photo where youre taller than me.
+  themes: [both]
+
+- id: both-judgemental
+  name: Both Judgemental
   rarity: legendary
-  photo: golden-temple.jpg
-  text: Clear the whole week's Do next list.
-  flavour: Legends say it took the panda nine attempts and one very large snack.
-  artist: Ms Tan
-  themes: [garden-seasons]
+  photo: BothJudgemental.jpg
+  text: Youre my little bundle of joy
+  flavour: Youre smiling so brightly in this photo, always makes me wonder how i manage to bring you so much joy. Photos like that are what will make me never stop wanting to squish you. ILOVEUUUUU!
+  themes: [both]
+
+- id: both-my-fattie
+  name: Both My Fattie
+  rarity: common
+  photo: BothMyFattie.jpg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-remarkable
+  name: Both Remarkable
+  rarity: common
+  photo: BothRemarkable.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-rich
+  name: Both Rich
+  rarity: common
+  photo: BothRich.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [both, rich]
+
+- id: both-side
+  name: Both Side
+  rarity: common
+  photo: BothSide.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-spx
+  name: Both SPX
+  rarity: common
+  photo: BothSPX.jpg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-stare
+  name: Both Stare
+  rarity: common
+  photo: BothStare.jpg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-umbrella
+  name: Both Umbrella
+  rarity: common
+  photo: BothUmbrella.jpg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: both-weird-keegan-hairstyle
+  name: Both Weird Hairstyle
+  rarity: common
+  photo: BothWeirdKeeganHairstyle.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [both]
+
+- id: boxed-fattie
+  name: Boxed Fattie
+  rarity: common
+  photo: BoxedFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: cat-fattie
+  name: Cat Fattie
+  rarity: common
+  photo: CatFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: close-unglam
+  name: Close Unglam
+  rarity: common
+  photo: CloseUnglam.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: digital-fattie
+  name: Digital Fattie
+  rarity: common
+  photo: DigitalFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: fattie-ception
+  name: Fattie Ception
+  rarity: common
+  photo: FattieCeption.jpg
+  text: TODO
+  flavour: TODO
+
+- id: first-ever
+  name: First Ever
+  rarity: common
+  photo: FirstEver.jpg
+  text: TODO
+  flavour: TODO
+
+- id: flower-bulldog
+  name: Flower Bulldog
+  rarity: common
+  photo: FlowerBulldog.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [flower]
+
+- id: flower-fattieee
+  name: Flower Fattieee
+  rarity: common
+  photo: FlowerFattieee.jpg
+  text: TODO
+  flavour: TODO
+  themes: [flower]
+
+- id: flower-megacute
+  name: Flower Megacute
+  rarity: common
+  photo: FlowerMegacute.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [flower]
+
+- id: focused-fattie
+  name: Focused Fattie
+  rarity: common
+  photo: FocusedFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: food-stuffed
+  name: Food Stuffed
+  rarity: common
+  photo: FoodStuffed.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: giant-fattie
+  name: Giant Fattie
+  rarity: common
+  photo: GiantFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: happy-cookie
+  name: Happy Cookie
+  rarity: common
+  photo: HappyCookie.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: hottie-fattie
+  name: Hottie Fattie
+  rarity: common
+  photo: HottieFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: jb-fat
+  name: JB Fat
+  rarity: common
+  photo: JBFat.JPG
+  text: TODO
+  flavour: TODO
+
+- id: matcha-cutie
+  name: Matcha Cutie
+  rarity: common
+  photo: MatchaCutie.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: movie-jacket
+  name: Movie Jacket
+  rarity: common
+  photo: MovieJacket.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: myshirtt
+  name: Myshirtt
+  rarity: common
+  photo: Myshirtt.jpg
+  text: TODO
+  flavour: TODO
+
+- id: no-idea-where
+  name: No Idea Where
+  rarity: common
+  photo: NoIdeaWhere.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: normal-work
+  name: Normal Work
+  rarity: common
+  photo: NormalWork.jpg
+  text: TODO
+  flavour: TODO
+
+- id: one-eyed-cutie
+  name: One Eyed Cutie
+  rarity: common
+  photo: OneEyedCutie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: ord-fattie
+  name: ORD Fattie
+  rarity: common
+  photo: ORDFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: overjoyed
+  name: Overjoyed
+  rarity: common
+  photo: Overjoyed.jpg
+  text: TODO
+  flavour: TODO
+
+- id: overjoyed-fattie
+  name: Overjoyed Fattie
+  rarity: common
+  photo: OverjoyedFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: passport-photo-fattie
+  name: Passport Photo Fattie
+  rarity: common
+  photo: PassportPhotoFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: pouting-soup
+  name: Pouting Soup
+  rarity: common
+  photo: PoutingSoup.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: quad-fatties
+  name: Quad Fatties
+  rarity: common
+  photo: QuadFatties.jpg
+  text: TODO
+  flavour: TODO
+
+- id: rich-beauty
+  name: Rich Beauty
+  rarity: common
+  photo: RichBeauty.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: rich-happy
+  name: Rich Happy
+  rarity: common
+  photo: RichHappy.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: rich-my-favorite-fattie
+  name: Rich My Favorite Fattie
+  rarity: common
+  photo: RichMyFavoriteFattie.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: rich-too-much-food
+  name: Rich Too Much Food
+  rarity: common
+  photo: RichTooMuchFood.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: rich-vege
+  name: Rich Vege
+  rarity: common
+  photo: RichVege.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: rich-waiting-patiently
+  name: Rich Waiting Patiently
+  rarity: common
+  photo: RichWaitingPatiently.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [rich]
+
+- id: side-eye
+  name: Side Eye
+  rarity: common
+  photo: SideEye.jpg
+  text: TODO
+  flavour: TODO
+
+- id: side-heart
+  name: Side Heart
+  rarity: common
+  photo: SideHeart.PNG
+  text: TODO
+  flavour: TODO
+
+- id: sleepy-blanket
+  name: Sleepy Blanket
+  rarity: common
+  photo: SleepyBlanket.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-idk-where
+  name: Sleepy Idk Where
+  rarity: common
+  photo: SleepyIdkWhere.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-jb
+  name: Sleepy JB
+  rarity: common
+  photo: SleepyJB.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-peaceful
+  name: Sleepy Peaceful
+  rarity: common
+  photo: SleepyPeaceful.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-school
+  name: Sleepy School
+  rarity: common
+  photo: SleepySchool.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-thumbs
+  name: Sleepy Thumbs
+  rarity: common
+  photo: SleepyThumbs.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: sleepy-yochi
+  name: Sleepy Yochi
+  rarity: common
+  photo: SleepyYochi.jpg
+  text: TODO
+  flavour: TODO
+  themes: [sleepy]
+
+- id: struggling-math
+  name: Struggling Math
+  rarity: common
+  photo: StrugglingMath.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: ta-fattie
+  name: TA Fattie
+  rarity: common
+  photo: TAFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: uppies-cutie
+  name: Uppies Cutie
+  rarity: common
+  photo: UppiesCutie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: uppies-fattie
+  name: Uppies Fattie
+  rarity: common
+  photo: UppiesFattie.jpg
+  text: TODO
+  flavour: TODO
+
+- id: value-ashtons
+  name: Value Ashtons
+  rarity: common
+  photo: ValueAshtons.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [value]
+
+- id: value-beer
+  name: Value Beer
+  rarity: common
+  photo: ValueBeer.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [value]
+
+- id: value-pepper-lunch
+  name: Value Pepper Lunch
+  rarity: common
+  photo: ValuePepperLunch.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [value]
+
+- id: value-tea
+  name: Value Tea
+  rarity: common
+  photo: ValueTea.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [value]
+
+- id: value-teaaa
+  name: Value Teaaa
+  rarity: common
+  photo: ValueTeaaa.jpg
+  text: TODO
+  flavour: TODO
+  themes: [value]
+
+- id: watermellon-beer
+  name: Watermellon Beer
+  rarity: common
+  photo: WatermellonBeer.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [watermelon]
+
+- id: watermellon-prawn
+  name: Watermellon Prawn
+  rarity: common
+  photo: WatermellonPrawn.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [watermelon]
+
+- id: watermellon-tasty
+  name: Watermellon Tasty
+  rarity: common
+  photo: WatermellonTasty.jpeg
+  text: TODO
+  flavour: TODO
+  themes: [watermelon]
+
+- id: way-too-happy
+  name: Way Too Happy
+  rarity: common
+  photo: WayTooHappy.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: weird-smile-food
+  name: Weird Smile Food
+  rarity: common
+  photo: weirdSmileFood.JPG
+  text: TODO
+  flavour: TODO
+
+- id: work-fattie
+  name: Work Fattie
+  rarity: common
+  photo: WorkFattie.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: wow-fat
+  name: Wow Fat
+  rarity: common
+  photo: WowFat.jpeg
+  text: TODO
+  flavour: TODO
+
+- id: yochi
+  name: Yochi
+  rarity: common
+  photo: yochi.JPG
+  text: TODO
+  flavour: TODO
