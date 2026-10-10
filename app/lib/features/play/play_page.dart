@@ -82,7 +82,7 @@ class _PlayPageState extends ConsumerState<PlayPage> with SingleTickerProviderSt
     return ref.read(triviaStoreProvider).save(run);
   }
 
-  Future<void> _start(DailyTrivia trivia, TriviaRun saved) async {
+  Future<void> _start(int day, List<TriviaQuestion> bank, TriviaRun saved) async {
     var run = saved;
     if (run.leftMidQuestion) {
       run = run.timeout(TriviaRules.timeLimit(run.nextNumber).inMilliseconds);
@@ -93,10 +93,14 @@ class _PlayPageState extends ConsumerState<PlayPage> with SingleTickerProviderSt
         return;
       }
     }
-    _trivia = trivia;
+    _trivia = DailyTrivia(day, bank, attempt: run.attempt);
     _run = run;
+    if (!_ticker.isActive) {
+      // A restarted ticker counts from zero again, so the clock the phases are measured on must too.
+      _elapsed = Duration.zero;
+      _ticker.start();
+    }
     _ask(run.nextNumber);
-    if (!_ticker.isActive) _ticker.start();
   }
 
   void _ask(int number) {
@@ -145,13 +149,15 @@ class _PlayPageState extends ConsumerState<PlayPage> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final phone = Breakpoints.isPhone(context);
     final trivia = ref.watch(todayTriviaProvider);
-    final runs = ref.watch(triviaRunsProvider).value ?? const <int, TriviaRun>{};
+    final days = ref.watch(triviaRunsProvider).value ?? const <int, TriviaDay>{};
     final day = ref.watch(triviaDayProvider);
-    final today = runs[day] ?? TriviaRun(day: day);
+    final today = days[day] ?? TriviaDay(day, const []);
     final now = ref.watch(clockProvider);
+    final current = today.current;
+    final lastFinished = today.tries.where((r) => r.finished).lastOrNull;
 
     final Widget body = switch (trivia) {
-      AsyncData(value: final t) when t.isEmpty => const _NoQuestions(),
+      AsyncData(value: (_, final bank)) when bank.isEmpty => const _NoQuestions(),
       AsyncData() when _run != null && _round != null => _QuestionView(
         run: _run!,
         round: _round!,
@@ -161,18 +167,21 @@ class _PlayPageState extends ConsumerState<PlayPage> with SingleTickerProviderSt
         onAnswer: _answer,
         onNext: _next,
       ),
-      AsyncData() when today.finished => _GameOver(
-        run: today,
-        best: triviaBest(runs),
-        streak: triviaStreak(runs, day),
+      AsyncData(value: (final d, final bank)) when lastFinished != null && current == null => _GameOver(
+        today: today,
+        run: lastFinished,
+        best: triviaBest(days),
+        streak: triviaStreak(days, day),
         leftCounted: _leftCounted,
+        onTryAgain: today.next == null ? null : () => _start(d, bank, today.next!),
       ),
-      AsyncData(value: final t) => _StartCard(
+      AsyncData(value: (final d, final bank)) => _StartCard(
         date: now,
-        run: today,
-        best: triviaBest(runs),
-        streak: triviaStreak(runs, day),
-        onStart: () => _start(t, today),
+        run: today.next!,
+        todayBest: lastFinished == null ? null : today.best,
+        best: triviaBest(days),
+        streak: triviaStreak(days, day),
+        onStart: () => _start(d, bank, today.next!),
       ),
       AsyncError() => const _NoQuestions(),
       _ => const SizedBox(height: 300, child: Center(child: CircularProgressIndicator())),
@@ -220,13 +229,19 @@ class _StartCard extends StatelessWidget {
   const _StartCard({
     required this.date,
     required this.run,
+    required this.todayBest,
     required this.best,
     required this.streak,
     required this.onStart,
   });
 
   final DateTime date;
+
+  /// The try to start or continue.
   final TriviaRun run;
+
+  /// The better score of today's finished tries, or null before the first one ends.
+  final int? todayBest;
   final int best;
   final int streak;
   final VoidCallback onStart;
@@ -257,25 +272,46 @@ class _StartCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Today’s run', style: PandaText.title),
+                    Text(
+                      'Try ${run.attempt} of ${TriviaRules.triesPerDay}',
+                      key: const ValueKey('trivia-try'),
+                      style: PandaText.title,
+                    ),
                     Text(DateFormat('EEEE d MMMM').format(date), style: PandaText.body.copyWith(color: p.muted)),
+                    if (todayBest != null)
+                      Text(
+                        'Today’s best so far: $todayBest',
+                        style: PandaText.bodyStrong.copyWith(color: p.bambooDark),
+                      ),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          rule(Icons.favorite_rounded, 'You have 2 lives. A wrong answer, or running out of time, costs one.'),
+          rule(
+            Icons.favorite_rounded,
+            'You have ${TriviaRules.maxLives} lives. A wrong answer, or running out of time, costs one.',
+          ),
           rule(Icons.trending_up_rounded, 'Each question is a little harder, with a little less time.'),
           rule(Icons.bolt_rounded, 'Answer correctly within 1 second of the answers appearing to win back a life.'),
-          rule(Icons.emoji_events_rounded, 'Your score is how many you get right. One run a day.'),
+          rule(
+            Icons.emoji_events_rounded,
+            'Your score is how many you get right. Two tries a day, with different questions: your better score counts.',
+          ),
           const SizedBox(height: 8),
           _Stats(best: best, streak: streak),
           const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: onStart,
             icon: const Icon(Icons.play_arrow_rounded),
-            label: Text(run.started ? 'Continue (question ${run.nextNumber})' : 'Start'),
+            label: Text(
+              run.started
+                  ? 'Continue (question ${run.nextNumber})'
+                  : run.attempt == 1
+                  ? 'Start'
+                  : 'Start try ${run.attempt}',
+            ),
           ),
           const SizedBox(height: 16),
           Text(triviaCredit, style: PandaText.caption.copyWith(color: p.muted)),
@@ -508,15 +544,35 @@ class _AnswerButton extends StatelessWidget {
 }
 
 class _GameOver extends StatelessWidget {
-  const _GameOver({required this.run, required this.best, required this.streak, required this.leftCounted});
+  const _GameOver({
+    required this.today,
+    required this.run,
+    required this.best,
+    required this.streak,
+    required this.leftCounted,
+    required this.onTryAgain,
+  });
+
+  final TriviaDay today;
+
+  /// The try that just ended.
   final TriviaRun run;
   final int best;
   final int streak;
   final bool leftCounted;
 
+  /// Starts the next try; null when today's tries are used up.
+  final VoidCallback? onTryAgain;
+
   @override
   Widget build(BuildContext context) {
     final p = context.panda;
+    final finished = [
+      for (final r in today.tries)
+        if (r.finished) r,
+    ];
+    final allDone = onTryAgain == null;
+    final left = today.triesLeft;
     return PandaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -531,10 +587,21 @@ class _GameOver extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            run.score >= best && run.score > 0 ? 'Your best yet! New questions tomorrow.' : 'New questions tomorrow.',
+            allDone
+                ? 'Today’s score: ${today.best} (your better try). New questions tomorrow.'
+                : 'Today’s best so far: ${today.best}. You have $left ${left == 1 ? 'try' : 'tries'} left.',
+            key: const ValueKey('trivia-today'),
             textAlign: TextAlign.center,
             style: PandaText.body.copyWith(color: p.muted),
           ),
+          if (allDone && today.best >= best && today.best > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Your best day yet!',
+              textAlign: TextAlign.center,
+              style: PandaText.bodyStrong.copyWith(color: p.bambooDark),
+            ),
+          ],
           if (leftCounted) ...[
             const SizedBox(height: 4),
             Text(
@@ -544,28 +611,58 @@ class _GameOver extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          Center(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              alignment: WrapAlignment.center,
-              children: [for (final (i, a) in run.answers.indexed) _ResultSquare(number: i + 1, answer: a)],
+          for (final r in finished)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                children: [
+                  if (finished.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'Try ${r.attempt}: ${r.score} right',
+                        style: PandaText.captionStrong.copyWith(color: p.muted),
+                      ),
+                    ),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      for (final (i, a) in r.answers.indexed)
+                        _ResultSquare(attempt: r.attempt, number: i + 1, answer: a),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           Center(
             child: _Stats(best: best, streak: streak),
           ),
           const SizedBox(height: 20),
           Center(
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: run.shareText));
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Result copied')));
-              },
-              icon: const Icon(Icons.copy_rounded),
-              label: const Text('Copy result'),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                if (onTryAgain != null)
+                  FilledButton.icon(
+                    onPressed: onTryAgain,
+                    icon: const Icon(Icons.replay_rounded),
+                    label: Text('Try again ($left ${left == 1 ? 'try' : 'tries'} left)'),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: (today.bestTry ?? run).shareText));
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Result copied')));
+                  },
+                  icon: const Icon(Icons.copy_rounded),
+                  label: const Text('Copy result'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -582,7 +679,8 @@ class _GameOver extends StatelessWidget {
 
 /// One question's result: a green tick, a lightning bolt (right and fast), or a red cross.
 class _ResultSquare extends StatelessWidget {
-  const _ResultSquare({required this.number, required this.answer});
+  const _ResultSquare({required this.attempt, required this.number, required this.answer});
+  final int attempt;
   final int number;
   final TriviaAnswer answer;
 
@@ -595,7 +693,7 @@ class _ResultSquare extends StatelessWidget {
         ? (p.bambooTint, p.bambooDark, Icons.check_rounded, 'right')
         : (p.overdueTint, p.overdue, Icons.close_rounded, answer.timedOut ? 'out of time' : 'wrong');
     return Tooltip(
-      message: 'Question $number: $label',
+      message: 'Try $attempt, question $number: $label',
       child: Container(
         width: 32,
         height: 32,
