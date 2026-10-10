@@ -6,7 +6,10 @@ import 'trivia_question.dart';
 /// The rules of the daily trivia run, in one place so they're easy to tune. See docs/trivia.md.
 abstract final class TriviaRules {
   /// Lives at the start, and the most you can have.
-  static const maxLives = 2;
+  static const maxLives = 3;
+
+  /// Tries each day. Each try has its own questions; the better score counts.
+  static const triesPerDay = 2;
 
   /// A correct answer this quick (after the answers appear) wins back a life.
   static const fastAnswer = Duration(seconds: 1);
@@ -29,14 +32,17 @@ abstract final class TriviaRules {
       : TriviaDifficulty.hard;
 }
 
-/// Today's run: the same questions, in the same order with the same answer order, for everyone.
+/// One try's questions: the same questions, in the same order with the same answer order, for
+/// everyone on that day and try.
 ///
 /// Each difficulty has its own pool, shuffled with [StableRandom] (so phones, computers and the
-/// browser agree). Day d takes its easy questions from position d × 5 of the easy pool, medium from
-/// d × 7 and hard from d × 8: just enough for a typical run, so the questions most people reach
-/// change every day, and a pool is only reshuffled once it has been used up.
+/// browser agree). Every try gets its own slot, `day × triesPerDay + (attempt − 1)`, and slot s takes
+/// its easy questions from position s × 5 of the easy pool, medium from s × 7 and hard from s × 8:
+/// just enough for a typical run. So the two tries of a day never share questions, each day carries
+/// on from the last, and a pool is only reshuffled once it has been used up (with ~3,900 questions,
+/// after roughly three months).
 class DailyTrivia {
-  DailyTrivia(this.day, Iterable<TriviaQuestion> bank)
+  DailyTrivia(this.day, Iterable<TriviaQuestion> bank, {this.attempt = 1})
     : _pools = {
         for (final d in TriviaDifficulty.values)
           d: [
@@ -47,7 +53,12 @@ class DailyTrivia {
 
   /// Days since 1 January 2026 ([dayFor]).
   final int day;
+
+  /// 1 for the day's first try, 2 for the second.
+  final int attempt;
   final Map<TriviaDifficulty, List<TriviaQuestion>> _pools;
+
+  int get _slot => day * TriviaRules.triesPerDay + (attempt - 1);
 
   static const _perDay = {TriviaDifficulty.easy: 5, TriviaDifficulty.medium: 7, TriviaDifficulty.hard: 8};
 
@@ -71,11 +82,11 @@ class DailyTrivia {
       TriviaDifficulty.medium => 6,
       TriviaDifficulty.hard => 13,
     };
-    final index = day * _perDay[wanted]! + (number - firstOfBand);
+    final index = _slot * _perDay[wanted]! + (number - firstOfBand);
     final position = index % pool.length;
     final cycle = (index - position) ~/ pool.length;
     final question = StableRandom('trivia#${difficulty.name}#$cycle').shuffled(pool)[position];
-    final answers = StableRandom('trivia-answers#$day#$number').shuffled([question.answer, ...question.wrong]);
+    final answers = StableRandom('trivia-answers#$day#$attempt#$number').shuffled([question.answer, ...question.wrong]);
     return TriviaRound(
       number: number,
       question: question,

@@ -91,12 +91,24 @@ void main() {
       final tomorrow = [for (var n = 1; n <= 5; n++) DailyTrivia(11, bank).round(n)!.question.question];
       expect(today.toSet().intersection(tomorrow.toSet()), isEmpty);
       expect(today.toSet(), hasLength(5));
-      // 20 easy questions, 5 a day: days 0–3 use each exactly once.
+      // 20 easy questions, 5 a try, 2 tries a day: days 0–1 use each exactly once.
       final cycle = [
-        for (var d = 0; d < 4; d++)
-          for (var n = 1; n <= 5; n++) DailyTrivia(d, bank).round(n)!.question.question,
+        for (var d = 0; d < 2; d++)
+          for (var attempt = 1; attempt <= 2; attempt++)
+            for (var n = 1; n <= 5; n++) DailyTrivia(d, bank, attempt: attempt).round(n)!.question.question,
       ];
       expect(cycle.toSet(), hasLength(20));
+    });
+
+    test('the second try has different questions, the same for everyone', () {
+      final big = fakeBank(n: 200);
+      List<String> run(int day, int attempt) => [
+        for (var n = 1; n <= 20; n++) DailyTrivia(day, big, attempt: attempt).round(n)!.question.question,
+      ];
+      expect(run(5, 2), run(5, 2));
+      expect(run(5, 1).take(5).toSet().intersection(run(5, 2).take(5).toSet()), isEmpty);
+      expect(run(5, 2).take(5).toSet().intersection(run(6, 1).take(5).toSet()), isEmpty);
+      expect(DailyTrivia(5, big).round(1)!.question.question, run(5, 1).first, reason: 'try 1 is the default');
     });
 
     test('borrow from an easier pool, then a harder one, when a difficulty is missing', () {
@@ -119,30 +131,38 @@ void main() {
   });
 
   group('a run', () {
-    test('starts with 2 lives and no score', () {
+    test('starts with 3 lives and no score', () {
       const run = TriviaRun(day: 1);
-      expect((run.lives, run.score, run.finished, run.started, run.nextNumber), (2, 0, false, false, 1));
+      expect(
+        (run.lives, run.score, run.finished, run.started, run.nextNumber, run.attempt),
+        (3, 0, false, false, 1, 1),
+      );
     });
 
     test('loses a life for a wrong answer or running out of time, and ends at 0', () {
-      final one = runOf([(true, 3000), (false, 2000)]);
+      final one = runOf([(true, 3000), (false, 2000), (false, 2000)]);
       expect((one.lives, one.score, one.finished), (1, 1, false));
       final over = one.timeout(15000);
       expect((over.lives, over.score, over.finished), (0, 1, true));
       expect(over.answers.last.timedOut, isTrue);
     });
 
-    test('a correct answer within 1 second wins back exactly one life, up to 2', () {
-      expect(runOf([(false, 2000), (true, 1000)]).lives, 2);
-      expect(runOf([(false, 2000), (true, 1001)]).lives, 1);
-      expect(runOf([(true, 200), (true, 300)]).lives, 2);
-      expect(runOf([(false, 2000), (false, 2000), (true, 100)]).lives, 0, reason: 'a finished run stays finished');
+    test('a correct answer within 1 second wins back exactly one life, up to 3', () {
+      expect(runOf([(false, 2000), (true, 1000)]).lives, 3);
+      expect(runOf([(false, 2000), (false, 2000), (true, 1000)]).lives, 2);
+      expect(runOf([(false, 2000), (true, 1001)]).lives, 2);
+      expect(runOf([(true, 200), (true, 300)]).lives, 3);
+      expect(
+        runOf([(false, 2000), (false, 2000), (false, 2000), (true, 100)]).lives,
+        0,
+        reason: 'a finished run stays finished',
+      );
     });
 
     test('a fast wrong answer is still wrong', () {
       final run = runOf([(false, 300)]);
       expect(run.answers.single.fast, isFalse);
-      expect(run.lives, 1);
+      expect(run.lives, 2);
     });
 
     test('remembers a question left with its answers showing', () {
@@ -155,35 +175,71 @@ void main() {
     test('share text has the day, score and a square per question', () {
       final run = runOf([(true, 500), (true, 4000), (false, 2000)]);
       expect(run.squares, '⚡🟩🟥');
-      expect(run.shareText, 'BamBoozled Trivia #2 🐼 2 right\n⚡🟩🟥');
+      expect(run.shareText, 'BamBoozled Trivia #2 (try 1) 🐼 2 right\n⚡🟩🟥');
+      expect(const TriviaRun(day: 1, attempt: 2).shareText, startsWith('BamBoozled Trivia #2 (try 2)'));
     });
 
     test('round-trips through JSON', () {
-      final run = runOf([(true, 500), (false, 2000)]).showing(3);
+      final run = TriviaRun(day: 1, attempt: 2).answer(0, correct: true, millis: 500).timeout(9000).showing(3);
       final back = TriviaRun.fromJson(jsonDecode(jsonEncode(run.toJson())) as Map<String, dynamic>);
-      expect((back.day, back.lives, back.score, back.shown, back.squares), (1, 1, 1, 3, run.squares));
+      expect((back.day, back.attempt, back.lives, back.score, back.shown, back.squares), (1, 2, 2, 1, 3, run.squares));
+      final old = TriviaRun.fromJson({'day': 4, 'answers': []});
+      expect(old.attempt, 1, reason: 'runs saved before tries existed are try 1');
     });
   });
 
-  group('streak and best', () {
-    TriviaRun played(int day, int score) => TriviaRun(
+  group('tries and days', () {
+    TriviaRun played(int day, int score, {int attempt = 1}) => TriviaRun(
       day: day,
+      attempt: attempt,
       answers: [for (var i = 0; i < score; i++) const TriviaAnswer(chosen: 0, correct: true, millis: 3000)],
-    ).timeout(5000);
+    ).timeout(5000).timeout(5000).timeout(5000);
 
-    test('counts days in a row ending today, or yesterday before today’s run', () {
-      final runs = {
-        for (final d in [5, 6, 7, 9]) d: played(d, 1),
+    test('a day offers two tries; its score is the better one', () {
+      var day = TriviaDay(7, const []);
+      expect((day.started, day.triesLeft, day.best, day.current, day.bestTry), (false, 2, 0, null, null));
+      expect(day.next!.attempt, 1);
+
+      final going = played(
+        7,
+        4,
+      ).answers.take(4).fold(const TriviaRun(day: 7), (r, a) => r.answer(0, correct: true, millis: 3000));
+      day = day.withRun(going);
+      expect(day.current, same(going));
+      expect(day.next, same(going));
+
+      day = day.withRun(played(7, 4));
+      expect((day.triesLeft, day.best, day.current), (1, 4, null));
+      expect(day.next!.attempt, 2);
+
+      day = day.withRun(played(7, 9, attempt: 2));
+      expect((day.triesLeft, day.best, day.next), (0, 9, null));
+      expect(day.bestTry!.attempt, 2);
+      expect(day.tries.map((r) => r.attempt), [1, 2]);
+    });
+
+    test('a tie keeps the earlier try as the best', () {
+      final day = TriviaDay(1, [played(1, 5, attempt: 2), played(1, 5)]);
+      expect(day.bestTry!.attempt, 1);
+    });
+
+    test('streak counts days with a try, ending today or yesterday', () {
+      final days = {
+        for (final d in [5, 6, 7, 9]) d: TriviaDay(d, [played(d, 1)]),
       };
-      expect(triviaStreak(runs, 9), 1);
-      expect(triviaStreak(runs, 8), 3);
-      expect(triviaStreak(runs, 10), 1);
-      expect(triviaStreak(runs, 11), 0);
+      expect(triviaStreak(days, 9), 1);
+      expect(triviaStreak(days, 8), 3);
+      expect(triviaStreak(days, 10), 1);
+      expect(triviaStreak(days, 11), 0);
       expect(triviaStreak({}, 3), 0);
     });
 
-    test('best is the highest score', () {
-      expect(triviaBest({1: played(1, 4), 2: played(2, 9), 3: played(3, 2)}), 9);
+    test('best is the best day, using each day’s better try', () {
+      final days = {
+        1: TriviaDay(1, [played(1, 4), played(1, 11, attempt: 2)]),
+        2: TriviaDay(2, [played(2, 9)]),
+      };
+      expect(triviaBest(days), 11);
       expect(triviaBest({}), 0);
     });
   });
@@ -200,12 +256,15 @@ void main() {
       final store = TriviaStore(db);
       await store.save(const TriviaRun(day: 1).timeout(15000));
       await store.save(const TriviaRun(day: 300).answer(2, correct: true, millis: 800));
-      var runs = await store.watch().first;
-      expect(runs.keys, [1, 300]);
-      expect(runs[300]!.score, 1);
+      await store.save(const TriviaRun(day: 300).answer(2, correct: true, millis: 800).timeout(5000));
+      await store.save(const TriviaRun(day: 300, attempt: 2).answer(1, correct: false, millis: 800));
+      var days = await store.watch().first;
+      expect(days.keys, [1, 300]);
+      expect(days[300]!.tries.map((r) => (r.attempt, r.answers.length)), [(1, 2), (2, 1)]);
+      expect(days[300]!.best, 1);
       await store.save(const TriviaRun(day: 401));
-      runs = await store.watch().first;
-      expect(runs.keys, [300, 401]);
+      days = await store.watch().first;
+      expect(days.keys, [300, 401]);
     });
 
     test('unreadable data reads as no runs', () {
@@ -217,6 +276,13 @@ void main() {
   group('the bundled question bank', () {
     final raw = File('assets/trivia/questions.json').readAsStringSync();
     final bank = [for (final q in jsonDecode(raw) as List) TriviaQuestion.fromJson(q as Map<String, dynamic>)];
+
+    test('has plenty of questions of every difficulty', () {
+      expect(bank.length, greaterThanOrEqualTo(1500));
+      for (final d in TriviaDifficulty.values) {
+        expect(bank.where((q) => q.difficulty == d).length, greaterThanOrEqualTo(200), reason: d.name);
+      }
+    });
 
     test('every question has one right and three different wrong answers', () {
       for (final q in bank) {

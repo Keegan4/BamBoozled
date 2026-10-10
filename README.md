@@ -30,12 +30,12 @@ The UI mockup is described in [design/README.md](design/README.md). Screenshots 
 
 ## Milestone 3 — Play: Bamboo Trivia
 
-A short daily trivia run in the **Play** tab, the same questions for everyone each day, one run a day:
-- You have **2 lives**. A wrong answer, or running out of time, costs one; the run ends when both are gone.
+A short daily trivia run in the **Play** tab, the same questions for everyone each day, with **two tries a day**:
+- You have **3 lives**. A wrong answer, or running out of time, costs one; the try ends when all three are gone.
 - Each question first shows on its own for a moment, then the four answers appear and the timer starts.
 - Questions get **harder** (easy → medium → hard) and the timer **shorter** (15 s, down to 5 s) as you go.
-- Answer correctly **within 1 second** of the answers appearing to win back a life (up to 2).
-- Your **score** is how many you answer correctly. The tab shows your streak and best score, and **Copy result** gives a line to paste into a chat.
+- Answer correctly **within 1 second** of the answers appearing to win back a life (up to 3).
+- Your **score** is how many you answer correctly. The second try has different questions, and **the better of your two tries** is the day's score. The tab shows your streak and best day, and **Copy result** gives a line to paste into a chat.
 
 Questions come from [Open Trivia DB](https://opentdb.com) (CC BY-SA 4.0) and are built into the app, so it works offline. Details and how to refresh the questions: [docs/trivia.md](docs/trivia.md).
 
