@@ -1,0 +1,110 @@
+# The cards for the Notes tab's daily packs. See docs/card-packs.md for the full guide.
+#
+# Each card:
+#   id       unique, lowercase-with-dashes. Never change it once released: collections are saved by id.
+#   name     the name on the card's banner (keep it under about 18 characters)
+#   rarity   common, rare, epic or legendary (default: common)
+#   photo    a file in this folder: JPG, PNG or WebP, about 1080 x 1350 px, under 500 KB
+#   text     the short message in the card's text box (up to 90 characters)
+#   flavour  optional: the quote shown when the card is opened in the binder (up to 300 characters)
+#   artist   optional: credited in the binder, and signed on "Signed" cards
+#   set      optional: the set name shown in the binder (default: Bamboo Grove)
+#   exclude  optional: finishes this card never gets, e.g. [misprint, ghost]
+#
+# Cards are numbered in the order they appear here, so add new cards at the end.
+
+- id: bamboo-grove
+  name: Bamboo Grove
+  rarity: common
+  photo: bamboo-grove.jpg
+  text: Take a proper lunch break today.
+  flavour: Pandas spend up to 14 hours a day eating. Nobody has ever told them to hurry.
+  artist: Ms Tan
+
+- id: early-start
+  name: Early Start
+  rarity: common
+  photo: early-start.jpg
+  text: Do the hardest task before 10 am.
+  flavour: The sun is up. The coffee is up. The marking pile is also, unfortunately, up.
+  artist: Ms Tan
+
+- id: tea-break
+  name: Tea Break
+  rarity: common
+  photo: tea-break.jpg
+  text: Step away for five minutes.
+  flavour: '"I''ll just reply to one email first," said the tea, now cold.'
+  artist: Mr Lim
+
+- id: rainy-recess
+  name: Rainy Recess
+  rarity: common
+  photo: rainy-recess.jpg
+  text: Plan one indoor activity for wet weather.
+  flavour: Forty students. One classroom. Zero dry shoes.
+  artist: Mr Lim
+
+- id: long-climb
+  name: Long Climb
+  rarity: common
+  photo: long-climb.jpg
+  text: Break a big task into three steps.
+  flavour: Every summit is just a lot of small steps that refused to stop.
+  artist: Ms Tan
+
+- id: panda-professor
+  name: Panda Professor
+  rarity: rare
+  photo: panda-professor.jpg
+  text: Prepare tomorrow's lesson today.
+  flavour: 'Tenure track: eat bamboo, grade essays, repeat.'
+  artist: Mr Lim
+
+- id: koi-pond
+  name: Koi Pond
+  rarity: rare
+  photo: koi-pond.jpg
+  text: Tidy one corner of your desk.
+  flavour: The koi have never once had an overdue task. Suspicious.
+  artist: Mdm Wong
+
+- id: holiday-mode
+  name: Holiday Mode
+  rarity: rare
+  photo: holiday-mode.jpg
+  text: Book a day off on the calendar.
+  flavour: Out of office. Out of bamboo. Out of worries.
+  artist: Mdm Wong
+
+- id: sakura-season
+  name: Sakura Season
+  rarity: epic
+  photo: sakura-season.jpg
+  text: Thank a colleague today.
+  flavour: The petals only fall for a week. So do the good moods after exams.
+  artist: Ms Tan
+
+- id: lantern-night
+  name: Lantern Night
+  rarity: epic
+  photo: lantern-night.jpg
+  text: Finish every task due today.
+  flavour: One lantern for every ticked box. The sky is getting crowded.
+  artist: Mr Lim
+
+- id: starry-snooze
+  name: Starry Snooze
+  rarity: legendary
+  photo: starry-snooze.jpg
+  text: Close the laptop on time tonight.
+  flavour: Once upon a time... ok how about we just skip to the end? The panda sleeps.
+  artist: Mdm Wong
+
+- id: golden-temple
+  name: Golden Temple
+  rarity: legendary
+  photo: golden-temple.jpg
+  text: Clear the whole week's Do next list.
+  flavour: Legends say it took the panda nine attempts and one very large snack.
+  artist: Ms Tan
