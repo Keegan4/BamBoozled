@@ -170,7 +170,7 @@ final collectionStoreProvider = Provider<CollectionStore>((ref) => CollectionSto
 final collectionProvider = StreamProvider<CollectionState>((ref) => ref.watch(collectionStoreProvider).watch());
 
 /// Decides each person's packs: the account id when signed in (so phone and computer get the same
-/// daily pack), otherwise an id made once for this install.
+/// packs), otherwise an id made once for this install.
 final packSeedProvider = FutureProvider<String>((ref) async {
   final userId = ref.watch(currentUserProvider.select((u) => u.value?.id));
   return userId ?? ref.watch(collectionStoreProvider).installId(const Uuid().v4);

@@ -6,13 +6,12 @@ import '../../domain/services/stable_random.dart';
 import '../local/app_database.dart';
 import 'card_library.dart';
 
-String dateKey(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
 /// The last pack opened, kept so its overview can be shown again.
 class OpenedPack {
   const OpenedPack(this.type, this.date, this.pulls);
   final PackType type;
+
+  /// When it was opened (ISO 8601).
   final String date;
 
   /// (card + finish key, new card, new finish)
@@ -32,21 +31,67 @@ class OpenedPack {
   return f == null ? null : (key.substring(0, i), f);
 }
 
+/// Free packs: one more every [PackTimer.every], and at most [PackTimer.max] waiting.
+abstract final class PackTimer {
+  static const every = Duration(hours: 2);
+  static const max = 2;
+}
+
 /// The card collection, kept on this device in the settings table.
 class CollectionState {
-  const CollectionState({this.copies = const {}, this.dailyOpenedOn, this.packsSinceLegendary = 0, this.last});
+  const CollectionState({
+    this.copies = const {},
+    this.stored = PackTimer.max,
+    this.refillFrom,
+    this.opened = 0,
+    this.packsSinceLegendary = 0,
+    this.last,
+  });
 
   /// card + finish key → copies owned.
   final Map<String, int> copies;
 
-  /// Date key of the last day the free daily pack was opened.
-  final String? dailyOpenedOn;
+  /// Packs waiting as of [refillFrom] (a new collection starts full).
+  final int stored;
+
+  /// When the next pack started filling. Null while full.
+  final DateTime? refillFrom;
+
+  /// Packs opened so far, which numbers each pack (and picks its cards).
+  final int opened;
   final int packsSinceLegendary;
   final OpenedPack? last;
 
   static const key = 'card_collection';
 
-  bool dailyAvailable(DateTime today) => dailyOpenedOn != dateKey(today);
+  /// Packs ready to open at [now]: [stored] plus one for each whole [PackTimer.every] since
+  /// [refillFrom], up to [PackTimer.max].
+  int packsAt(DateTime now) {
+    if (stored >= PackTimer.max || refillFrom == null) return PackTimer.max;
+    final earned = now.difference(refillFrom!).inMicroseconds ~/ PackTimer.every.inMicroseconds;
+    return (stored + (earned < 0 ? 0 : earned)).clamp(0, PackTimer.max);
+  }
+
+  /// When the next pack arrives, or null when the store is full.
+  DateTime? nextPackAt(DateTime now) {
+    if (packsAt(now) >= PackTimer.max) return null;
+    final earned = now.difference(refillFrom!).inMicroseconds ~/ PackTimer.every.inMicroseconds;
+    return refillFrom!.add(PackTimer.every * ((earned < 0 ? 0 : earned) + 1));
+  }
+
+  /// The state after one pack is taken at [now] (there must be one).
+  CollectionState _takePack(DateTime now) {
+    final have = packsAt(now);
+    assert(have > 0);
+    if (have >= PackTimer.max) {
+      // Was full: the timer starts now.
+      return copyWith(stored: have - 1, refillFrom: now);
+    }
+    // Keep the time already spent filling the next one.
+    final earned = now.difference(refillFrom!).inMicroseconds ~/ PackTimer.every.inMicroseconds;
+    final from = refillFrom!.add(PackTimer.every * (earned < 0 ? 0 : earned));
+    return copyWith(stored: have - 1, refillFrom: from);
+  }
 
   int copiesOf(String cardId) {
     var n = 0;
@@ -69,9 +114,12 @@ class CollectionState {
     try {
       final j = jsonDecode(value) as Map<String, dynamic>;
       final last = j['last'] as Map<String, dynamic>?;
+      final from = j['refillFrom'] as int?;
       return CollectionState(
         copies: {for (final e in (j['copies'] as Map<String, dynamic>? ?? {}).entries) e.key: e.value as int},
-        dailyOpenedOn: j['daily'] as String?,
+        stored: j['stored'] as int? ?? PackTimer.max,
+        refillFrom: from == null ? null : DateTime.fromMillisecondsSinceEpoch(from),
+        opened: j['opened'] as int? ?? 0,
         packsSinceLegendary: j['sinceLegendary'] as int? ?? 0,
         last: last == null
             ? null
@@ -87,7 +135,9 @@ class CollectionState {
 
   String toSetting() => jsonEncode({
     'copies': copies,
-    'daily': dailyOpenedOn,
+    'stored': stored,
+    if (refillFrom != null) 'refillFrom': refillFrom!.millisecondsSinceEpoch,
+    'opened': opened,
     'sinceLegendary': packsSinceLegendary,
     if (last != null)
       'last': {
@@ -101,12 +151,16 @@ class CollectionState {
 
   CollectionState copyWith({
     Map<String, int>? copies,
-    String? dailyOpenedOn,
+    int? stored,
+    DateTime? refillFrom,
+    int? opened,
     int? packsSinceLegendary,
     OpenedPack? last,
   }) => CollectionState(
     copies: copies ?? this.copies,
-    dailyOpenedOn: dailyOpenedOn ?? this.dailyOpenedOn,
+    stored: stored ?? this.stored,
+    refillFrom: refillFrom ?? this.refillFrom,
+    opened: opened ?? this.opened,
     packsSinceLegendary: packsSinceLegendary ?? this.packsSinceLegendary,
     last: last ?? this.last,
   );
@@ -122,13 +176,14 @@ class CollectionStore {
 
   Future<void> _save(CollectionState s) => db.setSetting(CollectionState.key, s.toSetting());
 
-  /// Opens today's free pack. It is the same for the same [seed] and day on every device. Returns
-  /// the cards, or an empty list if today's pack is already open (or there are no cards).
-  Future<List<Pull>> openDaily(CardLibrary library, String seed, DateTime today) async {
+  /// Opens a waiting pack. The n-th pack is the same for the same [seed] on every device. Returns
+  /// the cards, or an empty list if no pack is ready (or there are no cards).
+  Future<List<Pull>> openPack(CardLibrary library, String seed, DateTime now) async {
     final state = await read();
-    if (library.cards.isEmpty || !state.dailyAvailable(today)) return const [];
+    if (library.cards.isEmpty || state.packsAt(now) == 0) return const [];
     const type = PackType.bamboo;
-    final random = StableRandom('$seed#daily#${dateKey(today)}');
+    final number = state.opened + 1;
+    final random = StableRandom('$seed#pack#$number');
     final rolled = PackRoller.roll(
       library.cards,
       type,
@@ -146,12 +201,14 @@ class CollectionStore {
     }
     final gotLegendary = rolled.any((p) => p.$1.rarity == Rarity.legendary);
     await _save(
-      state.copyWith(
-        copies: copies,
-        dailyOpenedOn: dateKey(today),
-        packsSinceLegendary: gotLegendary ? 0 : state.packsSinceLegendary + 1,
-        last: OpenedPack(type, dateKey(today), [for (final p in pulls) (p.key, p.newCard, p.newFinish)]),
-      ),
+      state
+          ._takePack(now)
+          .copyWith(
+            copies: copies,
+            opened: number,
+            packsSinceLegendary: gotLegendary ? 0 : state.packsSinceLegendary + 1,
+            last: OpenedPack(type, now.toIso8601String(), [for (final p in pulls) (p.key, p.newCard, p.newFinish)]),
+          ),
     );
     return pulls;
   }

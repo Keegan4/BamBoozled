@@ -1,6 +1,9 @@
-# Daily packs (the Notes tab)
+# Card packs (the Notes tab)
 
-Every day the Notes tab has a free **Bamboo Booster** with **7 cards**.
+The Notes tab gives free **Bamboo Boosters** of **7 cards**: **a new pack every 2 hours**, and up to
+**2 packs** can wait to be opened (a new collection starts with 2). While 2 are waiting the timer
+pauses; it starts again when one is opened. The page shows how many are ready and when the next
+one arrives. The **?** next to the title explains the rarities and finishes.
 
 1. **Tear it open** by sliding a finger or the mouse across the top of the pack. A glowing cut
    follows you; let go past about 70% (or flick quickly) and the top tears off. Let go earlier and
@@ -13,8 +16,8 @@ Every day the Notes tab has a free **Bamboo Booster** with **7 cards**.
    **New finish** on a card you had, but not in this finish. Tap one for a closer look, or go to the
    binder.
 
-Once opened, the page shows today's cards (tap to see the overview again) and counts down to the
-next pack at **midnight**.
+Afterwards, **See your last pack** shows that overview again. With no packs left, the page shows
+the last pack's cards and counts down to the next pack.
 
 The **binder** (Notes → Binder) lists every card in the set by number: the ones you have in their
 showiest finish, with a ×count for duplicates and a dot per finish owned, and the rest as numbered
@@ -55,9 +58,9 @@ About **30%** of cards get a finish; the 7th card's chances are doubled.
 | Ghost | 0.3% | Pale, silvery and see-through |
 | Misprint | 0.1% | Shifted colours and a crooked banner, like a printing error |
 
-Packs are **the same for the same person on every device** for a given day (they're shuffled from
-the signed-in account, or from an id made for the device when not signed in). The collection itself
-is kept on each device.
+Packs are numbered, and a person's first pack, second pack and so on are **the same on every
+device** (they're shuffled from the signed-in account, or from an id made for the device when not
+signed in). The collection and the pack timer are kept on each device.
 
 ## Adding a card
 
@@ -107,5 +110,5 @@ The tests read the real folder on every push, so CI goes red instead of the app 
 
 - Removing a card from `cards.yaml` removes it from everyone's binder (copies are kept, so it comes
   back if the card is restored with the same id).
-- Opening packs is per device for now: the same person can open today's pack on their phone and on
-  their computer, and gets the same 7 cards on both.
+- Packs and the timer are per device for now: the same person has separate packs on their phone and
+  their computer (the n-th pack has the same cards on both).

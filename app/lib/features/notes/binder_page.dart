@@ -100,9 +100,7 @@ class BinderPage extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 40),
             child: Text(
-              filter == BinderFilter.missing
-                  ? 'You have every card. Well done!'
-                  : 'No cards here yet. Open today’s pack!',
+              filter == BinderFilter.missing ? 'You have every card. Well done!' : 'No cards here yet. Open a pack!',
               textAlign: TextAlign.center,
               style: PandaText.body.copyWith(color: p.muted),
             ),

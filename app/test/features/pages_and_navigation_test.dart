@@ -37,7 +37,7 @@ void main() {
 
       await tester.tap(rail('Notes'));
       await TestApp.settle(tester);
-      expect(find.text('Daily pack'), findsOneWidget);
+      expect(find.text('Card packs'), findsOneWidget);
       expect(find.text('Binder'), findsOneWidget);
 
       await tester.tap(rail('Settings'));
@@ -73,7 +73,7 @@ void main() {
       ('/', 'Good morning, Ms Tan'),
       ('/tasks', 'All tasks'),
       ('/calendar', 'October 2026'),
-      ('/notes', 'Daily pack'),
+      ('/notes', 'Card packs'),
       ('/settings', 'Your name'),
     ]) {
       testWidgets('opening $path directly shows the right page', (tester) async {
@@ -111,7 +111,7 @@ void main() {
       expect(find.text('Calendar'), findsWidgets);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Notes')));
       await TestApp.settle(tester);
-      expect(find.text('Daily pack'), findsOneWidget);
+      expect(find.text('Card packs'), findsOneWidget);
       await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text('Play')));
       await TestApp.settle(tester);
       expect(find.text('Bamboo Trivia'), findsOneWidget);
@@ -226,7 +226,7 @@ void main() {
       final app = await TestApp.create();
       for (final size in [phone, const Size(800, 900), const Size(1440, 900)]) {
         await app.pump(tester, size: size, location: '/notes');
-        expect(find.text('Daily pack'), findsOneWidget);
+        expect(find.text('Card packs'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       }

@@ -1,6 +1,6 @@
 # Idea: daily card packs, a binder and the Panda Exchange
 
-Status: **partly built.** The daily pack, the stack, the overview, the binder and all the finishes
+Status: **partly built.** Free packs (one every 2 hours, up to 2 waiting, instead of one a day), the stack, the overview, the binder and all the finishes
 are in the app (see [../card-packs.md](../card-packs.md)). The Panda Exchange and bought packs are
 not built yet; the pack types and costs are already in `pack_roller.dart`.
 

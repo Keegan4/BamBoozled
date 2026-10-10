@@ -17,7 +17,7 @@ The welcome page has:
 - **This week:** the *due*, *done* and *overdue* boxes are buttons. Click one to see those tasks.
 - **Finished tasks stay visible:** a "Recently done" section sits under "Do next", and the Status filter has a Done view.
 - **Canvas assignments:** connect a Canvas calendar feed in Settings and your assignments appear as tasks (see [Canvas](#canvas) below).
-- **Notes: a daily pack:** a free pack of 7 collectible cards a day. Tear it open by sliding across the top, swipe through the cards, and collect them in a binder. Cards have rarities and rare finishes (holo, gold, cosmos and more). Add your own photos: see [docs/card-packs.md](docs/card-packs.md).
+- **Notes: card packs:** a free pack of 7 collectible cards every 2 hours, with up to 2 waiting. Tear one open by sliding across the top, swipe through the cards, and collect them in a binder. Cards have rarities and rare finishes (holo, gold, cosmos and more), explained in the tab's help. Add your own photos: see [docs/card-packs.md](docs/card-packs.md).
 - **Repeating tasks:** ticking a Daily, Weekly or Monthly task marks it done, and the next one appears the day after. A repeating task can only be ticked from one repeat before its due date, so it can't be pushed weeks ahead by accident.
 
 ## Milestone 2 — Dark mode
@@ -194,7 +194,7 @@ BamBoozled/
 ├── README.md
 ├── docs/
 │   ├── task-format.md              # recommended task format
-│   ├── card-packs.md               # the Notes tab's daily packs, and adding cards
+│   ├── card-packs.md               # the Notes tab's card packs, and adding cards
 │   ├── ideas/daily-packs.md        # the pack idea in full, including the exchange (not built)
 │   ├── trivia.md                   # the Play tab's trivia rules and question bank
 │   └── priority-algorithm.md       # "Do next" scoring

@@ -8,6 +8,7 @@ import 'package:bamboozled/features/notes/binder_page.dart';
 import 'package:bamboozled/features/notes/widgets/booster_pack.dart';
 import 'package:bamboozled/features/notes/widgets/card_detail.dart';
 import 'package:bamboozled/features/notes/widgets/collectible_card.dart';
+import 'package:bamboozled/features/notes/widgets/pack_help.dart';
 import 'package:bamboozled/features/notes/widgets/pack_opening.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers.dart';
 
 const phone = Size(412, 915);
-final pack = find.byKey(const ValueKey('booster-pack'));
+
+/// The pack in front (a second waiting pack peeks out behind it, but can't be touched).
+final pack = find.byKey(const ValueKey('booster-pack')).hitTestable();
 final stackTop = find.byKey(const ValueKey('stack-top'));
 
 /// Lets drift (real async), the pack's animations and the overlay all finish.
@@ -43,13 +46,16 @@ Future<void> own(TestApp app, Map<String, int> copies) =>
     app.db.setSetting(CollectionState.key, CollectionState(copies: copies).toSetting());
 
 void main() {
-  group('daily pack', () {
+  group('card packs', () {
     testWidgets('starts sealed, with the binder empty', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
       await app.pump(tester, location: '/notes');
-      expect(find.text('Daily pack'), findsOneWidget);
+      expect(find.text('Card packs'), findsOneWidget);
       expect(pack, findsOneWidget);
-      expect(find.text('Slide across the top of the pack to tear it open.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('spare-pack')), findsOneWidget);
+      expect(find.text('2 packs ready. Slide across the top to tear one open.'), findsOneWidget);
+      expect(find.text('2 of 2 packs ready'), findsOneWidget);
+      expect(find.text('See your last pack'), findsNothing);
       expect(find.text('0 of 12 cards collected'), findsOneWidget);
       expect(find.bySemanticsLabel(RegExp('Bamboo Booster, sealed')), findsOneWidget);
       await app.dispose(tester);
@@ -87,7 +93,8 @@ void main() {
 
       final saved = (await tester.runAsync(() => collection(app)))!;
       expect(saved.copies.values.fold<int>(0, (a, b) => a + b), 7);
-      expect(saved.dailyOpenedOn, '2026-10-08');
+      expect(saved.opened, 1);
+      expect(saved.packsAt(testNow), 1);
 
       // Tap, swipe either way, or use the keyboard: each slides the top card off.
       await tester.tap(stackTop);
@@ -118,7 +125,7 @@ void main() {
       await settleFully(tester);
 
       // Then the overview, with the new ones marked.
-      expect(find.text('Today’s pack'), findsOneWidget);
+      expect(find.text('Your pack'), findsOneWidget);
       final pulls = saved.last!.pulls;
       expect(find.text('New'), findsNWidgets(pulls.where((p) => p.$2).length));
       expect(find.text('New finish'), findsNWidgets(pulls.where((p) => p.$3).length));
@@ -129,9 +136,20 @@ void main() {
       await tester.tap(find.text('Done'));
       await settleFully(tester);
       expect(find.byType(PackOpening), findsNothing);
+      // One pack is left, and the next starts filling.
+      expect(pack, findsOneWidget);
+      expect(find.byKey(const ValueKey('spare-pack')), findsNothing);
+      expect(find.text('1 pack ready, another in 2 h. Slide across the top to tear it open.'), findsOneWidget);
+      expect(find.text('See your last pack'), findsOneWidget);
+
+      // The second pack starts sealed and opens the same way.
+      await slide(tester);
+      expect(count(tester), '1 / 7');
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
       expect(pack, findsNothing);
-      expect(find.text('Today’s pack is open. A new one in 15 h.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('todays-fan')), findsOneWidget);
+      expect(find.text('No packs ready. The next one arrives in 2 h.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('last-fan')), findsOneWidget);
       await app.dispose(tester);
     });
 
@@ -159,20 +177,20 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await settleFully(tester);
       expect(find.byType(PackOpening), findsNothing);
-      expect(find.text('See today’s cards'), findsOneWidget);
+      expect(find.text('See your last pack'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('today’s cards can be seen again, looked at closely, and lead to the binder', (tester) async {
+    testWidgets('the last pack can be seen again, looked at closely, and lead to the binder', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
       await app.pump(tester, size: phone, location: '/notes');
       await slide(tester);
       await tester.tap(find.byTooltip('Close'));
       await settleFully(tester);
 
-      await tester.tap(find.text('See today’s cards'));
+      await tester.tap(find.text('See your last pack'));
       await settleFully(tester);
-      expect(find.text('Today’s pack'), findsOneWidget, reason: 'goes straight to the overview');
+      expect(find.text('Your pack'), findsOneWidget, reason: 'goes straight to the overview');
       expect(find.byKey(const ValueKey('stack-count')), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('overview-0')));
@@ -191,37 +209,44 @@ void main() {
       await app.dispose(tester);
     });
 
-    testWidgets('the fan of today’s cards opens the overview too', (tester) async {
+    testWidgets('once both packs are open, the fan of the last one opens its overview', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
       await app.pump(tester, location: '/notes');
-      await slide(tester);
-      await tester.tapAt(const Offset(4, 4));
+      for (var i = 0; i < 2; i++) {
+        await slide(tester);
+        await tester.tapAt(const Offset(4, 4));
+        await settleFully(tester);
+        expect(find.byType(PackOpening), findsNothing, reason: 'tapping the blurred background closes it');
+      }
+      await tester.tap(find.byKey(const ValueKey('last-fan')));
       await settleFully(tester);
-      expect(find.byType(PackOpening), findsNothing, reason: 'tapping the blurred background closes it');
-      await tester.tap(find.byKey(const ValueKey('todays-fan')));
-      await settleFully(tester);
-      expect(find.text('Today’s pack'), findsOneWidget);
+      expect(find.text('Your pack'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('a new pack comes the next day', (tester) async {
+    testWidgets('a pack comes back after 2 hours', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      await app.db.setSetting(CollectionState.key, const CollectionState(dailyOpenedOn: '2026-10-07').toSetting());
+      await app.db.setSetting(
+        CollectionState.key,
+        CollectionState(stored: 0, refillFrom: testNow.subtract(const Duration(hours: 2, minutes: 10))).toSetting(),
+      );
       await app.pump(tester, location: '/notes');
       expect(pack, findsOneWidget);
+      expect(find.text('1 of 2 packs ready'), findsOneWidget);
+      expect(find.text('1 pack ready, another in 1 h 50 min. Slide across the top to tear it open.'), findsOneWidget);
       await app.dispose(tester);
     });
 
-    testWidgets('the countdown reads naturally near midnight', (tester) async {
+    testWidgets('the countdown reads naturally', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      await app.db.setSetting(CollectionState.key, const CollectionState(dailyOpenedOn: '2026-10-08').toSetting());
+      await app.db.setSetting(CollectionState.key, CollectionState(stored: 0, refillFrom: testNow).toSetting());
       for (final (time, text) in [
-        (DateTime(2026, 10, 8, 23, 59, 30), 'in a minute'),
-        (DateTime(2026, 10, 8, 23, 20), 'in 40 min'),
-        (DateTime(2026, 10, 8, 21, 30), 'in 2 h 30 min'),
+        (testNow.add(const Duration(minutes: 119, seconds: 30)), 'in a minute'),
+        (testNow.add(const Duration(minutes: 80)), 'in 40 min'),
+        (testNow.add(const Duration(minutes: 30)), 'in 1 h 30 min'),
       ]) {
         await app.pump(tester, location: '/notes', now: time);
-        expect(find.text('Today’s pack is open. A new one $text.'), findsOneWidget);
+        expect(find.text('No packs ready. The next one arrives $text.'), findsOneWidget);
         await tester.pumpWidget(const SizedBox());
       }
       await app.dispose(tester);
@@ -267,6 +292,38 @@ void main() {
     });
   });
 
+  testWidgets('the help explains rarities, odds and every finish', (tester) async {
+    final app = await TestApp.create(withSampleTasks: false);
+    await app.pump(tester, size: phone, location: '/notes');
+    await tester.tap(find.byTooltip('About packs'));
+    await settleFully(tester);
+    expect(find.text('About packs'), findsOneWidget);
+    expect(find.textContaining('A new pack arrives every 2 hours, and up to 2 can wait'), findsOneWidget);
+    final table = find.byKey(const ValueKey('rarity-table'));
+    for (final r in Rarity.values) {
+      expect(find.descendant(of: table, matching: find.text(r.label)), findsOneWidget);
+    }
+    expect(find.descendant(of: table, matching: find.text('80%')), findsOneWidget);
+    expect(find.descendant(of: table, matching: find.text('60%')), findsOneWidget);
+    expect(find.textContaining('About 30% of cards get a finish'), findsOneWidget);
+    for (final f in Finish.values) {
+      final row = find.byKey(ValueKey('help-${f.key}'));
+      await tester.scrollUntilVisible(row, 200, scrollable: find.byType(Scrollable).last);
+      expect(
+        find.descendant(of: row, matching: find.text(f.label)),
+        findsWidgets,
+        reason: f.label,
+      );
+      expect(find.descendant(of: row, matching: find.text(finishDescriptions[f]!)), findsOneWidget);
+      expect(find.descendant(of: row, matching: find.byType(CollectibleCard)), findsOneWidget);
+    }
+    expect(find.text('0.1%'), findsOneWidget, reason: 'misprint');
+    await tester.tap(find.byTooltip('Close'));
+    await settleFully(tester);
+    expect(find.text('About packs'), findsNothing);
+    await app.dispose(tester);
+  });
+
   group('binder', () {
     testWidgets('shows progress, copies, finishes and gaps', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
@@ -296,7 +353,7 @@ void main() {
       await TestApp.settle(tester);
       await tester.tap(find.text('Notes').first);
       await TestApp.settle(tester);
-      expect(find.text('Daily pack'), findsOneWidget);
+      expect(find.text('Card packs'), findsOneWidget);
       await app.dispose(tester);
     });
 
@@ -331,7 +388,7 @@ void main() {
       await app.pump(tester, location: '/notes/binder');
       await tester.tap(find.text('Collected'));
       await TestApp.settle(tester);
-      expect(find.text('No cards here yet. Open today’s pack!'), findsOneWidget);
+      expect(find.text('No cards here yet. Open a pack!'), findsOneWidget);
       await app.dispose(tester);
     });
 

@@ -12,7 +12,7 @@ import 'collectible_card.dart';
 
 /// Shows a freshly opened pack over the blurred app: the cards in a face-up stack, each tap or
 /// swipe sliding the top one away, then an overview of all of them with the new ones marked.
-/// With [overview], it goes straight to the overview (for looking at today's cards again).
+/// With [overview], it goes straight to the overview (for looking at the last pack again).
 Future<void> showPackOpening(
   BuildContext context,
   List<Pull> pulls, {
@@ -205,7 +205,7 @@ class _PackOpeningState extends State<PackOpening> with SingleTickerProviderStat
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Today’s pack', style: PandaText.display.copyWith(color: Colors.white)),
+              Text('Your pack', style: PandaText.display.copyWith(color: Colors.white)),
               const SizedBox(height: 4),
               Text(
                 summary.isEmpty
