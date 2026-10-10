@@ -59,7 +59,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/daily_notes/
+    - assets/cards/
     - assets/trivia/
   fonts:
     - family: Nunito

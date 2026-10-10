@@ -7,6 +7,7 @@ import 'core/layout/compact_scale.dart';
 import 'core/theme/panda_theme.dart';
 import 'data/providers.dart';
 import 'features/calendar/calendar_page.dart';
+import 'features/notes/binder_page.dart';
 import 'features/notes/notes_page.dart';
 import 'features/play/play_page.dart';
 import 'features/settings/settings_page.dart';
@@ -34,6 +35,12 @@ GoRouter buildRouter({String initialLocation = '/'}) => GoRouter(
         GoRoute(
           path: '/notes',
           pageBuilder: (_, _) => const NoTransitionPage(child: NotesPage()),
+          routes: [
+            GoRoute(
+              path: 'binder',
+              pageBuilder: (_, _) => const NoTransitionPage(child: BinderPage()),
+            ),
+          ],
         ),
         GoRoute(
           path: '/play',

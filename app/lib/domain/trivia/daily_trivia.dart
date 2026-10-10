@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import '../services/daily_note_picker.dart';
 import '../services/stable_random.dart';
 import 'trivia_question.dart';
 
@@ -52,7 +51,7 @@ class DailyTrivia {
           ]..sort((a, b) => a.question.compareTo(b.question)),
       };
 
-  /// Days since 1 January 2026 ([DailyNotePicker.dayIndex]).
+  /// Days since 1 January 2026 ([dayFor]).
   final int day;
 
   /// 1 for the day's first try, 2 for the second.
@@ -63,7 +62,11 @@ class DailyTrivia {
 
   static const _perDay = {TriviaDifficulty.easy: 5, TriviaDifficulty.medium: 7, TriviaDifficulty.hard: 8};
 
-  static int dayFor(DateTime date) => DailyNotePicker.dayIndex(date);
+  static final _epoch = DateTime.utc(2026);
+
+  /// Whole days from 1 January 2026 to [date]'s calendar day (local date, counted in UTC so daylight
+  /// saving changes can't make a day 23 or 25 hours long).
+  static int dayFor(DateTime date) => DateTime.utc(date.year, date.month, date.day).difference(_epoch).inDays;
 
   bool get isEmpty => _pools.values.every((p) => p.isEmpty);
 

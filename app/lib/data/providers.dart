@@ -9,15 +9,13 @@ import 'package:uuid/uuid.dart';
 
 import '../core/theme/appearance.dart';
 import '../domain/models/category.dart';
-import '../domain/models/daily_note.dart';
-import '../domain/services/daily_note_picker.dart';
 import '../domain/models/task.dart';
 import '../domain/trivia/daily_trivia.dart';
 import '../domain/trivia/trivia_question.dart';
 import '../domain/trivia/trivia_run.dart';
 import 'canvas/canvas_service.dart';
-import 'daily_notes/daily_note_library.dart';
-import 'daily_notes/daily_note_store.dart';
+import 'cards/card_library.dart';
+import 'cards/collection_store.dart';
 import 'trivia/trivia_store.dart';
 import 'local/app_database.dart';
 import 'remote/auth_service.dart';
@@ -160,38 +158,22 @@ final themeModeProvider = Provider<ThemeMode>((ref) {
   return ref.watch(clockProvider.select(appearance.themeModeAt));
 });
 
-// ---- Daily cards (Notes tab) ----
+// ---- Card packs (Notes tab) ----
 
 /// Where bundled files come from. Tests can swap in their own.
 final assetBundleProvider = Provider<AssetBundle>((ref) => rootBundle);
 
-final dailyNotesProvider = FutureProvider<DailyNoteLibrary>((ref) => loadDailyNotes(ref.watch(assetBundleProvider)));
+final cardLibraryProvider = FutureProvider<CardLibrary>((ref) => loadCards(ref.watch(assetBundleProvider)));
 
-final dailyNoteStoreProvider = Provider<DailyNoteStore>((ref) => DailyNoteStore(ref.watch(databaseProvider)));
+final collectionStoreProvider = Provider<CollectionStore>((ref) => CollectionStore(ref.watch(databaseProvider)));
 
-final dailyNoteStateProvider = StreamProvider<DailyNoteState>((ref) => ref.watch(dailyNoteStoreProvider).watch());
+final collectionProvider = StreamProvider<CollectionState>((ref) => ref.watch(collectionStoreProvider).watch());
 
-/// Shuffles the cards per person: the account id when signed in (so phone and computer agree),
-/// otherwise an id made once for this install.
-final dailyNoteSeedProvider = FutureProvider<String>((ref) async {
+/// Decides each person's packs: the account id when signed in (so phone and computer get the same
+/// daily pack), otherwise an id made once for this install.
+final packSeedProvider = FutureProvider<String>((ref) async {
   final userId = ref.watch(currentUserProvider.select((u) => u.value?.id));
-  return userId ?? ref.watch(dailyNoteStoreProvider).installId(const Uuid().v4);
-});
-
-/// Today's card, or null when there are no cards. A card already revealed today stays today's card,
-/// even if the shuffle would now pick another (e.g. after signing in).
-final todaysNoteProvider = Provider<AsyncValue<DailyNote?>>((ref) {
-  final today = ref.watch(clockProvider.select((d) => DateTime(d.year, d.month, d.day)));
-  final library = ref.watch(dailyNotesProvider);
-  final state = ref.watch(dailyNoteStateProvider);
-  final seed = ref.watch(dailyNoteSeedProvider);
-  if (library.hasError) return AsyncValue.error(library.error!, library.stackTrace!);
-  if (!library.hasValue || !state.hasValue || !seed.hasValue) return const AsyncValue.loading();
-  final notes = {for (final n in library.value!.notes) n.id: n};
-  final pinned = notes[state.value!.opened[DailyNoteState.dateKey(today)]];
-  if (pinned != null) return AsyncValue.data(pinned);
-  final id = DailyNotePicker.pick(notes.keys, seed.value!, today);
-  return AsyncValue.data(id == null ? null : notes[id]);
+  return userId ?? ref.watch(collectionStoreProvider).installId(const Uuid().v4);
 });
 
 // ---- Daily trivia (Play tab) ----

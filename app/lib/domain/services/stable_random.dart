@@ -1,6 +1,6 @@
 /// A tiny seeded random-number generator that gives the same numbers on phones, desktops and in the
 /// browser (`dart:math`'s Random doesn't promise that), for anything that must match on every device
-/// without syncing, such as the daily card and the daily trivia questions.
+/// without syncing, such as the daily card pack and the daily trivia questions.
 class StableRandom {
   /// Seeded from a string, e.g. `'trivia#easy#3'`.
   StableRandom(String seed) : _state = fnv1a(seed);
@@ -16,8 +16,23 @@ class StableRandom {
     return (t ^ (t >>> 14)) & 0xffffffff;
   }
 
+  /// 0 ≤ result < 1.
+  double nextDouble() => _next() / 0x100000000;
+
   /// 0 ≤ result < [max].
-  int nextInt(int max) => (_next() / 0x100000000 * max).floor();
+  int nextInt(int max) => (nextDouble() * max).floor();
+
+  /// Picks a key with probability proportional to its weight. Zero weights are never picked.
+  T pick<T>(Map<T, double> weights) {
+    final entries = weights.entries.where((e) => e.value > 0).toList();
+    final total = entries.fold<double>(0, (s, e) => s + e.value);
+    var r = nextDouble() * total;
+    for (final e in entries) {
+      r -= e.value;
+      if (r < 0) return e.key;
+    }
+    return entries.last.key;
+  }
 
   /// A shuffled copy of [items] (Fisher–Yates).
   List<T> shuffled<T>(Iterable<T> items) {

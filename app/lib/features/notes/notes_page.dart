@@ -1,18 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/layout/breakpoints.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/panda_theme.dart';
-import '../../core/utils/dates.dart';
 import '../../core/widgets/panda_mascot.dart';
-import '../../data/daily_notes/daily_note_store.dart';
+import '../../data/cards/collection_store.dart';
 import '../../data/providers.dart';
-import '../../domain/models/daily_note.dart';
-import 'widgets/daily_card.dart';
-import 'widgets/note_viewer.dart';
+import '../../domain/models/cards.dart';
+import 'widgets/booster_pack.dart';
+import 'widgets/collectible_card.dart';
+import 'widgets/pack_opening.dart';
 
-/// The Notes tab: one surprise card a day, plus the cards collected so far.
+/// The Notes tab: a free pack of 7 cards a day, opened by tearing off the top, and the binder.
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
 
@@ -22,81 +25,61 @@ class NotesPage extends ConsumerWidget {
     final phone = Breakpoints.isPhone(context);
     final now = ref.watch(clockProvider);
     final today = DateTime(now.year, now.month, now.day);
-    final note = ref.watch(todaysNoteProvider);
-    final state = ref.watch(dailyNoteStateProvider).value ?? const DailyNoteState();
-    final library = ref.watch(dailyNotesProvider).value?.notes ?? const <DailyNote>[];
-    final stage = state.stageOn(today);
+    final library = ref.watch(cardLibraryProvider);
+    final collection = ref.watch(collectionProvider);
+    final cards = library.value?.cards ?? const <CardDef>[];
+    final state = collection.value ?? const CollectionState();
+    final available = state.dailyAvailable(today);
+    final todays = state.last != null && state.last!.date == dateKey(today) && library.value != null
+        ? state.last!.resolve(library.value!)
+        : const <Pull>[];
 
-    // Today's card opens in the focused viewer; whatever happens there is saved, so the card on the
-    // page (a preview) and the collection keep up.
-    Future<void> openToday(DailyNote n) => showNoteViewer(
-      context,
-      n,
-      footer: formatShortDate(today, now),
-      initialStage: stage,
-      onStageChanged: (s) => ref.read(dailyNoteStoreProvider).setStage(today, n.id, s),
-    );
+    void seeBinder() => context.go('/notes/binder');
 
-    final notesById = {for (final n in library) n.id: n};
-    final collected = [
-      for (final (date, id) in state.history)
-        if (notesById[id] case final n?) (date, n),
-    ];
+    Future<void> open() async {
+      final lib = library.value;
+      if (lib == null) return;
+      final seed = await ref.read(packSeedProvider.future);
+      final pulls = await ref.read(collectionStoreProvider).openDaily(lib, seed, today);
+      if (pulls.isEmpty || !context.mounted) return;
+      await showPackOpening(context, pulls, onSeeBinder: seeBinder);
+    }
+
+    final loading = !library.hasValue || !collection.hasValue;
+    final owned = cards.where((c) => state.copiesOf(c.id) > 0).length;
+    final packWidth = math.min(260.0, MediaQuery.sizeOf(context).width - 96);
 
     return ListView(
       padding: EdgeInsets.fromLTRB(phone ? 16 : 40, phone ? 20 : 32, phone ? 16 : 40, 40),
       children: [
-        Text('Today’s card', style: phone ? PandaText.title : PandaText.display),
+        Text('Daily pack', style: phone ? PandaText.title : PandaText.display),
         const SizedBox(height: 4),
         Text(
-          note.value == null
+          loading || cards.isEmpty
               ? ''
-              : stage == CardStage.hidden
-              ? 'Open today’s card to reveal the photo.'
-              : 'A new card ${_untilMidnight(now)}.',
-          key: const ValueKey('card-hint'),
+              : available
+              ? 'Slide across the top of the pack to tear it open.'
+              : 'Today’s pack is open. A new one ${_untilMidnight(now)}.',
+          key: const ValueKey('pack-hint'),
           style: PandaText.body.copyWith(color: p.muted),
         ),
-        const SizedBox(height: 20),
-        switch (note) {
-          AsyncData(value: final n?) => Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 380),
-              child: DailyCard(
-                key: const ValueKey('todays-card'),
-                note: n,
-                stage: stage,
-                onTap: () => openToday(n),
-                footer: formatShortDate(today, now),
-                actionLabel: 'Tap to open',
-              ),
-            ),
+        const SizedBox(height: 24),
+        if (loading)
+          const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()))
+        else if (cards.isEmpty)
+          const _NoCards()
+        else if (available)
+          Center(
+            child: BoosterPack(key: const ValueKey('daily-pack'), width: packWidth, onOpened: open),
+          )
+        else
+          _OpenedToday(
+            pulls: todays,
+            onSee: () => showPackOpening(context, todays, overview: true, onSeeBinder: seeBinder),
           ),
-          AsyncData() || AsyncError() => const _NoCards(),
-          _ => const SizedBox(height: 300, child: Center(child: CircularProgressIndicator())),
-        },
-        if (collected.isNotEmpty) ...[
+        if (!loading && cards.isNotEmpty) ...[
           const SizedBox(height: 36),
-          Text('Collected · ${collected.length}', style: PandaText.title),
-          const SizedBox(height: 4),
-          Text('Tap a card to look at it again.', style: PandaText.caption.copyWith(color: p.muted)),
-          const SizedBox(height: 14),
-          GridView(
-            key: const ValueKey('collected'),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            // Thumbnails stay small: 3 across on a phone, more on wider screens.
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 160,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 12,
-              childAspectRatio: 4 / 5.9,
-            ),
-            children: [
-              for (final (date, n) in collected)
-                _CollectedThumb(note: n, label: formatShortDate(date, now), today: date == today),
-            ],
-          ),
+          _BinderSummary(owned: owned, total: cards.length, onOpen: seeBinder),
         ],
       ],
     );
@@ -111,48 +94,109 @@ class NotesPage extends ConsumerWidget {
   }
 }
 
-class _CollectedThumb extends StatelessWidget {
-  const _CollectedThumb({required this.note, required this.label, required this.today});
+/// Today's cards, fanned out small, with a button to look through them again.
+class _OpenedToday extends StatelessWidget {
+  const _OpenedToday({required this.pulls, required this.onSee});
 
-  final DailyNote note;
-  final String label;
-  final bool today;
+  final List<Pull> pulls;
+  final VoidCallback onSee;
+
+  @override
+  Widget build(BuildContext context) {
+    const w = 84.0;
+    final shown = pulls.take(7).toList();
+    final fanWidth = math.min(MediaQuery.sizeOf(context).width - 64, w + (shown.length - 1) * 36.0);
+    final step = shown.length < 2 ? 0.0 : (fanWidth - w) / (shown.length - 1);
+    return Column(
+      children: [
+        if (shown.isNotEmpty)
+          Semantics(
+            label: 'Today’s cards: ${shown.map((x) => x.card.name).join(', ')}',
+            excludeSemantics: true,
+            child: GestureDetector(
+              onTap: onSee,
+              child: SizedBox(
+                key: const ValueKey('todays-fan'),
+                width: fanWidth,
+                height: w * CollectibleCard.aspect + 16,
+                child: Stack(
+                  children: [
+                    for (final (i, pull) in shown.indexed)
+                      Positioned(
+                        left: i * step,
+                        top: 8 + ((i - (shown.length - 1) / 2).abs() * 2),
+                        child: Transform.rotate(
+                          angle: (i - (shown.length - 1) / 2) * 0.05,
+                          child: CollectibleCard(card: pull.card, finish: pull.finish, width: w),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: 20),
+        if (shown.isNotEmpty)
+          FilledButton.icon(
+            onPressed: onSee,
+            icon: const Icon(Icons.style_rounded),
+            label: const Text('See today’s cards'),
+          ),
+      ],
+    );
+  }
+}
+
+class _BinderSummary extends StatelessWidget {
+  const _BinderSummary({required this.owned, required this.total, required this.onOpen});
+
+  final int owned;
+  final int total;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
     final p = context.panda;
-    final caption = today ? 'Today' : label;
-    return Semantics(
-      button: true,
-      label: '${note.title ?? 'Card'}, opened $caption. Open it.',
-      excludeSemantics: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 4 / 5,
-            child: Material(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(PandaSizes.tileRadius),
-                side: BorderSide(color: p.line),
+    return Material(
+      color: p.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(PandaSizes.cardRadius),
+        side: BorderSide(color: p.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const ValueKey('binder-summary'),
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Icon(Icons.collections_bookmark_rounded, color: p.bambooDark, size: 32),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Binder', style: PandaText.heading),
+                    Text('$owned of $total cards collected', style: PandaText.caption.copyWith(color: p.muted)),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(PandaSizes.pill),
+                      child: LinearProgressIndicator(
+                        value: total == 0 ? 0 : owned / total,
+                        minHeight: 6,
+                        color: p.bamboo,
+                        backgroundColor: p.line,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Ink.image(
-                image: AssetImage(note.photo),
-                fit: BoxFit.cover,
-                child: InkWell(onTap: () => showNoteViewer(context, note, footer: caption)),
-              ),
-            ),
+              const SizedBox(width: 12),
+              Icon(Icons.chevron_right_rounded, color: p.muted),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            caption,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: PandaText.caption.copyWith(color: p.muted),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -171,7 +215,7 @@ class _NoCards extends StatelessWidget {
         const Text('No cards yet', style: PandaText.title, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Text(
-          'Add photos and messages to assets/daily_notes to start getting a card a day.',
+          'Add photos to assets/cards and list them in cards.yaml to start opening packs.',
           style: PandaText.body.copyWith(color: context.panda.muted),
           textAlign: TextAlign.center,
         ),
