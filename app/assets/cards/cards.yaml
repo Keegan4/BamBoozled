@@ -10,6 +10,7 @@
 #   artist   optional: credited in the binder, and signed on "Signed" cards
 #   set      optional: the set name shown in the binder (default: Bamboo Grove)
 #   exclude  optional: finishes this card never gets, e.g. [misprint, ghost]
+#   themes   optional: the themes (from themes.yaml) this card belongs to, e.g. [school-day]
 #
 # Cards are numbered in the order they appear here, so add new cards at the end.
 
@@ -20,6 +21,7 @@
   text: Take a proper lunch break today.
   flavour: Pandas spend up to 14 hours a day eating. Nobody has ever told them to hurry.
   artist: Ms Tan
+  themes: [garden-seasons]
 
 - id: early-start
   name: Early Start
@@ -28,6 +30,7 @@
   text: Do the hardest task before 10 am.
   flavour: The sun is up. The coffee is up. The marking pile is also, unfortunately, up.
   artist: Ms Tan
+  themes: [school-day]
 
 - id: tea-break
   name: Tea Break
@@ -36,6 +39,7 @@
   text: Step away for five minutes.
   flavour: '"I''ll just reply to one email first," said the tea, now cold.'
   artist: Mr Lim
+  themes: [school-day]
 
 - id: rainy-recess
   name: Rainy Recess
@@ -44,6 +48,7 @@
   text: Plan one indoor activity for wet weather.
   flavour: Forty students. One classroom. Zero dry shoes.
   artist: Mr Lim
+  themes: [school-day]
 
 - id: long-climb
   name: Long Climb
@@ -52,6 +57,7 @@
   text: Break a big task into three steps.
   flavour: Every summit is just a lot of small steps that refused to stop.
   artist: Ms Tan
+  themes: [after-hours]
 
 - id: panda-professor
   name: Panda Professor
@@ -60,6 +66,7 @@
   text: Prepare tomorrow's lesson today.
   flavour: 'Tenure track: eat bamboo, grade essays, repeat.'
   artist: Mr Lim
+  themes: [school-day]
 
 - id: koi-pond
   name: Koi Pond
@@ -68,6 +75,7 @@
   text: Tidy one corner of your desk.
   flavour: The koi have never once had an overdue task. Suspicious.
   artist: Mdm Wong
+  themes: [garden-seasons]
 
 - id: holiday-mode
   name: Holiday Mode
@@ -76,6 +84,7 @@
   text: Book a day off on the calendar.
   flavour: Out of office. Out of bamboo. Out of worries.
   artist: Mdm Wong
+  themes: [after-hours]
 
 - id: sakura-season
   name: Sakura Season
@@ -84,6 +93,7 @@
   text: Thank a colleague today.
   flavour: The petals only fall for a week. So do the good moods after exams.
   artist: Ms Tan
+  themes: [garden-seasons]
 
 - id: lantern-night
   name: Lantern Night
@@ -92,6 +102,7 @@
   text: Finish every task due today.
   flavour: One lantern for every ticked box. The sky is getting crowded.
   artist: Mr Lim
+  themes: [after-hours]
 
 - id: starry-snooze
   name: Starry Snooze
@@ -100,6 +111,7 @@
   text: Close the laptop on time tonight.
   flavour: Once upon a time... ok how about we just skip to the end? The panda sleeps.
   artist: Mdm Wong
+  themes: [after-hours]
 
 - id: golden-temple
   name: Golden Temple
@@ -108,3 +120,4 @@
   text: Clear the whole week's Do next list.
   flavour: Legends say it took the panda nine attempts and one very large snack.
   artist: Ms Tan
+  themes: [garden-seasons]

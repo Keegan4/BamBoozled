@@ -103,6 +103,7 @@ class CardDef {
     this.artist,
     this.set = 'Bamboo Grove',
     this.excluded = const {},
+    this.themes = const [],
   });
 
   final String id;
@@ -120,10 +121,34 @@ class CardDef {
   final String set;
   final Set<Finish> excluded;
 
+  /// Ids of the themes (from themes.yaml) this card belongs to.
+  final List<String> themes;
+
+  /// The finishes this card can come in.
+  List<Finish> get possibleFinishes => [
+    for (final f in Finish.values)
+      if (!excluded.contains(f)) f,
+  ];
+
   String get numberLabel => '#${number.toString().padLeft(3, '0')}';
 
   @override
   String toString() => 'CardDef($id)';
+}
+
+/// A group of cards with something in common. Collecting every card in it unlocks its [story].
+class StoryTheme {
+  const StoryTheme({required this.id, required this.name, required this.story, this.blurb});
+
+  final String id;
+  final String name;
+
+  /// One line shown before it's unlocked, e.g. "Life in the staffroom".
+  final String? blurb;
+  final String story;
+
+  @override
+  String toString() => 'StoryTheme($id)';
 }
 
 /// A card as pulled from a pack.

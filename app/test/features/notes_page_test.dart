@@ -9,9 +9,12 @@ import 'package:bamboozled/features/notes/widgets/booster_pack.dart';
 import 'package:bamboozled/features/notes/widgets/card_detail.dart';
 import 'package:bamboozled/features/notes/widgets/collectible_card.dart';
 import 'package:bamboozled/features/notes/widgets/pack_help.dart';
+import 'package:bamboozled/features/notes/widgets/rarity_fanfare.dart';
 import 'package:bamboozled/features/notes/widgets/pack_opening.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers.dart';
@@ -367,10 +370,24 @@ void main() {
       expect(find.byKey(const ValueKey('card-lore')), findsOneWidget);
       expect(find.textContaining('Pandas spend up to 14 hours'), findsOneWidget);
       expect(find.text('Photo: Ms Tan'), findsOneWidget);
-      expect(find.text('FINISHES OWNED'), findsOneWidget);
+      expect(find.text('FINISHES · 2 OF ${Finish.values.length} COLLECTED'), findsOneWidget);
       CollectibleCard big() => tester.widget(find.byKey(const ValueKey('detail-card')));
       expect(big().finish, Finish.holo);
       expect(find.text('No finish ×2'), findsOneWidget);
+
+      // Finishes not collected yet are listed, greyed out, and can't be picked.
+      final gold = find.byKey(const ValueKey('finish-gold'));
+      expect(gold, findsOneWidget);
+      expect(find.descendant(of: gold, matching: find.byType(ChoiceChip)), findsNothing);
+      expect(find.bySemanticsLabel('Gold, not collected yet'), findsOneWidget);
+      expect(
+        find.descendant(of: find.byKey(const ValueKey('card-lore')), matching: find.byType(ChoiceChip)),
+        findsNWidgets(2),
+      );
+      await tester.ensureVisible(gold);
+      await tester.tap(gold);
+      await tester.pump();
+      expect(big().finish, Finish.holo);
 
       await tester.ensureVisible(find.byKey(const ValueKey('finish-none')));
       await tester.tap(find.byKey(const ValueKey('finish-none')));
@@ -380,6 +397,82 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await settleFully(tester);
       expect(find.byType(CardDetail), findsNothing);
+      await app.dispose(tester);
+    });
+
+    testWidgets('a card that never gets some finishes does not list them', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await own(app, {'tea-break|none': 1});
+      await app.pump(
+        tester,
+        location: '/notes/binder',
+        overrides: [
+          cardLibraryProvider.overrideWith((ref) async {
+            final lib = await loadCards(DiskAssetBundle());
+            return CardLibrary([
+              for (final c in lib.cards)
+                CardDef(
+                  id: c.id,
+                  number: c.number,
+                  name: c.name,
+                  rarity: c.rarity,
+                  photo: c.photo,
+                  text: c.text,
+                  excluded: c.id == 'tea-break' ? {Finish.misprint, Finish.ghost} : const {},
+                ),
+            ]);
+          }),
+        ],
+      );
+      await tester.tap(find.byKey(const ValueKey('slot-tea-break')));
+      await settleFully(tester);
+      expect(find.text('FINISHES · 1 OF ${Finish.values.length - 2} COLLECTED'), findsOneWidget);
+      expect(find.byKey(const ValueKey('finish-misprint')), findsNothing);
+      await app.dispose(tester);
+    });
+
+    testWidgets('themes show progress, and the story unlocks once every card is collected', (tester) async {
+      final app = await TestApp.create(withSampleTasks: false);
+      await own(app, {
+        'early-start|none': 1,
+        'tea-break|none': 1,
+        'rainy-recess|none': 1,
+        'panda-professor|holo': 1,
+        'bamboo-grove|none': 1,
+      });
+      await app.pump(tester, location: '/notes/binder');
+      expect(find.text('Themes'), findsOneWidget);
+      final school = find.byKey(const ValueKey('theme-school-day'));
+      final garden = find.byKey(const ValueKey('theme-garden-seasons'));
+      expect(find.descendant(of: school, matching: find.text('4 / 4')), findsOneWidget);
+      expect(find.descendant(of: school, matching: find.text('Story unlocked. Tap to read it.')), findsOneWidget);
+      expect(find.descendant(of: garden, matching: find.text('1 / 4')), findsOneWidget);
+      expect(find.byKey(const ValueKey('theme-after-hours')), findsOneWidget);
+
+      await tester.tap(school);
+      await settleFully(tester);
+      expect(find.text('A Day at School'), findsWidgets);
+      expect(find.byKey(const ValueKey('story-text')), findsOneWidget);
+      expect(find.textContaining('The panda arrived before the sun'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
+
+      await tester.tap(garden);
+      await settleFully(tester);
+      expect(find.byKey(const ValueKey('story-text')), findsNothing);
+      expect(find.text('Collect all 4 cards to unlock the story. 3 to go.'), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await settleFully(tester);
+
+      // A card's detail links to its theme too.
+      await tester.tap(find.byKey(const ValueKey('slot-bamboo-grove')));
+      await settleFully(tester);
+      final link = find.byKey(const ValueKey('detail-theme-garden-seasons'));
+      expect(find.descendant(of: link, matching: find.text('Seasons in the Garden · 1 of 4')), findsOneWidget);
+      await tester.ensureVisible(link);
+      await tester.tap(link);
+      await settleFully(tester);
+      expect(find.byKey(const ValueKey('story-locked')), findsOneWidget);
       await app.dispose(tester);
     });
 
@@ -419,5 +512,117 @@ void main() {
     await tester.pumpAndSettle();
     expect(opened, 1);
     semantics.dispose();
+  });
+
+  group('pack fanfare and themes in the overview', () {
+    CardDef card(String id, Rarity r, {List<String> themes = const []}) => CardDef(
+      id: id,
+      number: 1,
+      name: id,
+      rarity: r,
+      photo: 'assets/cards/bamboo-grove.jpg',
+      text: 't',
+      themes: themes,
+    );
+
+    Widget host(Widget child, {List<Override> overrides = const []}) => ProviderScope(
+      overrides: overrides,
+      child: MaterialApp(
+        home: Material(color: Colors.black, child: child),
+      ),
+    );
+
+    String? banner(WidgetTester tester) {
+      final f = find.byKey(const ValueKey('fanfare-banner'));
+      return f.evaluate().isEmpty ? null : tester.widget<Text>(f).data;
+    }
+
+    testWidgets('Epic and Legendary cards pop out with sparkles and a banner', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        host(
+          PackOpening(
+            pulls: [
+              Pull(card('e', Rarity.epic), Finish.none),
+              Pull(card('c', Rarity.common), Finish.none),
+              Pull(card('r', Rarity.rare), Finish.none),
+              Pull(card('l', Rarity.legendary), Finish.none),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(banner(tester), 'EPIC!');
+      expect(find.byKey(const ValueKey('fanfare-sparkles')), findsOneWidget);
+      for (final want in [null, null, 'LEGENDARY!']) {
+        await tester.tap(stackTop);
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump(const Duration(milliseconds: 800));
+        expect(banner(tester), want);
+      }
+      expect(hasFanfare(Rarity.rare), isFalse);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('with reduced motion the fanfare still shows, standing still', (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+        disableAnimations: true,
+      );
+      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      await tester.pumpWidget(host(PackOpening(pulls: [Pull(card('l', Rarity.legendary), Finish.holo)])));
+      await tester.pump();
+      expect(banner(tester), 'LEGENDARY!');
+      expect(tester.hasRunningAnimations, isFalse);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the overview celebrates a theme the pack completed', (tester) async {
+      final lib = (await tester.runAsync(() => loadCards(DiskAssetBundle())))!;
+      final school = lib.cardsIn('school-day');
+      final state = CollectionState(copies: {for (final c in school) '${c.id}|none': 1});
+      final pulls = [Pull(school.first, Finish.none, newCard: true), Pull(lib.byId('koi-pond')!, Finish.none)];
+      await tester.pumpWidget(
+        host(
+          PackOpening(pulls: pulls, startWithOverview: true),
+          overrides: [
+            cardLibraryProvider.overrideWith((ref) async => lib),
+            collectionProvider.overrideWith((ref) => Stream.value(state)),
+          ],
+        ),
+      );
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+        await tester.pump();
+      }
+      final done = find.byKey(const ValueKey('completed-school-day'));
+      expect(done, findsOneWidget);
+      expect(find.text('Theme complete: A Day at School. Read the story'), findsOneWidget);
+      expect(find.byKey(const ValueKey('completed-garden-seasons')), findsNothing);
+      await tester.tap(done);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('story-text')), findsOneWidget);
+    });
+
+    testWidgets('a theme finished earlier is not celebrated again', (tester) async {
+      final lib = (await tester.runAsync(() => loadCards(DiskAssetBundle())))!;
+      final school = lib.cardsIn('school-day');
+      final state = CollectionState(copies: {for (final c in school) '${c.id}|none': 2});
+      await tester.pumpWidget(
+        host(
+          PackOpening(pulls: [Pull(school.first, Finish.none)], startWithOverview: true),
+          overrides: [
+            cardLibraryProvider.overrideWith((ref) async => lib),
+            collectionProvider.overrideWith((ref) => Stream.value(state)),
+          ],
+        ),
+      );
+      for (var i = 0; i < 5; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+        await tester.pump();
+      }
+      expect(find.byKey(const ValueKey('completed-school-day')), findsNothing);
+    });
   });
 }

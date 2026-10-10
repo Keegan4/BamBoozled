@@ -103,6 +103,12 @@ class CollectionState {
 
   int copiesIn(String cardId, Finish f) => copies[Pull.keyOf(cardId, f)] ?? 0;
 
+  /// How many of [cards] have at least one copy.
+  int ownedAmong(Iterable<CardDef> cards) => cards.where((c) => copiesOf(c.id) > 0).length;
+
+  /// Whether every one of [cards] is owned (and there is at least one), e.g. a whole theme.
+  bool ownsAll(Iterable<CardDef> cards) => cards.isNotEmpty && cards.every((c) => copiesOf(c.id) > 0);
+
   /// The finishes owned for a card, showiest first.
   List<Finish> finishesOf(String cardId) => [
     for (final f in Finish.showiest)

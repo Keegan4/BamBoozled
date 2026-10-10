@@ -47,14 +47,16 @@ The **Notes** tab is a small card-collecting game.
 - **Tear a pack open** by sliding a finger or the mouse across its top (Enter or Space also work).
 - The **7 cards** come out face up in a stack. Tap or swipe the top card to slide it aside. After the last card, an overview shows all 7, marking cards that are **New** (or a **New finish** of a card you already had).
 - Every card goes into the **binder** (Notes → Binder), which shows what you've collected, duplicates (×2) and the gaps still to find. Tap a card to see it large with its story.
-- Each card has a **rarity** (Common, Rare, Epic, Legendary) and may get a **finish** (Holo, Gold, Cosmos, Misprint and others). The **?** next to the title explains the odds. If 9 packs in a row have no Legendary, the next one is guaranteed one.
+- Each card has a **rarity** (Common, Rare, Epic, Legendary) and may get a **finish** (Holo, Gold, Cosmos, Misprint and others). The **?** next to the title explains the odds. If 9 packs in a row have no Legendary, the next one is guaranteed one. Epic and Legendary cards burst out with sparkles and a flashing **EPIC!** or **LEGENDARY!** above them.
+- A card's detail shows **every finish** it can come in, with the ones you haven't collected greyed out.
+- **Themes:** cards can be tagged with a theme. Collect every card in a theme to **unlock its story** in the binder.
 
 ### Changing the pictures and text
 
 Everything lives in **`app/assets/cards/`**:
 
 - **Pictures:** the photo files (JPG, PNG or WebP, portrait 4:5, about 1080 × 1350 px, under 500 KB).
-- **Text:** **`cards.yaml`**, one entry per card:
+- **Card text:** **`cards.yaml`**, one entry per card:
 
 ```yaml
 - id: tea-break              # unique, lowercase-with-dashes; never change it once released
@@ -64,7 +66,10 @@ Everything lives in **`app/assets/cards/`**:
   text: Step away for five minutes.             # the card's message (up to 90 characters)
   flavour: The tea, now cold, disagrees.        # optional: the story shown in the binder
   artist: Mr Lim             # optional: credited in the binder
+  themes: [school-day]       # optional: the themes it belongs to
 ```
+
+- **Themes and their stories:** **`themes.yaml`**, one entry per theme (`id`, `name`, an optional one-line `blurb`, and the `story` it unlocks). Tag cards with the theme's `id` to put them in it.
 
 To change a picture, replace the file (keeping its name) or point `photo:` at a new one. To change the words, edit `name`, `text` or `flavour`. To add a card, put its photo in the folder and add an entry at the **end** of `cards.yaml` (cards are numbered in file order). Both can be done on GitHub's website (**Add file → Upload files**, and the pencil icon to edit). The tests check the file on every push, and the changes reach people with the next release. The full guide, including all the rules, is [docs/card-packs.md](docs/card-packs.md).
 

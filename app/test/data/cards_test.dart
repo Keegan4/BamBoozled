@@ -106,6 +106,104 @@ void main() {
     });
   });
 
+  group('themes', () {
+    test('parseThemes reads themes and reports bad ones', () {
+      final (themes, problems) = parseThemes('''
+- id: school-day
+  name: A Day at School
+  blurb: First bell to last email.
+  story: Once upon a time.
+- just text
+- {id: Bad Id, name: X, story: s}
+- {id: school-day, name: Again, story: s}
+- {id: no-story, name: N}
+- {id: long, name: L, story: "${'x' * 1501}"}
+''');
+      expect(themes.single.id, 'school-day');
+      expect(themes.single.name, 'A Day at School');
+      expect(themes.single.blurb, 'First bell to last email.');
+      expect(themes.single.story, 'Once upon a time.');
+      expect(problems, hasLength(5));
+      expect(parseThemes('a: 1').$2.single, contains('should be a list'));
+      expect(parseThemes('- [x').$2.single, contains('could not be read'));
+      expect(parseThemes('').$1, isEmpty);
+    });
+
+    test('story lines are joined into paragraphs', () {
+      final (themes, _) = parseThemes('''
+- id: t
+  name: T
+  story: |
+    One line
+    and the next.
+
+    A second
+    paragraph.
+''');
+      expect(themes.single.story, 'One line and the next.\n\nA second paragraph.');
+    });
+
+    test('cards join themes by tag; unknown tags are reported and themes with no cards are hidden', () {
+      final lib = buildLibrary(
+        '''
+- {id: a, name: A, photo: a.jpg, text: t, themes: [one, nope]}
+- {id: b, name: B, photo: a.jpg, text: t, theme: One}
+- {id: c, name: C, photo: a.jpg, text: t}
+''',
+        '''
+- {id: one, name: One, story: s}
+- {id: empty, name: Empty, story: s}
+''',
+        assetExists: (_) => true,
+      );
+      expect(lib.themes.map((t) => t.id), ['one']);
+      expect(lib.cardsIn('one').map((c) => c.id), ['a', 'b']);
+      expect(lib.byId('a')!.themes, ['one']);
+      expect(lib.byId('c')!.themes, isEmpty);
+      expect(lib.problems.single, contains('"nope" is not in themes.yaml'));
+      expect(lib.themeById('one')!.name, 'One');
+      expect(lib.themeById('empty'), isNull);
+      // Without a themes file, tags aren't checked, but no themes are shown either.
+      expect(
+        buildLibrary('- {id: a, name: A, photo: a.jpg, text: t, theme: x}', null, assetExists: (_) => true).themes,
+        isEmpty,
+      );
+    });
+
+    test('the bundled themes are valid and every one has cards', () async {
+      final lib = await loadCards(DiskAssetBundle());
+      expect(lib.problems, isEmpty);
+      expect(lib.themes, isNotEmpty);
+      for (final t in lib.themes) {
+        expect(lib.cardsIn(t.id), isNotEmpty, reason: t.id);
+      }
+    });
+
+    test('collections know when a theme is complete', () {
+      const a = CardDef(id: 'a', number: 1, name: 'A', rarity: Rarity.common, photo: 'p', text: 't');
+      const b = CardDef(id: 'b', number: 2, name: 'B', rarity: Rarity.common, photo: 'p', text: 't');
+      const state = CollectionState(copies: {'a|holo': 1, 'b|none': 0});
+      expect(state.ownedAmong([a, b]), 1);
+      expect(state.ownsAll([a, b]), isFalse);
+      expect(state.ownsAll([a]), isTrue);
+      expect(state.ownsAll(const []), isFalse);
+    });
+
+    test('possible finishes leave out excluded ones', () {
+      const c = CardDef(
+        id: 'a',
+        number: 1,
+        name: 'A',
+        rarity: Rarity.common,
+        photo: 'p',
+        text: 't',
+        excluded: {Finish.gold},
+      );
+      expect(c.possibleFinishes, hasLength(Finish.values.length - 1));
+      expect(c.possibleFinishes, isNot(contains(Finish.gold)));
+    });
+  });
+
   group('CollectionStore', () {
     late AppDatabase db;
     late CollectionStore store;
