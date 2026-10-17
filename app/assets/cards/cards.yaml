@@ -109,168 +109,168 @@
 
 - id: both-my-fattie
   name: Both My Fattie
-  rarity: common
+  rarity: rare
   photo: BothMyFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: My little pouter
+  flavour: Keith and nick saw this post and said that you were pouting in like 40% of photos, I agree.
   themes: [both]
 
 - id: both-remarkable
   name: Both Remarkable
-  rarity: common
+  rarity: rare
   photo: BothRemarkable.jpeg
-  text: TODO
-  flavour: TODO
+  text: You are my Remarkable fattie
+  flavour: All i remember from that day was you complaining non-stop about your legs dying, and us going in 1 giant circle just to go back to the start, fun times.
   themes: [both]
 
 - id: both-rich
   name: Both Rich
   rarity: common
   photo: BothRich.jpeg
-  text: TODO
-  flavour: TODO
+  text: Even when youre blurry youre Megacute
+  flavour: Youre actually so megacute hereee, I wish I had a cooler pose idk why my legs are like slanted. Also nice skirt.
   themes: [both, rich]
 
 - id: both-side
   name: Both Side
   rarity: common
   photo: BothSide.jpeg
-  text: TODO
-  flavour: TODO
+  text: Yayyy its another swing day
+  flavour: All of the swing days are super memorable, idk if this was right after you cried or was that another day. Regardless I'll always have a shoulder for you to lean onnnn
   themes: [both]
 
 - id: both-spx
   name: Both SPX
-  rarity: common
+  rarity: epic
   photo: BothSPX.jpg
-  text: TODO
-  flavour: TODO
+  text: My nose looks so big in this picture
+  flavour: My hair is annoyingly straight, also this is when I finally got my legendary t-shirt! Made by my delicious little squishy fattie. I can't believe you were also so excited for this too
   themes: [both]
 
 - id: both-stare
   name: Both Stare
-  rarity: common
+  rarity: rare
   photo: BothStare.jpg
-  text: TODO
-  flavour: TODO
+  text: POV youre too short to get the food on the top shelf
+  flavour: OMG megafat youre basically wearing nothing, look at how crazy veiny my right hand is (I hope its still visibile in the card)
   themes: [both]
 
 - id: both-umbrella
   name: Both Umbrella
   rarity: common
   photo: BothUmbrella.jpg
-  text: TODO
-  flavour: TODO
+  text: We are way too white
+  flavour: Your teeth are also so white, we look for some reason so similar here. I just think you are a fattie. 
   themes: [both]
 
 - id: both-weird-keegan-hairstyle
   name: Both Weird Hairstyle
-  rarity: common
+  rarity: rare
   photo: BothWeirdKeeganHairstyle.jpeg
-  text: TODO
-  flavour: TODO
+  text: OMG my hair is so straight
+  flavour: I dont know what is making you so happy to the point of almost crying. Also now I drank a whole lot of soju so Im a little bit drunk. Very nice.
   themes: [both]
 
 - id: boxed-fattie
   name: Boxed Fattie
-  rarity: common
+  rarity: epic
   photo: BoxedFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Me when Im only wearing a box
+  flavour: You look like you are having so much fun holding a giant box, also you are a giant little megacutiee. Hope you had fun walking around vivo and eating desert with my familyy.
 
 - id: cat-fattie
   name: Cat Fattie
   rarity: common
   photo: CatFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: OMG its a CAT fattieee
+  flavour: You look so happy when you have a free drink. I can conclude that you are fat. Also we should definitely go back to the matcha place again it was so vibes sitting there.
 
 - id: close-unglam
   name: Close Unglam
-  rarity: common
+  rarity: epic
   photo: CloseUnglam.jpeg
-  text: TODO
-  flavour: TODO
+  text: OMG its a NOSEEEEEEE
+  flavour: You are so fat you occupy the entire screen. Evidence of your fatness.
 
 - id: digital-fattie
   name: Digital Fattie
-  rarity: common
+  rarity: rare
   photo: DigitalFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Im unfortunately too tall to be in this photo
+  flavour: This is how we will be seeing each other when we go on exhange. MegaSad. We should do fun stuff like this more in the future, the free stuff tasted so good, but you were the best treat in the end.
 
 - id: fattie-ception
   name: Fattie Ception
   rarity: common
   photo: FattieCeption.jpg
-  text: TODO
-  flavour: TODO
+  text: Still not enough fattie
+  flavour: This is how my brain looks like daily actually
 
 - id: first-ever
   name: First Ever
   rarity: common
   photo: FirstEver.jpg
-  text: TODO
-  flavour: TODO
+  text: You after losing to me in stress (like usual)
+  flavour: I'm pretty sure this is one of the first photos I ever got of you, you still look just as fat today.
 
 - id: flower-bulldog
   name: Flower Bulldog
-  rarity: common
+  rarity: rare
   photo: FlowerBulldog.jpeg
-  text: TODO
-  flavour: TODO
+  text: A bulldog staring at the sun 
+  flavour: Yay im the sun. Did you know that the sun is also a star? See everything goes back to that one star moment in the end
   themes: [flower]
 
 - id: flower-fattieee
   name: Flower Fattieee
-  rarity: common
+  rarity: epic
   photo: FlowerFattieee.jpg
-  text: TODO
-  flavour: TODO
+  text: My little happy fattie
+  flavour: Im still a bit sad you didnt like the flowers, but issokay you still look megacute in this photo. I havent gotten any flowers yet at the time of writing so I hope future keegan got you something you like!
   themes: [flower]
 
 - id: flower-megacute
   name: Flower Megacute
-  rarity: common
+  rarity: legendary
   photo: FlowerMegacute.jpeg
-  text: TODO
-  flavour: TODO
+  text: You probably took forever to get this one
+  flavour: You look so precious here, I think if I had to show people photos of you this might be one of the nicer ones. I'm actually writing this now instead of showering, and I got the best part of the day waiting for me, FATTIE TIMEEEE! Yo definitely dont remember but today was the utown i fetch dayyy.
   themes: [flower]
 
 - id: focused-fattie
   name: Focused Fattie
   rarity: common
   photo: FocusedFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Me when deciding what to eat
+  flavour: I realised all my photos all have my skin peeling, thats a bit womp womp. My hair at least dosent look horrible here so I guess that amazing, also once again exact same shirt. If there was a photo of you in front of me I would also focus this much
 
 - id: food-stuffed
   name: Food Stuffed
-  rarity: common
+  rarity: epic
   photo: FoodStuffed.jpeg
-  text: TODO
-  flavour: TODO
+  text: OMG actually fat
+  flavour: Youre my little chipmunk. Your cheeks are way too squishy for this world. I love youuuu
 
 - id: giant-fattie
   name: Giant Fattie
-  rarity: common
+  rarity: legendary
   photo: GiantFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: ITS A MASSIVE FATTIEE
+  flavour: Nobody knows what youre looking at, 100% chance it must be me
 
 - id: happy-cookie
   name: Happy Cookie
   rarity: common
   photo: HappyCookie.jpeg
-  text: TODO
-  flavour: TODO
+  text: Wow cookies
+  flavour: I dont even recognise you in braces anymore, also new green shirt. You must have been predicting this matcha cookies. Yup fat
 
 - id: hottie-fattie
   name: Hottie Fattie
-  rarity: common
+  rarity: legendary
   photo: HottieFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: No idea if I should have actually put this photo
+  flavour: Wow I look pretty crazy. What happened man. I know a fattie happened. This is actually the last time youll ever be able to see my abs
 
 - id: jb-fat
   name: JB Fat
