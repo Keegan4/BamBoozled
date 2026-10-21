@@ -276,193 +276,193 @@
   name: JB Fat
   rarity: common
   photo: JBFat.JPG
-  text: TODO
-  flavour: TODO
+  text: Pouting when there is such good food in front of you.
+  flavour: My first JB trip with you was so fun. Never thought the most fun part of the day would be walking around the mall for like 4h. We definitely need to go for more trips in the future. I might have said this in like all the cards but ILYYY
 
 - id: matcha-cutie
   name: Matcha Cutie
   rarity: common
   photo: MatchaCutie.jpeg
-  text: TODO
-  flavour: TODO
+  text: Fattie Private limited
+  flavour: It was surprisingly vibes to just sit down and drink matcha. Most likely cos its the amazing company that I haddd.
 
 - id: movie-jacket
   name: Movie Jacket
-  rarity: common
+  rarity: rare
   photo: MovieJacket.jpeg
-  text: TODO
-  flavour: TODO
+  text: Im quite sure you dont even remember the contents of the movie
+  flavour: YOU DONT LIKE POPCORNNNN?!? Unfathomable. For that you win the title of the fatest human being in this picture
 
 - id: myshirtt
   name: Myshirtt
-  rarity: common
+  rarity: epic
   photo: Myshirtt.jpg
-  text: TODO
-  flavour: TODO
+  text: I dont really see how I look so happy but I love the shirt
+  flavour: Im so happy I ended up going for the coffee festival, was so close to not going. It was super expensive though, but I believe that every cent spent was worth it. You must follow me for more festivals like this againnn.
 
 - id: no-idea-where
   name: No Idea Where
-  rarity: common
+  rarity: rare
   photo: NoIdeaWhere.jpeg
-  text: TODO
-  flavour: TODO
+  text: I have 0 clue where this photo was taken
+  flavour: If you can figure it out tell me then Ill give you a secret reward. Also I think you look quite cute here, I had to turn my head manually just to see your cuteness.
 
 - id: normal-work
   name: Normal Work
   rarity: common
   photo: NormalWork.jpg
-  text: TODO
-  flavour: TODO
+  text: Why am I smiling?
+  flavour: Who knows what I could be looking at, could be anything. Most likely its work but you should just imagine im looking at you and smiling.
 
 - id: one-eyed-cutie
   name: One Eyed Cutie
-  rarity: common
+  rarity: epic
   photo: OneEyedCutie.jpg
-  text: TODO
-  flavour: TODO
+  text: I literally saw you wear this skort once and never again
+  flavour: Also today was the day of our first kiss, yes I remember this weird detail. Youre a little cute cheeky fattieee. I love youuu
 
 - id: ord-fattie
   name: ORD Fattie
-  rarity: common
+  rarity: rare
   photo: ORDFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Yes I am in a toilet
+  flavour: Happy that Im finally gonna be done with this nonsense, so many good memories made over the 2 years though. Our 1 year is coming soon too but unlike army I dont ever wanna be done with youuuu.
 
 - id: overjoyed
   name: Overjoyed
-  rarity: common
+  rarity: rare
   photo: Overjoyed.jpg
-  text: TODO
-  flavour: TODO
+  text: You when you see me
+  flavour: My high little fattie. Your teeth are like so perfect in this photo. If I wasnt shy I would post so many photos of you on my insta. Maybe not this though, your underwear is hanging at the back of the room.
 
 - id: overjoyed-fattie
   name: Overjoyed Fattie
-  rarity: common
+  rarity: epic
   photo: OverjoyedFattie.jpg
-  text: TODO
+  text: My face is contorted in an unnatural way. Only you can make my face look this weird and strangely happy.
   flavour: TODO
 
 - id: passport-photo-fattie
   name: Passport Photo Fattie
   rarity: common
   photo: PassportPhotoFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Young me, still wearing the same shirt
+  flavour: This is me before I was battle scarred, I still look so well rested and full of youth. At this time you were like barely even born yet also so you might be fat.
 
 - id: pouting-soup
   name: Pouting Soup
-  rarity: common
+  rarity: epic
   photo: PoutingSoup.jpeg
-  text: TODO
-  flavour: TODO
+  text: OMG ITS A MEGAPOUT
+  flavour: I might be mean but I always find you super duper cute and funny when you pout this much. Also this can be a meme template. Me when my pistachio drink contains nuts. I drank coffee at 10pm so Im a bit high while writing this.
 
 - id: quad-fatties
   name: Quad Fatties
   rarity: common
   photo: QuadFatties.jpg
-  text: TODO
-  flavour: TODO
+  text: The Gang of 4
+  flavour: My mouth is the size of your face. I cant beleive the entire ice cream was completely free. I went back a second time with my family, its too much value. 
 
 - id: rich-beauty
   name: Rich Beauty
   rarity: common
   photo: RichBeauty.jpeg
-  text: TODO
-  flavour: TODO
+  text: A giant fancy fattie
+  flavour: Wow I like immediately smiled when I saw your cute little face. Its blurry but I still see my cute pretty fattie underneath
   themes: [rich]
 
 - id: rich-happy
   name: Rich Happy
   rarity: common
   photo: RichHappy.jpeg
-  text: TODO
-  flavour: TODO
+  text: In my opinion the perfect photo of you
+  flavour: This will be the photo I look at when Im on exchange and miss you alot. Even the photo and lighting is well taken. The waitress pulling out the chair moment is still embarrassing HJAHA.
   themes: [rich]
 
 - id: rich-my-favorite-fattie
   name: Rich My Favorite Fattie
-  rarity: common
+  rarity: rare
   photo: RichMyFavoriteFattie.jpeg
-  text: TODO
-  flavour: TODO
+  text: We need way more photos of being well dressed together
+  flavour: HAH i win my mouth is bigger than yours. On a more serious note I think we should find more occassions to go out like this, was really a fantastic time
   themes: [rich]
 
 - id: rich-too-much-food
   name: Rich Too Much Food
-  rarity: common
+  rarity: epic
   photo: RichTooMuchFood.jpeg
-  text: TODO
-  flavour: TODO
+  text: I was so full after this
+  flavour: After months of saving on dinner you finally got a gigantic meal. I hope you liked itttt. I cant believe the best part of the meal was the $15 pork chop. But in the end it was such an amazing night. Also we could see a sea of cheapskates eating the basically free burger.
   themes: [rich]
 
 - id: rich-vege
   name: Rich Vege
   rarity: common
   photo: RichVege.jpeg
-  text: TODO
-  flavour: TODO
+  text: The face of a satisfied fattie
+  flavour: You should eat more and become nice and fat. I sound like the evil witch in hansel and grettle. But cheers to much more good food in the future
   themes: [rich]
 
 - id: rich-waiting-patiently
   name: Rich Waiting Patiently
-  rarity: common
+  rarity: rare
   photo: RichWaitingPatiently.jpeg
-  text: TODO
-  flavour: TODO
+  text: Waiting patiently for some amazing food
+  flavour: You seem to already be staring at a 5* meal though
   themes: [rich]
 
 - id: side-eye
   name: Side Eye
-  rarity: common
+  rarity: rare
   photo: SideEye.jpg
-  text: TODO
-  flavour: TODO
+  text: Large amount of judging is being done
+  flavour: My fat detectors were tingling, so I turned and saw a giant fattie. I spy with my little eye a cute little potato I need to squish
 
 - id: side-heart
   name: Side Heart
   rarity: common
   photo: SideHeart.PNG
-  text: TODO
-  flavour: TODO
+  text: Almost there
+  flavour: No lah you failed why you put your heart so high, tsk tsk tsk. Also imagine working, now got no more naixue at jewel where will ya go? Work coffee will be funnn
 
 - id: sleepy-blanket
   name: Sleepy Blanket
-  rarity: common
+  rarity: Rare
   photo: SleepyBlanket.jpg
-  text: TODO
-  flavour: TODO
+  text: I was at peace
+  flavour: I was so nice and sound asleep, only to be awoken by 2 giant fatties. Now ill forever be immortalised for my sleepiness in nicks insta.
   themes: [sleepy]
 
 - id: sleepy-idk-where
   name: Sleepy Idk Where
   rarity: common
   photo: SleepyIdkWhere.jpg
-  text: TODO
-  flavour: TODO
+  text: OHHH was this zen room?
+  flavour: Once again I was so at peace, you can see all the crazy places Ive been sleeping in.
   themes: [sleepy]
 
 - id: sleepy-jb
   name: Sleepy JB
-  rarity: common
+  rarity: rare
   photo: SleepyJB.jpg
-  text: TODO
-  flavour: TODO
+  text: I was so tired then
+  flavour: Aww mans my neck looks so red. Is this normally how red it looks? Also im surprised you havent drawn on my face with a marker in my sleep. I would definitely have done it if you were the one asleep.
   themes: [sleepy]
 
 - id: sleepy-peaceful
   name: Sleepy Peaceful
-  rarity: common
+  rarity: epic
   photo: SleepyPeaceful.jpg
-  text: TODO
-  flavour: TODO
+  text: Im a zombie
+  flavour: You werent even next to me Idk when I fell asleep like this. No wonder my hair becomes so messy after each time I go your room. I dont even notice falling asleep most of the time. But its nice to wake up and see my fattie
   themes: [sleepy]
 
 - id: sleepy-school
   name: Sleepy School
-  rarity: common
+  rarity: rare
   photo: SleepySchool.jpg
-  text: TODO
-  flavour: TODO
+  text: Its so crazy we drank coffee at like 11
+  flavour: I look so out of it completely. If my hand wasnt supporting my face I would probably just faceplant on the table. Also thanks for entertaining my nonsense and going com with me at nighttt. ILU
   themes: [sleepy]
 
 - id: sleepy-thumbs
