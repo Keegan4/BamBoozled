@@ -467,143 +467,144 @@
 
 - id: sleepy-thumbs
   name: Sleepy Thumbs
-  rarity: common
+  rarity: epic
   photo: SleepyThumbs.jpg
-  text: TODO
-  flavour: TODO
+  text: The most exhausted commando youll ever see
+  flavour: Where are my muscles even, look at my arm it looks like a loaf of bread. See Im so much better after my 50 pushups everyday (I Hope)
   themes: [sleepy]
 
 - id: sleepy-yochi
   name: Sleepy Yochi
-  rarity: common
+  rarity: rare
   photo: SleepyYochi.jpg
-  text: TODO
-  flavour: TODO
+  text: I have so much facial hair
+  flavour: I cannot believe it but I physically yawned when I saw this photo. Also you can see my amazing moustache
   themes: [sleepy]
 
 - id: struggling-math
   name: Struggling Math
   rarity: common
   photo: StrugglingMath.jpeg
-  text: TODO
+  text: I still have the exam papers we should really do them one day. Also Ive never laughed so hard at someone doing math before. Youre megafat
   flavour: TODO
 
 - id: ta-fattie
   name: TA Fattie
   rarity: common
   photo: TAFattie.jpg
-  text: TODO
-  flavour: TODO
+  text: Me in the midst of making $80
+  flavour: My fattie bought me that drink, Im never actually buying it myself but it was pretty amazing. Also good job coming for my first ever lesson! You got to see me in action for the first time even though I was pretty nervous.
 
 - id: uppies-cutie
   name: Uppies Cutie
-  rarity: common
+  rarity: epic
   photo: UppiesCutie.jpg
-  text: TODO
-  flavour: TODO
+  text: The only time youll be taller than me
+  flavour: I love doing these stupid challenges with you. It always ends up with me exhausted but I always end up laughing so much. Youre an amazing little squishy butter crunchy.
 
 - id: uppies-fattie
   name: Uppies Fattie
-  rarity: common
+  rarity: rare
   photo: UppiesFattie.jpg
-  text: TODO
+  text: Actually so fat. I am surprised my hands can even support your weight without breaking, I am actually pretty impressive. I feel like rotating you, should do that again too
   flavour: TODO
 
 - id: value-ashtons
   name: Value Ashtons
-  rarity: common
+  rarity: legendary
   photo: ValueAshtons.jpeg
-  text: TODO
-  flavour: TODO
+  text: SO MUCH VALUE
+  flavour: Technically it wasnt the thing with the most value, since the free ice cream is infinite value. Regardless I think this was the first time I had so much fun queuing for something and feeling so rewarded after queing this long. Also the food was meh so I guess it was the journey that mattered, the journey with a very fat one
   themes: [value]
 
 - id: value-beer
   name: Value Beer
-  rarity: common
+  rarity: rare
   photo: ValueBeer.jpeg
-  text: TODO
-  flavour: TODO
+  text: 1 for 1 beer for like 4.90
+  flavour: I remember like during this or after this you were like so sad that you didnt get selected for your role. Then you thought you werent good enough. NO SADDD. You gotta have a bit more confidence in yourself, youre pretty amazing, if not why would I spend so much effort on this ultra elaborate gift for you. I love youuu
   themes: [value]
 
 - id: value-pepper-lunch
   name: Value Pepper Lunch
   rarity: common
   photo: ValuePepperLunch.jpeg
-  text: TODO
-  flavour: TODO
+  text: Even more value
+  flavour: It was like okay value honestly, but I actually love pepper lunch. I remember in secondary school I wouldn't even mind spending $10 on it, thinking about it now Im kinda crazy for spending so much money back then.
   themes: [value]
 
 - id: value-tea
   name: Value Tea
   rarity: common
   photo: ValueTea.jpeg
-  text: TODO
-  flavour: TODO
+  text: FREEEEE
+  flavour: It was a bit too thick and hard to drink, but it was quite funny that you ended up helping another kiasu aunty with her instagram. I had to do that for my parents when I got them the free ice cream at swensons.
   themes: [value]
 
 - id: value-teaaa
   name: Value Teaaa
   rarity: common
   photo: ValueTeaaa.jpg
-  text: TODO
-  flavour: TODO
+  text: This is where my love for tea is born
+  flavour: You queued up for the actual real treat Which is MEEEEEEEEEEEE
   themes: [value]
 
 - id: watermellon-beer
   name: Watermellon Beer
   rarity: common
   photo: WatermellonBeer.jpeg
-  text: TODO
-  flavour: TODO
+  text: Youre my favourite square
+  flavour: Yes I have a whole collection just for watermellon stuff. You are actually a perfect 2 beers wide.
   themes: [watermelon]
 
 - id: watermellon-prawn
   name: Watermellon Prawn
-  rarity: common
+  rarity: epic
   photo: WatermellonPrawn.jpeg
-  text: TODO
+  text: So nice and fat. I was refering to the nice looking prawns in your soup actually.
   flavour: TODO
   themes: [watermelon]
 
 - id: watermellon-tasty
   name: Watermellon Tasty
-  rarity: common
+  rarity: rare
   photo: WatermellonTasty.jpeg
-  text: TODO
-  flavour: TODO
+  text: You look so incredibly well dressed
+  flavour: Hey not fair you are licking the fattie. I wanna lick the fattie. Also you are megasquishy
   themes: [watermelon]
 
 - id: way-too-happy
   name: Way Too Happy
   rarity: common
   photo: WayTooHappy.jpeg
-  text: TODO
-  flavour: TODO
+  text: August is the month of value
+  flavour: Me when there is too good a deal to pass up. Nobody has any idea why I am this happy. Also i was so shocked to see your whole family. Yes this was the prata day
 
 - id: weird-smile-food
   name: Weird Smile Food
   rarity: common
   photo: weirdSmileFood.JPG
-  text: TODO
-  flavour: TODO
+  text: I named this weird smile but youre still megacute
+  flavour: You look so contented and like full of joy. To be fair I would be too If I was eating such amazing food with such an amazing person (Quite clear who the amazing person is)
 
 - id: work-fattie
   name: Work Fattie
-  rarity: common
+  rarity: rare
   photo: WorkFattie.jpeg
-  text: TODO
-  flavour: TODO
+  text: No value big sad
+  flavour: I thought we were gonna get big value with employee discount but sadly not. At least I got the 2nd best thing, which is a cute photo of youuu.
 
 - id: wow-fat
   name: Wow Fat
-  rarity: common
+  rarity: epic
   photo: WowFat.jpeg
-  text: TODO
-  flavour: TODO
+  text: Caught in a fat moment
+  flavour: I never knew you were into these kinda things, nevermind I do, I knew that you were a fattie from a very young age. Also havent seen you with braces in a while. It makes your teeth look less visible.
 
 - id: yochi
   name: Yochi
-  rarity: common
+  rarity: epic
   photo: yochi.JPG
-  text: TODO
-  flavour: TODO
+  text: I cant wait for my yochi with you
+  flavour: I finally made it. This is the last card Ive made. It took nearly 3 weeks of making, I started from week 7 and I only just finished in like week 10. I hope you enjoyed it! It was really fun to make and look back at all my amazing cute photos with youuu. I love you a ton my fattieee
+  themes: [watermelon]
