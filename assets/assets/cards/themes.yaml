@@ -1,0 +1,81 @@
+# Themes group cards together. Collecting every card in a theme unlocks its story in the binder.
+# See docs/card-packs.md for the full guide.
+#
+# Each theme:
+#   id     unique, lowercase-with-dashes. Cards join a theme with `themes: [this-id]` in cards.yaml.
+#   name   shown in the binder (up to 40 characters)
+#   blurb  optional: one line shown while the story is still locked
+#   story  the story unlocked when every card in the theme is collected (up to 1500 characters)
+#
+# A theme with no cards yet is simply not shown.
+
+- id: both
+  name: Both of Us
+  blurb: Double the fatties
+  story: |
+    This is actually so much work to write a cute story after every single collection is finished, but I think
+    It will be a perfect reward for perservering and finishing this all in the end. This is the first collection
+    I made and I think I realised that we need way more photos together. I can pretty much remember the exact 
+    moment in pretty much all of these amazing photos and it made me like kinda smile a little when I was looking
+    back at all these good moments. Abit cheesy, but be it happy or sad moments, I wanna capture all of them.
+    I think pretty much all these experiences I had with you are so precious, and I wouldnt wanna spend any of these
+    moments with anyone else. So yeah, I hope to take a million more photos with you in the future! I love youuuu.
+
+- id: flower
+  name: Flower Power
+  blurb: See I always get you so many flowers
+  story: |
+    Once again I see very little practical value in flowers. They're worse than food cos at least you can eat food
+    but I kinda realised you still love them. So even though I think they are potato, I still wanna make my beloved
+    cute little fattie happyyy. Im happy you told me you didnt actually like the flowers that much (even though I 
+    was quite sad initially) cos now I at least got a chance to learn from my mistake. But thank you for caring about
+    poor little Keegan's feelings in that moment, youre such a cute little fattieee. I promise for all future occassions
+    I'll get you some kind of flower, cos the biggest treat is always seeing your cute little eyes light up whenever you
+    get these stupid impractical flowers. Im starting to see some use in them though, making you happy gotta be the 
+    best use possible. Hopefully past keegan got you some nice flowers for this birthday. I really hope this all worked
+    well and you even get to see this message, but yeah! No stress for exams too its probably close to that exam I forgot
+    but you said its before recess week, so JIAYOSSSS! I LOVEUUUUU!!!
+
+- id: rich
+  name: Living Rich
+  blurb: Its literally all just that one fancy dinner
+  story: |
+    I am officially $100 poorer. Not really, I gotta eat ultra fancy atas food with a fattie. I actually never ate such expensive
+    food outside of my family before, so I guess you are a little special fattie. You did actually look quite amazing that day
+    I was once again too shocked at your lack of teeth to realise this, but after careful thought and consideration I realised
+    you are a giant cute little fattieee. I learnt a valuable lesson from this, I am never getting $15 water again. Thats like 3 
+    entier days of food all in just water. Finally, to end of this message, its time to leave with an obligatory I LOVE YOUUUU!
+
+- id: sleepy
+  name: Sleepy Fattie
+  blurb: Asleep anywhere, anytime. 
+  story: |
+    Apparently the fact that I can be tired around you means I am super duper comfortable around you. Wonder where I heard that 
+    from? Anyways yeah I dont know why but I am perpetually tired, but the mornings where I just lie down and cuddle with you is
+    very soothing for the soul. Even on thursdays when I am exhausted I love just closing my eyes and resting next to you. Even 
+    though at times you may think that sleeping is kinda a suboptimal thing to do, I think it really means a ton that I can sleep 
+    so easily next to you. So what does this mean? I LOVE YOUUUUUUU
+
+- id: value
+  name: Good Value
+  blurb: Worth every cent (Or no cent)
+  story: |
+    This was the final story Im writing and it might be the most meaningful one. I realised that ultimately we are really vastly 
+    different people, we even like different people (you like me, good choice). Even our family dynamic is so crazily different, 
+    things that my family does normally. Im sorry I was supposed to finish this already but I got a bit distracted by my game. 
+    But I realised the one thing we do have in common is our unbelievable love for deals. I actually dont think I care that much
+    about deals. I mean I really love the value, but I definitely wouldnt bother queing up for things If i didnt have you next to 
+    me. I think you are the deciding factor in all of this, and I think i dont really love deals that much, I think I love you. 
+    Thank you for making my dull moments sharper and literally never failing to make my day brighter. Thank you also for being my
+    partner in crime and entertaining all the nonsense I wanna do, all the way starting from my stupid lock picking nonsense from the
+    first time I ever studied with you. Cheers to many more stupid moments and alot more queing up! I LOVE YOUUUUU!!!!!
+    
+
+- id: watermelon
+  name: Watermelon Days
+  blurb: HAH my little watermellon
+  story: |
+    HAH watermellon. Imagine thinking you get a nice meaningful message but instead you just get me calling you fat. You are fat 
+    btw. This is a whole collection of my favourite square watermellon fattieee. I still remember the entire day quite well actually
+    But it was so fun seeing you so square at one north in the morning. I think youre a cutie and Ill love you no matter your face shapee
+    I LOVE YOUUUUUU!!!

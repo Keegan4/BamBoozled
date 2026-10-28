@@ -1,0 +1,610 @@
+# The cards for the Notes tab's daily packs. See docs/card-packs.md for the full guide.
+#
+# Each card:
+#   id       unique, lowercase-with-dashes. Never change it once released: collections are saved by id.
+#   name     the name on the card's banner (keep it under about 18 characters)
+#   rarity   common, rare, epic or legendary (default: common)
+#   photo    a file in this folder: JPG, PNG or WebP, about 1080 x 1350 px, under 500 KB
+#   text     the short message in the card's text box (up to 90 characters)
+#   flavour  optional: the quote shown when the card is opened in the binder (up to 400 characters)
+#   artist   optional: credited in the binder, and signed on "Signed" cards
+#   set      optional: the set name shown in the binder (default: Bamboo Grove)
+#   exclude  optional: finishes this card never gets, e.g. [misprint, ghost]
+#   themes   optional: the themes (from themes.yaml) this card belongs to, e.g. [school-day]
+#
+# Cards are numbered in the order they appear here, so add new cards at the end.
+
+- id: ackshually
+  name: Ackshually
+  rarity: common
+  photo: Ackshually.png
+  text: No clue why you are fat and pointing up.
+  flavour: If youre seeing this, this is ackshually the first card I created. I made this at 11pm so I hope youre loving this present. Love you *90000
+
+- id: ackshually-keegan
+  name: Ackshually Keegan
+  rarity: common
+  photo: AckshuallyKeegan.jpg
+  text: I am clearly the sharpest tool in the shed
+  flavour: I remember this was one of your favourites for a time.
+
+- id: angel-fattie
+  name: Angel Fattie
+  rarity: epic
+  photo: AngelFattie.jpg
+  text: OMG youre so CUTEEEE
+  flavour: Its so ironic that youre angel but youre a free thinker. You should wear this dress more
+
+- id: both-bugis-sleepy
+  name: Both Bugis Sleepy
+  rarity: rare
+  photo: BothBugisSleepy.jpg
+  text: My mouth is like the size of your face
+  flavour: Youre head like fits so nicely into my neck. I guess youre made for me
+  themes: [both, sleepy]
+
+- id: both-bus
+  name: Both Bus
+  rarity: common
+  photo: BothBus.jpeg
+  text: I'm being covered by youuu
+  flavour: Me when im trying to take a nice photo then a fattie occupies half my screen
+  themes: [both]
+
+- id: both-call-fatties
+  name: Both Call Fatties
+  rarity: epic
+  photo: BothCallFatties.jpg
+  text: We have the exact same face but youre cut off
+  flavour: For this flavour text, I look like a giant fat tomato.
+  themes: [both]
+
+- id: both-cool-guys
+  name: Both Cool Guys
+  rarity: common
+  photo: BothCoolGuys.jpg
+  text: We are movie stars
+  flavour: There is a cool guy and theres my fattie. Also i always wear that one shirt
+  themes: [both]
+
+- id: both-covered
+  name: Both Covered
+  rarity: rare
+  photo: BothCovered.jpeg
+  text: OMG its a edgy girl
+  flavour: This was quite early on in the relationship also, at this early stage, you were already megafat.
+  themes: [both]
+
+- id: both-crying
+  name: Both Crying
+  rarity: epic
+  photo: BothCrying.jpg
+  text: Why are you crying 
+  flavour: You look like youve been crying for like an hour. This was way before I ever saw you cry for real though, cheers to many more moments, whether they are happy or sad.
+  themes: [both]
+
+- id: both-elevator
+  name: Both Elevator
+  rarity: common
+  photo: BothElevator.jpeg
+  text: You look so contented with what youre seeing
+  flavour: Idk why you seem so tall in this photo. Also youre smiling and looking at yourself in the photo, what a fattie.
+  themes: [both]
+
+- id: both-fat
+  name: Both Fat
+  rarity: common
+  photo: BothFat.jpeg
+  text: Your face is red like you just slept on your keyboard
+  flavour: My lips are so dry, also a rare photo where youre taller than me.
+  themes: [both]
+
+- id: both-judgemental
+  name: Both Judgemental
+  rarity: legendary
+  photo: BothJudgemental.jpg
+  text: Youre my little bundle of joy
+  flavour: Youre smiling so brightly in this photo, always makes me wonder how i manage to bring you so much joy. Photos like that are what will make me never stop wanting to squish you. ILOVEUUUUU!
+  themes: [both]
+
+- id: both-my-fattie
+  name: Both My Fattie
+  rarity: rare
+  photo: BothMyFattie.jpg
+  text: My little pouter
+  flavour: Keith and nick saw this post and said that you were pouting in like 40% of photos, I agree.
+  themes: [both]
+
+- id: both-remarkable
+  name: Both Remarkable
+  rarity: rare
+  photo: BothRemarkable.jpeg
+  text: You are my Remarkable fattie
+  flavour: All i remember from that day was you complaining non-stop about your legs dying, and us going in 1 giant circle just to go back to the start, fun times.
+  themes: [both]
+
+- id: both-rich
+  name: Both Rich
+  rarity: common
+  photo: BothRich.jpeg
+  text: Even when youre blurry youre Megacute
+  flavour: Youre actually so megacute hereee, I wish I had a cooler pose idk why my legs are like slanted. Also nice skirt.
+  themes: [both, rich]
+
+- id: both-side
+  name: Both Side
+  rarity: common
+  photo: BothSide.jpeg
+  text: Yayyy its another swing day
+  flavour: All of the swing days are super memorable, idk if this was right after you cried or was that another day. Regardless I'll always have a shoulder for you to lean onnnn
+  themes: [both]
+
+- id: both-spx
+  name: Both SPX
+  rarity: epic
+  photo: BothSPX.jpg
+  text: My nose looks so big in this picture
+  flavour: My hair is annoyingly straight, also this is when I finally got my legendary t-shirt! Made by my delicious little squishy fattie. I can't believe you were also so excited for this too
+  themes: [both]
+
+- id: both-stare
+  name: Both Stare
+  rarity: rare
+  photo: BothStare.jpg
+  text: POV youre too short to get the food on the top shelf
+  flavour: OMG megafat youre basically wearing nothing, look at how crazy veiny my right hand is (I hope its still visibile in the card)
+  themes: [both]
+
+- id: both-umbrella
+  name: Both Umbrella
+  rarity: common
+  photo: BothUmbrella.jpg
+  text: We are way too white
+  flavour: Your teeth are also so white, we look for some reason so similar here. I just think you are a fattie. 
+  themes: [both]
+
+- id: both-weird-keegan-hairstyle
+  name: Both Weird Hairstyle
+  rarity: rare
+  photo: BothWeirdKeeganHairstyle.jpeg
+  text: OMG my hair is so straight
+  flavour: I dont know what is making you so happy to the point of almost crying. Also now I drank a whole lot of soju so Im a little bit drunk. Very nice.
+  themes: [both]
+
+- id: boxed-fattie
+  name: Boxed Fattie
+  rarity: epic
+  photo: BoxedFattie.jpg
+  text: Me when Im only wearing a box
+  flavour: You look like you are having so much fun holding a giant box, also you are a giant little megacutiee. Hope you had fun walking around vivo and eating desert with my familyy.
+
+- id: cat-fattie
+  name: Cat Fattie
+  rarity: common
+  photo: CatFattie.jpg
+  text: OMG its a CAT fattieee
+  flavour: You look so happy when you have a free drink. I can conclude that you are fat. Also we should definitely go back to the matcha place again it was so vibes sitting there.
+
+- id: close-unglam
+  name: Close Unglam
+  rarity: epic
+  photo: CloseUnglam.jpeg
+  text: OMG its a NOSEEEEEEE
+  flavour: You are so fat you occupy the entire screen. Evidence of your fatness.
+
+- id: digital-fattie
+  name: Digital Fattie
+  rarity: rare
+  photo: DigitalFattie.jpg
+  text: Im unfortunately too tall to be in this photo
+  flavour: This is how we will be seeing each other when we go on exhange. MegaSad. We should do fun stuff like this more in the future, the free stuff tasted so good, but you were the best treat in the end.
+
+- id: fattie-ception
+  name: Fattie Ception
+  rarity: common
+  photo: FattieCeption.jpg
+  text: Still not enough fattie
+  flavour: This is how my brain looks like daily actually
+
+- id: first-ever
+  name: First Ever
+  rarity: common
+  photo: FirstEver.jpg
+  text: You after losing to me in stress (like usual)
+  flavour: I'm pretty sure this is one of the first photos I ever got of you, you still look just as fat today.
+
+- id: flower-bulldog
+  name: Flower Bulldog
+  rarity: rare
+  photo: FlowerBulldog.jpeg
+  text: A bulldog staring at the sun 
+  flavour: Yay im the sun. Did you know that the sun is also a star? See everything goes back to that one star moment in the end
+  themes: [flower]
+
+- id: flower-fattieee
+  name: Flower Fattieee
+  rarity: epic
+  photo: FlowerFattieee.jpg
+  text: My little happy fattie
+  flavour: Im still a bit sad you didnt like the flowers, but issokay you still look megacute in this photo. I havent gotten any flowers yet at the time of writing so I hope future keegan got you something you like!
+  themes: [flower]
+
+- id: flower-megacute
+  name: Flower Megacute
+  rarity: legendary
+  photo: FlowerMegacute.jpeg
+  text: You probably took forever to get this one
+  flavour: You look so precious here, I think if I had to show people photos of you this might be one of the nicer ones. I'm actually writing this now instead of showering, and I got the best part of the day waiting for me, FATTIE TIMEEEE! Yo definitely dont remember but today was the utown i fetch dayyy.
+  themes: [flower]
+
+- id: focused-fattie
+  name: Focused Fattie
+  rarity: common
+  photo: FocusedFattie.jpg
+  text: Me when deciding what to eat
+  flavour: I realised all my photos all have my skin peeling, thats a bit womp womp. My hair at least dosent look horrible here so I guess that amazing, also once again exact same shirt. If there was a photo of you in front of me I would also focus this much
+
+- id: food-stuffed
+  name: Food Stuffed
+  rarity: epic
+  photo: FoodStuffed.jpeg
+  text: OMG actually fat
+  flavour: Youre my little chipmunk. Your cheeks are way too squishy for this world. I love youuuu
+
+- id: giant-fattie
+  name: Giant Fattie
+  rarity: legendary
+  photo: GiantFattie.jpg
+  text: ITS A MASSIVE FATTIEE
+  flavour: Nobody knows what youre looking at, 100% chance it must be me
+
+- id: happy-cookie
+  name: Happy Cookie
+  rarity: common
+  photo: HappyCookie.jpeg
+  text: Wow cookies
+  flavour: I dont even recognise you in braces anymore, also new green shirt. You must have been predicting this matcha cookies. Yup fat
+
+- id: hottie-fattie
+  name: Hottie Fattie
+  rarity: legendary
+  photo: HottieFattie.jpg
+  text: No idea if I should have actually put this photo
+  flavour: Wow I look pretty crazy. What happened man. I know a fattie happened. This is actually the last time youll ever be able to see my abs
+
+- id: jb-fat
+  name: JB Fat
+  rarity: common
+  photo: JBFat.JPG
+  text: Pouting when there is such good food in front of you.
+  flavour: My first JB trip with you was so fun. Never thought the most fun part of the day would be walking around the mall for like 4h. We definitely need to go for more trips in the future. I might have said this in like all the cards but ILYYY
+
+- id: matcha-cutie
+  name: Matcha Cutie
+  rarity: common
+  photo: MatchaCutie.jpeg
+  text: Fattie Private limited
+  flavour: It was surprisingly vibes to just sit down and drink matcha. Most likely cos its the amazing company that I haddd.
+
+- id: movie-jacket
+  name: Movie Jacket
+  rarity: rare
+  photo: MovieJacket.jpeg
+  text: Im quite sure you dont even remember the contents of the movie
+  flavour: YOU DONT LIKE POPCORNNNN?!? Unfathomable. For that you win the title of the fatest human being in this picture
+
+- id: myshirtt
+  name: Myshirtt
+  rarity: epic
+  photo: Myshirtt.jpg
+  text: I dont really see how I look so happy but I love the shirt
+  flavour: Im so happy I ended up going for the coffee festival, was so close to not going. It was super expensive though, but I believe that every cent spent was worth it. You must follow me for more festivals like this againnn.
+
+- id: no-idea-where
+  name: No Idea Where
+  rarity: rare
+  photo: NoIdeaWhere.jpeg
+  text: I have 0 clue where this photo was taken
+  flavour: If you can figure it out tell me then Ill give you a secret reward. Also I think you look quite cute here, I had to turn my head manually just to see your cuteness.
+
+- id: normal-work
+  name: Normal Work
+  rarity: common
+  photo: NormalWork.jpg
+  text: Why am I smiling?
+  flavour: Who knows what I could be looking at, could be anything. Most likely its work but you should just imagine im looking at you and smiling.
+
+- id: one-eyed-cutie
+  name: One Eyed Cutie
+  rarity: epic
+  photo: OneEyedCutie.jpg
+  text: I literally saw you wear this skort once and never again
+  flavour: Also today was the day of our first kiss, yes I remember this weird detail. Youre a little cute cheeky fattieee. I love youuu
+
+- id: ord-fattie
+  name: ORD Fattie
+  rarity: rare
+  photo: ORDFattie.jpg
+  text: Yes I am in a toilet
+  flavour: Happy that Im finally gonna be done with this nonsense, so many good memories made over the 2 years though. Our 1 year is coming soon too but unlike army I dont ever wanna be done with youuuu.
+
+- id: overjoyed
+  name: Overjoyed
+  rarity: rare
+  photo: Overjoyed.jpg
+  text: You when you see me
+  flavour: My high little fattie. Your teeth are like so perfect in this photo. If I wasnt shy I would post so many photos of you on my insta. Maybe not this though, your underwear is hanging at the back of the room.
+
+- id: overjoyed-fattie
+  name: Overjoyed Fattie
+  rarity: epic
+  photo: OverjoyedFattie.jpg
+  text: Only you can make my face look this weird and strangely happy.
+  flavour: My face is contorted in an unnatural way. Only you can make my face look this weird and strangely happy.
+
+- id: passport-photo-fattie
+  name: Passport Photo Fattie
+  rarity: common
+  photo: PassportPhotoFattie.jpg
+  text: Young me, still wearing the same shirt
+  flavour: This is me before I was battle scarred, I still look so well rested and full of youth. At this time you were like barely even born yet also so you might be fat.
+
+- id: pouting-soup
+  name: Pouting Soup
+  rarity: epic
+  photo: PoutingSoup.jpeg
+  text: OMG ITS A MEGAPOUT
+  flavour: I might be mean but I always find you super duper cute and funny when you pout this much. Also this can be a meme template. Me when my pistachio drink contains nuts. I drank coffee at 10pm so Im a bit high while writing this.
+
+- id: quad-fatties
+  name: Quad Fatties
+  rarity: common
+  photo: QuadFatties.jpg
+  text: The Gang of 4
+  flavour: My mouth is the size of your face. I cant beleive the entire ice cream was completely free. I went back a second time with my family, its too much value. 
+
+- id: rich-beauty
+  name: Rich Beauty
+  rarity: common
+  photo: RichBeauty.jpeg
+  text: A giant fancy fattie
+  flavour: Wow I like immediately smiled when I saw your cute little face. Its blurry but I still see my cute pretty fattie underneath
+  themes: [rich]
+
+- id: rich-happy
+  name: Rich Happy
+  rarity: common
+  photo: RichHappy.jpeg
+  text: In my opinion the perfect photo of you
+  flavour: This will be the photo I look at when Im on exchange and miss you alot. Even the photo and lighting is well taken. The waitress pulling out the chair moment is still embarrassing HJAHA.
+  themes: [rich]
+
+- id: rich-my-favorite-fattie
+  name: Rich My Favorite Fattie
+  rarity: rare
+  photo: RichMyFavoriteFattie.jpeg
+  text: We need way more photos of being well dressed together
+  flavour: HAH i win my mouth is bigger than yours. On a more serious note I think we should find more occassions to go out like this, was really a fantastic time
+  themes: [rich]
+
+- id: rich-too-much-food
+  name: Rich Too Much Food
+  rarity: epic
+  photo: RichTooMuchFood.jpeg
+  text: I was so full after this
+  flavour: After months of saving on dinner you finally got a gigantic meal. I hope you liked itttt. I cant believe the best part of the meal was the $15 pork chop. But in the end it was such an amazing night. Also we could see a sea of cheapskates eating the basically free burger.
+  themes: [rich]
+
+- id: rich-vege
+  name: Rich Vege
+  rarity: common
+  photo: RichVege.jpeg
+  text: The face of a satisfied fattie
+  flavour: You should eat more and become nice and fat. I sound like the evil witch in hansel and grettle. But cheers to much more good food in the future
+  themes: [rich]
+
+- id: rich-waiting-patiently
+  name: Rich Waiting Patiently
+  rarity: rare
+  photo: RichWaitingPatiently.jpeg
+  text: Waiting patiently for some amazing food
+  flavour: You seem to already be staring at a 5* meal though
+  themes: [rich]
+
+- id: side-eye
+  name: Side Eye
+  rarity: rare
+  photo: SideEye.jpg
+  text: Large amount of judging is being done
+  flavour: My fat detectors were tingling, so I turned and saw a giant fattie. I spy with my little eye a cute little potato I need to squish
+
+- id: side-heart
+  name: Side Heart
+  rarity: common
+  photo: SideHeart.PNG
+  text: Almost there
+  flavour: No lah you failed why you put your heart so high, tsk tsk tsk. Also imagine working, now got no more naixue at jewel where will ya go? Work coffee will be funnn
+
+- id: sleepy-blanket
+  name: Sleepy Blanket
+  rarity: Rare
+  photo: SleepyBlanket.jpg
+  text: I was at peace
+  flavour: I was so nice and sound asleep, only to be awoken by 2 giant fatties. Now ill forever be immortalised for my sleepiness in nicks insta.
+  themes: [sleepy]
+
+- id: sleepy-idk-where
+  name: Sleepy Idk Where
+  rarity: common
+  photo: SleepyIdkWhere.jpg
+  text: OHHH was this zen room?
+  flavour: Once again I was so at peace, you can see all the crazy places Ive been sleeping in.
+  themes: [sleepy]
+
+- id: sleepy-jb
+  name: Sleepy JB
+  rarity: rare
+  photo: SleepyJB.jpg
+  text: I was so tired then
+  flavour: Aww mans my neck looks so red. Is this normally how red it looks? Also im surprised you havent drawn on my face with a marker in my sleep. I would definitely have done it if you were the one asleep.
+  themes: [sleepy]
+
+- id: sleepy-peaceful
+  name: Sleepy Peaceful
+  rarity: epic
+  photo: SleepyPeaceful.jpg
+  text: Im a zombie
+  flavour: You werent even next to me Idk when I fell asleep like this. No wonder my hair becomes so messy after each time I go your room. I dont even notice falling asleep most of the time. But its nice to wake up and see my fattie
+  themes: [sleepy]
+
+- id: sleepy-school
+  name: Sleepy School
+  rarity: rare
+  photo: SleepySchool.jpg
+  text: Its so crazy we drank coffee at like 11
+  flavour: I look so out of it completely. If my hand wasnt supporting my face I would probably just faceplant on the table. Also thanks for entertaining my nonsense and going com with me at nighttt. ILU
+  themes: [sleepy]
+
+- id: sleepy-thumbs
+  name: Sleepy Thumbs
+  rarity: epic
+  photo: SleepyThumbs.jpg
+  text: The most exhausted commando youll ever see
+  flavour: Where are my muscles even, look at my arm it looks like a loaf of bread. See Im so much better after my 50 pushups everyday (I Hope)
+  themes: [sleepy]
+
+- id: sleepy-yochi
+  name: Sleepy Yochi
+  rarity: rare
+  photo: SleepyYochi.jpg
+  text: I have so much facial hair
+  flavour: I cannot believe it but I physically yawned when I saw this photo. Also you can see my amazing moustache
+  themes: [sleepy]
+
+- id: struggling-math
+  name: Struggling Math
+  rarity: common
+  photo: StrugglingMath.jpeg
+  text: Ive never laughed so hard at someone doing math before. Youre megafat
+  flavour: I still have the exam papers we should really do them one day. Also Ive never laughed so hard at someone doing math before. Youre megafat
+
+- id: ta-fattie
+  name: TA Fattie
+  rarity: common
+  photo: TAFattie.jpg
+  text: Me in the midst of making $80
+  flavour: My fattie bought me that drink, Im never actually buying it myself but it was pretty amazing. Also good job coming for my first ever lesson! You got to see me in action for the first time even though I was pretty nervous.
+
+- id: uppies-cutie
+  name: Uppies Cutie
+  rarity: epic
+  photo: UppiesCutie.jpg
+  text: The only time youll be taller than me
+  flavour: I love doing these stupid challenges with you. It always ends up with me exhausted but I always end up laughing so much. Youre an amazing little squishy butter crunchy.
+
+- id: uppies-fattie
+  name: Uppies Fattie
+  rarity: rare
+  photo: UppiesFattie.jpg
+  text: Actually so fat. I feel like rotating you, should do that again too
+  flavour: Actually so fat. I am surprised my hands can even support your weight without breaking, I am actually pretty impressive. I feel like rotating you, should do that again too
+
+- id: value-ashtons
+  name: Value Ashtons
+  rarity: legendary
+  photo: ValueAshtons.jpeg
+  text: SO MUCH VALUE
+  flavour: Technically it wasnt the thing with the most value, since the free ice cream is infinite value. Regardless I think this was the first time I had so much fun queuing for something and feeling so rewarded after queing this long. Also the food was meh so I guess it was the journey that mattered, the journey with a very fat one
+  themes: [value]
+
+- id: value-beer
+  name: Value Beer
+  rarity: rare
+  photo: ValueBeer.jpeg
+  text: 1 for 1 beer for like 4.90
+  flavour: I remember like during this or after this you were like so sad that you didnt get selected for your role. Then you thought you werent good enough. NO SADDD. You gotta have a bit more confidence in yourself, youre pretty amazing, if not why would I spend so much effort on this ultra elaborate gift for you. I love youuu
+  themes: [value]
+
+- id: value-pepper-lunch
+  name: Value Pepper Lunch
+  rarity: common
+  photo: ValuePepperLunch.jpeg
+  text: Even more value
+  flavour: It was like okay value honestly, but I actually love pepper lunch. I remember in secondary school I wouldn't even mind spending $10 on it, thinking about it now Im kinda crazy for spending so much money back then.
+  themes: [value]
+
+- id: value-tea
+  name: Value Tea
+  rarity: common
+  photo: ValueTea.jpeg
+  text: FREEEEE
+  flavour: It was a bit too thick and hard to drink, but it was quite funny that you ended up helping another kiasu aunty with her instagram. I had to do that for my parents when I got them the free ice cream at swensons.
+  themes: [value]
+
+- id: value-teaaa
+  name: Value Teaaa
+  rarity: common
+  photo: ValueTeaaa.jpg
+  text: This is where my love for tea is born
+  flavour: You queued up for the actual real treat Which is MEEEEEEEEEEEE
+  themes: [value]
+
+- id: watermellon-beer
+  name: Watermellon Beer
+  rarity: common
+  photo: WatermellonBeer.jpeg
+  text: Youre my favourite square
+  flavour: Yes I have a whole collection just for watermellon stuff. You are actually a perfect 2 beers wide.
+  themes: [watermelon]
+
+- id: watermellon-prawn
+  name: Watermellon Prawn
+  rarity: epic
+  photo: WatermellonPrawn.jpeg
+  text: So nice and fat. I was refering to the nice looking prawns in your soup actually.
+  flavour: TODO
+  themes: [watermelon]
+
+- id: watermellon-tasty
+  name: Watermellon Tasty
+  rarity: rare
+  photo: WatermellonTasty.jpeg
+  text: You look so incredibly well dressed
+  flavour: Hey not fair you are licking the fattie. I wanna lick the fattie. Also you are megasquishy
+  themes: [watermelon]
+
+- id: way-too-happy
+  name: Way Too Happy
+  rarity: common
+  photo: WayTooHappy.jpeg
+  text: August is the month of value
+  flavour: Me when there is too good a deal to pass up. Nobody has any idea why I am this happy. Also i was so shocked to see your whole family. Yes this was the prata day
+
+- id: weird-smile-food
+  name: Weird Smile Food
+  rarity: common
+  photo: weirdSmileFood.JPG
+  text: I named this weird smile but youre still megacute
+  flavour: You look so contented and like full of joy. To be fair I would be too If I was eating such amazing food with such an amazing person (Quite clear who the amazing person is)
+
+- id: work-fattie
+  name: Work Fattie
+  rarity: rare
+  photo: WorkFattie.jpeg
+  text: No value big sad
+  flavour: I thought we were gonna get big value with employee discount but sadly not. At least I got the 2nd best thing, which is a cute photo of youuu.
+
+- id: wow-fat
+  name: Wow Fat
+  rarity: epic
+  photo: WowFat.jpeg
+  text: Caught in a fat moment
+  flavour: I never knew you were into these kinda things, nevermind I do, I knew that you were a fattie from a very young age. Also havent seen you with braces in a while. It makes your teeth look less visible.
+
+- id: yochi
+  name: Yochi
+  rarity: epic
+  photo: yochi.JPG
+  text: I cant wait for my yochi with you
+  flavour: I finally made it. This is the last card Ive made. It took nearly 3 weeks of making, I started from week 7 and I only just finished in like week 10. I hope you enjoyed it! It was really fun to make and look back at all my amazing cute photos with youuu. I love you a ton my fattieee
+  themes: [watermelon]
