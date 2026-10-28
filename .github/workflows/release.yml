@@ -185,4 +185,4 @@ jobs:
           publish_dir: site
           publish_branch: gh-pages
           force_orphan: true
-          commit_message: Web app ${{ needs.version.outputs.name }}
+          commit_message: Publish web app ${{ needs.version.outputs.name }}

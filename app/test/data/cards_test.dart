@@ -48,6 +48,16 @@ void main() {
       expect(c.name, 'A');
     });
 
+    test('binder stories accept 400 characters and reject longer text', () {
+      final story = 'x' * maxFlavourLength;
+      final valid = parse('- {id: a, name: A, photo: a.jpg, text: t, flavour: "$story"}');
+      expect(valid.problems, isEmpty);
+      expect(valid.cards.single.flavour, story);
+      final tooLong = parse('- {id: a, name: A, photo: a.jpg, text: t, flavour: "${story}x"}');
+      expect(tooLong.cards, isEmpty);
+      expect(tooLong.problems.single, contains('keep it to $maxFlavourLength'));
+    });
+
     test('bad entries are skipped with a reason, good ones kept and numbered', () {
       final lib = parse('''
 - just text
@@ -59,7 +69,7 @@ void main() {
 - {id: path, name: P, photo: x/a.jpg, text: t}
 - {id: gone, name: G, photo: a.png, text: t}
 - {id: notext, name: N, photo: a.jpg}
-- {id: long, name: L, photo: a.jpg, text: t, flavour: "${'x' * 301}"}
+- {id: long, name: L, photo: a.jpg, text: t, flavour: "${'x' * (maxFlavourLength + 1)}"}
 - {id: ex, name: E, photo: a.jpg, text: t, exclude: [sparkly, none]}
 - {id: second, name: S, photo: a.jpg, text: t}
 ''');

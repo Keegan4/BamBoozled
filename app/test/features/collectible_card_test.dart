@@ -10,7 +10,7 @@ CardDef card(Rarity r, {String? artist = 'Ms Tan'}) => CardDef(
   number: 7,
   name: 'Bamboo Grove',
   rarity: r,
-  photo: 'assets/cards/bamboo-grove.jpg',
+  photo: 'assets/cards/FirstEver.jpg',
   text: 'Take a proper lunch break today.',
   artist: artist,
 );

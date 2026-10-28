@@ -408,7 +408,7 @@ void main() {
         location: '/notes/binder',
         overrides: [
           cardLibraryProvider.overrideWith((ref) async {
-            final lib = await loadCards(DiskAssetBundle());
+            final lib = await loadCards(TestCardAssetBundle());
             return CardLibrary([
               for (final c in lib.cards)
                 CardDef(
@@ -487,7 +487,7 @@ void main() {
 
     testWidgets('a full binder has nothing missing', (tester) async {
       final app = await TestApp.create(withSampleTasks: false);
-      final lib = await tester.runAsync(() => loadCards(DiskAssetBundle()));
+      final lib = await tester.runAsync(() => loadCards(TestCardAssetBundle()));
       await own(app, {for (final c in lib!.cards) '${c.id}|none': 1});
       await app.pump(tester, location: '/notes/binder');
       await tester.tap(find.text('Missing'));
@@ -515,15 +515,8 @@ void main() {
   });
 
   group('pack fanfare and themes in the overview', () {
-    CardDef card(String id, Rarity r, {List<String> themes = const []}) => CardDef(
-      id: id,
-      number: 1,
-      name: id,
-      rarity: r,
-      photo: 'assets/cards/bamboo-grove.jpg',
-      text: 't',
-      themes: themes,
-    );
+    CardDef card(String id, Rarity r, {List<String> themes = const []}) =>
+        CardDef(id: id, number: 1, name: id, rarity: r, photo: 'assets/cards/FirstEver.jpg', text: 't', themes: themes);
 
     Widget host(Widget child, {List<Override> overrides = const []}) => ProviderScope(
       overrides: overrides,
@@ -579,7 +572,7 @@ void main() {
     });
 
     testWidgets('the overview celebrates a theme the pack completed', (tester) async {
-      final lib = (await tester.runAsync(() => loadCards(DiskAssetBundle())))!;
+      final lib = (await tester.runAsync(() => loadCards(TestCardAssetBundle())))!;
       final school = lib.cardsIn('school-day');
       final state = CollectionState(copies: {for (final c in school) '${c.id}|none': 1});
       final pulls = [Pull(school.first, Finish.none, newCard: true), Pull(lib.byId('koi-pond')!, Finish.none)];
@@ -606,7 +599,7 @@ void main() {
     });
 
     testWidgets('a theme finished earlier is not celebrated again', (tester) async {
-      final lib = (await tester.runAsync(() => loadCards(DiskAssetBundle())))!;
+      final lib = (await tester.runAsync(() => loadCards(TestCardAssetBundle())))!;
       final school = lib.cardsIn('school-day');
       final state = CollectionState(copies: {for (final c in school) '${c.id}|none': 2});
       await tester.pumpWidget(

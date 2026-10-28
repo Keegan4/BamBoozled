@@ -102,7 +102,7 @@ class TestApp {
       taskRepositoryProvider.overrideWithValue(repository ?? repo),
       clockProvider.overrideWith(now == null ? FixedClock.new : () => ClockAt(now)),
       routerProvider.overrideWith((ref) => buildRouter(initialLocation: location)),
-      assetBundleProvider.overrideWithValue(DiskAssetBundle()),
+      assetBundleProvider.overrideWithValue(TestCardAssetBundle()),
       ...overrides,
     ],
     child: const BamBoozledApp(),
@@ -192,7 +192,10 @@ class DiskAssetBundle extends AssetBundle {
   @override
   Future<ByteData> load(String key) async {
     if (key == 'AssetManifest.bin') {
-      final files = Directory('assets').listSync(recursive: true).whereType<File>().map((f) => f.path);
+      final files = Directory('assets')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .map((f) => f.path.replaceAll(r'\', '/'));
       return const StandardMessageCodec().encodeMessage({
         for (final path in files)
           path: [
@@ -206,4 +209,15 @@ class DiskAssetBundle extends AssetBundle {
 
   @override
   Future<String> loadString(String key, {bool cache = true}) async => File(key).readAsString();
+}
+
+/// A fixed collection for screen tests, independent of changes to the released cards.
+/// Other assets, and tests that use DiskAssetBundle directly, still read the real bundle.
+class TestCardAssetBundle extends DiskAssetBundle {
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async {
+    if (key == 'assets/cards/cards.yaml') return File('test/fixtures/cards/cards.yaml').readAsString();
+    if (key == 'assets/cards/themes.yaml') return File('test/fixtures/cards/themes.yaml').readAsString();
+    return super.loadString(key, cache: cache);
+  }
 }

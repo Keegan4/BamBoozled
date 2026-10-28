@@ -112,7 +112,7 @@ A card can be in several themes. A theme with no cards yet isn't shown, and a ta
   rarity: common             # common, rare, epic or legendary
   photo: tea-break.jpg       # the file you added in step 1
   text: Step away for five minutes.   # the card's text box (up to 90 characters)
-  flavour: '"I''ll just reply to one email first," said the tea, now cold.'   # optional, up to 300
+  flavour: '"I''ll just reply to one email first," said the tea, now cold.'   # optional, up to 400
   artist: Mr Lim             # optional: credited in the binder, signed on Signed cards
   exclude: [misprint]        # optional: finishes this card never gets
   themes: [school-day]       # optional: themes from themes.yaml (see above)

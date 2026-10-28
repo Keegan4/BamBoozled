@@ -8,7 +8,7 @@ import '../../domain/models/cards.dart';
 const cardsFolder = 'assets/cards';
 
 const maxCardTextLength = 90;
-const maxFlavourLength = 300;
+const maxFlavourLength = 400;
 const maxCardNameLength = 24;
 
 /// The cards that could be read, plus a reason for each entry that couldn't.

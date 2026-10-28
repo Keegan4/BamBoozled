@@ -6,7 +6,7 @@
 #   rarity   common, rare, epic or legendary (default: common)
 #   photo    a file in this folder: JPG, PNG or WebP, about 1080 x 1350 px, under 500 KB
 #   text     the short message in the card's text box (up to 90 characters)
-#   flavour  optional: the quote shown when the card is opened in the binder (up to 300 characters)
+#   flavour  optional: the quote shown when the card is opened in the binder (up to 400 characters)
 #   artist   optional: credited in the binder, and signed on "Signed" cards
 #   set      optional: the set name shown in the binder (default: Bamboo Grove)
 #   exclude  optional: finishes this card never gets, e.g. [misprint, ghost]
@@ -339,8 +339,8 @@
   name: Overjoyed Fattie
   rarity: epic
   photo: OverjoyedFattie.jpg
-  text: My face is contorted in an unnatural way. Only you can make my face look this weird and strangely happy.
-  flavour: TODO
+  text: Only you can make my face look this weird and strangely happy.
+  flavour: My face is contorted in an unnatural way. Only you can make my face look this weird and strangely happy.
 
 - id: passport-photo-fattie
   name: Passport Photo Fattie
@@ -485,8 +485,8 @@
   name: Struggling Math
   rarity: common
   photo: StrugglingMath.jpeg
-  text: I still have the exam papers we should really do them one day. Also Ive never laughed so hard at someone doing math before. Youre megafat
-  flavour: TODO
+  text: Ive never laughed so hard at someone doing math before. Youre megafat
+  flavour: I still have the exam papers we should really do them one day. Also Ive never laughed so hard at someone doing math before. Youre megafat
 
 - id: ta-fattie
   name: TA Fattie
@@ -506,8 +506,8 @@
   name: Uppies Fattie
   rarity: rare
   photo: UppiesFattie.jpg
-  text: Actually so fat. I am surprised my hands can even support your weight without breaking, I am actually pretty impressive. I feel like rotating you, should do that again too
-  flavour: TODO
+  text: Actually so fat. I feel like rotating you, should do that again too
+  flavour: Actually so fat. I am surprised my hands can even support your weight without breaking, I am actually pretty impressive. I feel like rotating you, should do that again too
 
 - id: value-ashtons
   name: Value Ashtons
